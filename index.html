@@ -42,18 +42,21 @@
         <!-- 模式 A：老闆娘後台 -->
         <div id="viewAdmin" class="space-y-6">
             
-            <!-- 設定區 -->
+            <!-- 設定區 (新增儲存按鈕) -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <h3 class="font-bold text-indigo-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-gear"></i> 店鋪設定</h3>
+                <h3 class="font-bold text-indigo-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-gear"></i> 店鋪設定 (設定完請按儲存)</h3>
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">店鋪名稱</label>
                         <input type="text" id="inputShopName" value="西門町Candy服飾" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">客服 LINE 網址</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">客服 LINE 網址 <span class="text-xs text-gray-400 font-normal">(客人點購買會跳轉到這裡)</span></label>
                         <input type="text" id="inputLineLink" placeholder="例如: https://line.me/ti/p/您的ID" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
+                    <button id="btnSaveSettings" onclick="saveSettings()" class="w-full bg-indigo-600 text-white font-bold text-base py-3 rounded-xl flex justify-center items-center gap-2 shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition">
+                        <i class="fa-solid fa-floppy-disk"></i> 永久儲存店鋪設定
+                    </button>
                 </div>
             </div>
 
@@ -139,8 +142,8 @@
     <!-- Firebase SDK 與主程式邏輯 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // 移除了 Auth 門禁，直接開放讀寫
-        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // 加入 setDoc 讓我們可以儲存設定
+        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBFLjVGT5kkThgxuWpdeLbqNLzYKiWB6CA",
@@ -160,8 +163,8 @@
         // 自訂超有質感的提示框
         window.showToast = function(message, type = 'success') {
             const toast = document.createElement('div');
-            toast.className = `fixed top-10 left-1/2 z-[100] px-6 py-3 rounded-full shadow-lg text-white font-bold text-sm tracking-wide toast-animate ${type === 'success' ? 'bg-[#06C755]' : 'bg-red-500'}`;
-            toast.innerHTML = type === 'success' ? `<i class="fa-solid fa-check-circle mr-2"></i>${message}` : `<i class="fa-solid fa-circle-exclamation mr-2"></i>${message}`;
+            toast.className = `fixed top-10 left-1/2 z-[100] px-6 py-3 rounded-full shadow-lg text-white font-bold text-sm tracking-wide toast-animate ${type === 'success' ? 'bg-[#06C755]' : (type === 'purple' ? 'bg-indigo-600' : 'bg-red-500')}`;
+            toast.innerHTML = type === 'success' ? `<i class="fa-solid fa-check-circle mr-2"></i>${message}` : (type === 'purple' ? `<i class="fa-solid fa-floppy-disk mr-2"></i>${message}` : `<i class="fa-solid fa-circle-exclamation mr-2"></i>${message}`);
             document.body.appendChild(toast);
             setTimeout(() => {
                 toast.style.transition = 'opacity 0.5s ease';
@@ -170,7 +173,47 @@
             }, 3000);
         };
 
-        // 直接讀取商品，不需經過門禁檢查
+        // ==========================================
+        // 💾 新增：自動讀取您的店鋪設定跟 LINE 網址
+        // ==========================================
+        const settingsRef = doc(db, 'settings', 'shopInfo');
+        onSnapshot(settingsRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('inputShopName').value = data.shopName || '西門町Candy服飾';
+                document.getElementById('inputLineLink').value = data.lineLink || '';
+                renderProducts(); // 更新畫面上的店名
+            }
+        });
+
+        // ==========================================
+        // 💾 新增：儲存店鋪設定的魔法
+        // ==========================================
+        window.saveSettings = async function() {
+            const shopName = document.getElementById('inputShopName').value.trim();
+            const lineLink = document.getElementById('inputLineLink').value.trim();
+            const btn = document.getElementById('btnSaveSettings');
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 儲存中...';
+            btn.disabled = true;
+
+            try {
+                // 把設定寫進 Firebase 的保險箱裡
+                await setDoc(doc(db, 'settings', 'shopInfo'), {
+                    shopName: shopName,
+                    lineLink: lineLink
+                });
+                showToast("✨ 店鋪設定已永久儲存！", "purple");
+            } catch (err) {
+                showToast("儲存失敗，請重試", "error");
+                console.error(err);
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 永久儲存店鋪設定';
+            btn.disabled = false;
+        };
+
+        // 讀取商品資料庫
         const productsRef = collection(db, 'products');
         onSnapshot(productsRef, (snapshot) => {
             const fetched = [];
@@ -180,7 +223,6 @@
             renderProducts();
         }, (error) => {
             console.error("資料讀取失敗:", error);
-            showToast("無法連線到倉庫，請確認資料庫是否開啟", "error");
         });
 
         window.previewImage = function(event) {
