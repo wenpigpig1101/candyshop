@@ -11,51 +11,89 @@
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        /* 提示框動畫 */
         @keyframes slideDown { from { transform: translate(-50%, -100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
         .toast-animate { animation: slideDown 0.3s ease-out forwards; }
     </style>
 </head>
-<body class="pb-20">
+<body class="bg-gray-200">
 
-    <!-- 頂部切換列 -->
-    <div class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <!-- 🌟 老闆娘專屬的隱藏切換列 (密碼正確才會出現) -->
+    <div id="adminToggleBar" class="hidden bg-gray-800 border-b border-gray-700 sticky top-0 z-50 shadow-md">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <div class="bg-indigo-600 text-white p-2 rounded-xl"><i class="fa-solid fa-store"></i></div>
-                <span class="font-bold text-lg hidden sm:inline" id="headerShopName">西門町Candy服飾</span>
+            <div class="text-white font-bold flex items-center gap-2">
+                <i class="fa-solid fa-user-shield text-[#06C755]"></i> 管理模式
             </div>
-            <div class="flex bg-gray-100 rounded-full p-1 border border-gray-200">
-                <button id="btnAdmin" class="px-4 py-2 rounded-full text-sm font-bold transition-all bg-white text-indigo-600 shadow-sm flex items-center gap-1" onclick="switchView('admin')">
-                    <i class="fa-solid fa-box-open"></i> 老闆娘後台
+            <div class="flex bg-gray-700 rounded-full p-1">
+                <button id="btnAdmin" onclick="switchView('admin')" class="px-4 py-2 rounded-full text-sm font-bold transition-all bg-indigo-600 text-white shadow-sm flex items-center gap-1">
+                    <i class="fa-solid fa-box-open"></i> 後台管理
                 </button>
-                <button id="btnCustomer" class="px-4 py-2 rounded-full text-sm font-bold transition-all text-gray-500 flex items-center gap-1" onclick="switchView('customer')">
-                    <i class="fa-solid fa-mobile-screen"></i> 客人看型錄
+                <button id="btnCustomer" onclick="switchView('customer')" class="px-4 py-2 rounded-full text-sm font-bold transition-all bg-transparent text-gray-300 hover:text-white flex items-center gap-1">
+                    <i class="fa-solid fa-mobile-screen"></i> 預覽型錄
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- 內容區 -->
-    <div class="max-w-4xl mx-auto px-4 py-6">
-        
-        <!-- 模式 A：老闆娘後台 -->
-        <div id="viewAdmin" class="space-y-6">
+    <!-- 主容器 -->
+    <div class="w-full pb-20">
+
+        <!-- ========================================== -->
+        <!-- 模式 B：客人看型錄 (這是預設畫面，客人只看得到這個) -->
+        <!-- ========================================== -->
+        <div id="viewCustomer" class="max-w-md mx-auto bg-gray-50 min-h-screen shadow-xl relative">
+            <!-- 頂部招牌 -->
+            <div class="bg-white px-4 py-4 shadow-sm sticky top-0 z-40 flex justify-between items-center">
+                <div class="font-bold text-lg text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-store text-indigo-600"></i>
+                    <span id="customerShopName">西門町Candy服飾</span>
+                </div>
+                <!-- 🔒 秘密通道：只有老闆娘知道點這裡 -->
+                <button onclick="enterAdmin()" id="btnLock" class="text-gray-300 hover:text-indigo-500 transition p-2">
+                    <i class="fa-solid fa-lock"></i>
+                </button>
+            </div>
+
+            <!-- 跑馬燈 -->
+            <div class="bg-rose-50 text-rose-600 text-xs py-2 px-4 text-center font-bold shadow-inner flex justify-center items-center gap-1">
+                <i class="fa-solid fa-circle-exclamation"></i> 現貨有限，看中請立刻點按鈕保留！
+            </div>
+
+            <!-- 商品列表 -->
+            <div id="customerProductList" class="p-4 flex flex-col gap-5 pb-20">
+                <!-- 載入中畫面 -->
+                <div class="p-8 text-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200 mt-10">
+                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>店鋪整理中...
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 模式 A：老闆娘後台 (隱藏的，密碼正確才看得到) -->
+        <!-- ========================================== -->
+        <div id="viewAdmin" class="hidden max-w-4xl mx-auto px-4 py-6 space-y-6">
             
-            <!-- 設定區 (新增儲存按鈕) -->
+            <div class="bg-indigo-50 border border-indigo-200 text-indigo-800 p-4 rounded-xl flex items-start gap-3 shadow-sm">
+                <i class="fa-solid fa-circle-info mt-1"></i>
+                <div>
+                    <strong class="block mb-1">歡迎回來，老闆娘！</strong>
+                    <p class="text-sm">這是您的秘密後台，客人是絕對看不到這裡的。您可以在這裡安心上架跟設定。</p>
+                </div>
+            </div>
+
+            <!-- 設定區 -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <h3 class="font-bold text-indigo-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-gear"></i> 店鋪設定 (設定完請按儲存)</h3>
+                <h3 class="font-bold text-indigo-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-gear"></i> 店鋪基本設定</h3>
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">店鋪名稱</label>
                         <input type="text" id="inputShopName" value="西門町Candy服飾" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">客服 LINE 網址 <span class="text-xs text-gray-400 font-normal">(客人點購買會跳轉到這裡)</span></label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">客服 LINE 網址 <span class="text-xs text-gray-400 font-normal">(客人點擊購買時會跳轉的連結)</span></label>
                         <input type="text" id="inputLineLink" placeholder="例如: https://line.me/ti/p/您的ID" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
                     <button id="btnSaveSettings" onclick="saveSettings()" class="w-full bg-indigo-600 text-white font-bold text-base py-3 rounded-xl flex justify-center items-center gap-2 shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition">
-                        <i class="fa-solid fa-floppy-disk"></i> 永久儲存店鋪設定
+                        <i class="fa-solid fa-floppy-disk"></i> 永久儲存設定
                     </button>
                 </div>
             </div>
@@ -66,7 +104,6 @@
                     <i class="fa-solid fa-camera text-xl"></i><h2 class="text-lg font-bold">新增商品</h2>
                 </div>
                 <div class="p-5 flex flex-col md:flex-row gap-6">
-                    <!-- 左邊：圖片上傳 -->
                     <div class="w-full md:w-1/3 border-2 border-dashed border-gray-300 rounded-2xl p-2 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition relative min-h-[280px]" onclick="document.getElementById('fileInput').click()">
                         <img id="imgPreview" src="" class="w-full h-full object-cover rounded-xl absolute inset-0 hidden">
                         <div id="uploadPlaceholder" class="text-center p-4">
@@ -78,12 +115,11 @@
                         <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="previewImage(event)">
                     </div>
 
-                    <!-- 右邊：輸入欄位 -->
                     <div class="w-full md:w-2/3 flex flex-col justify-between">
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-1">商品名稱 <span class="text-red-500">*</span></label>
-                                <input type="text" id="inputTitle" placeholder="例如：手提愛心長夾 或 冰絲寬褲" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#06C755] outline-none">
+                                <input type="text" id="inputTitle" placeholder="例如：手提愛心長夾" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#06C755] outline-none">
                             </div>
                             
                             <div>
@@ -98,53 +134,32 @@
                                         <i class="fa-solid fa-wand-magic-sparkles"></i> 點我一鍵生文案
                                     </button>
                                 </div>
-                                <textarea id="inputDesc" class="w-full border border-gray-300 rounded-xl p-3 resize-none focus:ring-2 focus:ring-[#06C755] outline-none" rows="3" placeholder="請先輸入商品名稱，再按右上方「一鍵生文案」按鈕，或是自己輸入介紹喔！"></textarea>
+                                <textarea id="inputDesc" class="w-full border border-gray-300 rounded-xl p-3 resize-none focus:ring-2 focus:ring-[#06C755] outline-none" rows="3" placeholder="按右上角一鍵生文案，或是自己打字喔！"></textarea>
                             </div>
                         </div>
 
                         <button id="btnPublish" class="mt-4 w-full bg-[#06C755] text-white font-bold text-lg py-4 rounded-xl flex justify-center items-center gap-2 shadow-md hover:bg-green-600 transition" onclick="publishProduct()">
-                            <i class="fa-solid fa-paper-plane"></i> 立即排版上架
+                            <i class="fa-solid fa-paper-plane"></i> 立即上架
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- 商品管理列表 -->
+            <!-- 列表區 -->
             <div>
-                <h3 class="font-bold text-gray-700 mb-4"><i class="fa-solid fa-box"></i> 已上架商品</h3>
+                <h3 class="font-bold text-gray-700 mb-4"><i class="fa-solid fa-box"></i> 已上架商品管理</h3>
                 <div id="adminProductList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- 管理列表會生成在這裡 -->
-                </div>
-            </div>
-        </div>
-
-        <!-- 模式 B：客人看型錄 -->
-        <div id="viewCustomer" class="hidden flex flex-col items-center">
-            <div class="mb-4 text-center">
-                <span class="bg-green-100 text-green-800 px-4 py-2 rounded-full font-bold text-sm shadow-sm inline-block">這是客人看到的手機畫面！</span>
-            </div>
-            
-            <div class="w-full max-w-[400px] bg-[#f9f9f9] rounded-[2rem] shadow-2xl border-[6px] border-gray-800 overflow-hidden relative pb-10 min-h-[700px]">
-                <div class="bg-white px-4 py-4 shadow-sm sticky top-0 z-10 text-center">
-                    <h1 class="text-lg font-bold text-gray-800" id="customerShopName">西門町Candy服飾</h1>
-                </div>
-                <div class="bg-rose-50 text-rose-600 text-xs py-2 px-4 text-center font-bold">
-                    🔥 現貨有限，看中請立刻點按鈕保留！
-                </div>
-                <div id="customerProductList" class="p-4 flex flex-col gap-5">
-                    <!-- 客人看到的商品會生成在這裡 -->
                 </div>
             </div>
         </div>
 
     </div>
 
-    <!-- Firebase SDK 與主程式邏輯 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // 加入 setDoc 讓我們可以儲存設定
         import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // ✅ 老闆娘專屬金鑰
         const firebaseConfig = {
             apiKey: "AIzaSyBFLjVGT5kkThgxuWpdeLbqNLzYKiWB6CA",
             authDomain: "candyshop-568cc.firebaseapp.com",
@@ -160,7 +175,7 @@
         window.productsData = [];
         let base64Image = null;
 
-        // 自訂超有質感的提示框
+        // 提示框
         window.showToast = function(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `fixed top-10 left-1/2 z-[100] px-6 py-3 rounded-full shadow-lg text-white font-bold text-sm tracking-wide toast-animate ${type === 'success' ? 'bg-[#06C755]' : (type === 'purple' ? 'bg-indigo-600' : 'bg-red-500')}`;
@@ -173,22 +188,31 @@
             }, 3000);
         };
 
-        // ==========================================
-        // 💾 新增：自動讀取您的店鋪設定跟 LINE 網址
-        // ==========================================
+        // 🔒 密碼鎖功能
+        window.enterAdmin = function() {
+            const pwd = prompt("請輸入老闆娘專屬密碼：");
+            if (pwd === "1101") {
+                showToast("密碼正確！歡迎進入後台");
+                document.getElementById('adminToggleBar').classList.remove('hidden');
+                document.getElementById('btnLock').classList.add('hidden');
+                switchView('admin');
+            } else if (pwd !== null) {
+                showToast("密碼錯誤！您不是老闆娘喔", "error");
+            }
+        };
+
+        // 讀取店鋪設定
         const settingsRef = doc(db, 'settings', 'shopInfo');
         onSnapshot(settingsRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 document.getElementById('inputShopName').value = data.shopName || '西門町Candy服飾';
                 document.getElementById('inputLineLink').value = data.lineLink || '';
-                renderProducts(); // 更新畫面上的店名
+                renderProducts(); 
             }
         });
 
-        // ==========================================
-        // 💾 新增：儲存店鋪設定的魔法
-        // ==========================================
+        // 儲存店鋪設定
         window.saveSettings = async function() {
             const shopName = document.getElementById('inputShopName').value.trim();
             const lineLink = document.getElementById('inputLineLink').value.trim();
@@ -198,18 +222,13 @@
             btn.disabled = true;
 
             try {
-                // 把設定寫進 Firebase 的保險箱裡
-                await setDoc(doc(db, 'settings', 'shopInfo'), {
-                    shopName: shopName,
-                    lineLink: lineLink
-                });
+                await setDoc(doc(db, 'settings', 'shopInfo'), { shopName: shopName, lineLink: lineLink });
                 showToast("✨ 店鋪設定已永久儲存！", "purple");
             } catch (err) {
                 showToast("儲存失敗，請重試", "error");
-                console.error(err);
             }
 
-            btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 永久儲存店鋪設定';
+            btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 永久儲存設定';
             btn.disabled = false;
         };
 
@@ -221,14 +240,11 @@
             fetched.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
             window.productsData = fetched;
             renderProducts();
-        }, (error) => {
-            console.error("資料讀取失敗:", error);
         });
 
         window.previewImage = function(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
@@ -242,7 +258,6 @@
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    
                     base64Image = canvas.toDataURL('image/jpeg', 0.6); 
                     document.getElementById('imgPreview').src = base64Image;
                     document.getElementById('imgPreview').classList.remove('hidden');
@@ -252,33 +267,18 @@
             reader.readAsDataURL(file);
         };
 
-        // 一鍵生成文案魔法
         window.generateCopywriting = function() {
             const title = document.getElementById('inputTitle').value;
             const descField = document.getElementById('inputDesc');
-            
-            if (!title) {
-                showToast("老闆娘，請先輸入「商品名稱」喔！", "error");
-                return;
-            }
-
+            if (!title) { showToast("老闆娘，請先輸入「商品名稱」喔！", "error"); return; }
             descField.value = "🤖 正在為您寫厲害的銷售文案...";
-            
             setTimeout(() => {
                 let desc = "這款實品真的超級美！摸到材質妳一定會愛上，版型超修飾，穿起來質感滿分💯。現貨數量有限，喜歡趕快帶回家～"; 
-
-                if (title.includes('褲')) {
-                    desc = "超有垂墜感！走路都有風，材質軟Ｑ舒服，鬆緊褲頭超好穿，完美修飾馬鞍肉跟小腹！現貨不用等，絕對要包色啊❤️";
-                } else if (title.includes('洋裝') || title.includes('裙')) {
-                    desc = "這款版型超修飾肚子跟大腿！布料親膚透氣，套一件就能出門，姊妹聚會穿這件絕對被誇獎～現貨有限，喜歡快喊保留！";
-                } else if (title.includes('衫') || title.includes('衣') || title.includes('T')) {
-                    desc = "布料超親膚透氣，夏天穿完全不悶熱！隨便搭個褲子或裙子就超好看，日常出門必備的顯瘦百搭款，真心推薦👍";
-                } else if (title.includes('包') || title.includes('夾')) {
-                    desc = "實體質感超好，夾層很多超級實用！出門帶它剛剛好，百搭又時尚。這批賣完不知道什麼時候才會再補，要買要快喔！";
-                } else if (title.includes('套裝')) {
-                    desc = "一套幫妳搭好，出門免煩惱！材質親膚舒服，分開搭其他衣服也好看，CP值超高。實體攤位也是賣翻天，現貨快搶！";
-                }
-
+                if (title.includes('褲')) desc = "超有垂墜感！走路都有風，材質軟Ｑ舒服，鬆緊褲頭超好穿，完美修飾馬鞍肉跟小腹！現貨不用等，絕對要包色啊❤️";
+                else if (title.includes('洋裝') || title.includes('裙')) desc = "這款版型超修飾肚子跟大腿！布料親膚透氣，套一件就能出門，姊妹聚會穿這件絕對被誇獎～現貨有限，喜歡快喊保留！";
+                else if (title.includes('衫') || title.includes('衣') || title.includes('T')) desc = "布料超親膚透氣，夏天穿完全不悶熱！隨便搭個褲子或裙子就超好看，日常出門必備的顯瘦百搭款，真心推薦👍";
+                else if (title.includes('包') || title.includes('夾')) desc = "實體質感超好，夾層很多超級實用！出門帶它剛剛好，百搭又時尚。這批賣完不知道什麼時候才會再補，要買要快喔！";
+                else if (title.includes('套裝')) desc = "一套幫妳搭好，出門免煩惱！材質親膚舒服，分開搭其他衣服也好看，CP值超高。實體攤位也是賣翻天，現貨快搶！";
                 descField.value = desc;
                 descField.classList.add('ring-2', 'ring-purple-400', 'bg-purple-50');
                 setTimeout(() => descField.classList.remove('ring-2', 'ring-purple-400', 'bg-purple-50'), 500);
@@ -301,29 +301,15 @@
 
             try {
                 await addDoc(collection(db, 'products'), {
-                    imageUrl: base64Image,
-                    title: title,
-                    price: price,
-                    rawText: desc, 
-                    soldCount: soldCount,
-                    createdAt: serverTimestamp()
+                    imageUrl: base64Image, title: title, price: price, rawText: desc, soldCount: soldCount, createdAt: serverTimestamp()
                 });
-                
-                document.getElementById('inputTitle').value = '';
-                document.getElementById('inputPrice').value = '';
-                document.getElementById('inputDesc').value = '';
-                base64Image = null;
-                document.getElementById('imgPreview').classList.add('hidden');
-                document.getElementById('uploadPlaceholder').classList.remove('hidden');
-                document.getElementById('fileInput').value = '';
-                
-                showToast("🎉 上架成功！快切換到「客人看型錄」看看");
+                document.getElementById('inputTitle').value = ''; document.getElementById('inputPrice').value = ''; document.getElementById('inputDesc').value = '';
+                base64Image = null; document.getElementById('imgPreview').classList.add('hidden'); document.getElementById('uploadPlaceholder').classList.remove('hidden'); document.getElementById('fileInput').value = '';
+                showToast("🎉 上架成功！快切換到「預覽型錄」看看");
             } catch (err) {
                 showToast("上架失敗，請重試", "error");
-                console.error(err);
             }
-
-            document.getElementById('btnPublish').innerHTML = '<i class="fa-solid fa-paper-plane"></i> 立即排版上架';
+            document.getElementById('btnPublish').innerHTML = '<i class="fa-solid fa-paper-plane"></i> 立即上架';
             document.getElementById('btnPublish').disabled = false;
         };
 
@@ -398,16 +384,17 @@
 
             if (mode === 'admin') {
                 vAdmin.classList.remove('hidden'); vCustomer.classList.add('hidden');
-                btnAdmin.className = "px-4 py-2 rounded-full text-sm font-bold transition-all bg-white text-indigo-600 shadow-sm flex items-center gap-1";
-                btnCustomer.className = "px-4 py-2 rounded-full text-sm font-bold transition-all text-gray-500 flex items-center gap-1";
+                btnAdmin.className = "px-4 py-2 rounded-full text-sm font-bold transition-all bg-indigo-600 text-white shadow-sm flex items-center gap-1";
+                btnCustomer.className = "px-4 py-2 rounded-full text-sm font-bold transition-all bg-transparent text-gray-300 hover:text-white flex items-center gap-1";
             } else {
                 vAdmin.classList.add('hidden'); vCustomer.classList.remove('hidden');
                 btnCustomer.className = "px-4 py-2 rounded-full text-sm font-bold transition-all bg-[#06C755] text-white shadow-sm flex items-center gap-1";
-                btnAdmin.className = "px-4 py-2 rounded-full text-sm font-bold transition-all text-gray-500 flex items-center gap-1";
+                btnAdmin.className = "px-4 py-2 rounded-full text-sm font-bold transition-all bg-transparent text-gray-300 hover:text-white flex items-center gap-1";
                 renderProducts();
             }
         };
 
+        // 監聽店名即時改變
         document.getElementById('inputShopName').addEventListener('input', renderProducts);
 
     </script>
