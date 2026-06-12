@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>西門町Candy服飾 - 專屬型錄</title>
+    <title>Candy-型錄</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -13,11 +13,38 @@
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes slideDown { from { transform: translate(-50%, -100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
         .toast-animate { animation: slideDown 0.3s ease-out forwards; }
+        /* Modal 淡入動畫 */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-animate { animation: fadeIn 0.2s ease-out forwards; }
     </style>
 </head>
 <body class="bg-gray-200">
 
-    <!-- 🌟 老闆娘專屬的隱藏切換列 -->
+    <!-- 🌟 圖片放大預覽 Modal -->
+    <div id="imageModal" class="hidden fixed inset-0 z-[200] bg-black bg-opacity-90 flex items-center justify-center p-4 modal-animate" onclick="closeImageModal()">
+        <span class="absolute top-4 right-4 text-white text-4xl cursor-pointer hover:text-gray-300 transition" onclick="closeImageModal()">&times;</span>
+        <img id="expandedImg" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+    </div>
+
+    <!-- 🌟 老闆娘專屬密碼輸入 Modal -->
+    <div id="passwordModal" class="hidden fixed inset-0 z-[150] bg-black bg-opacity-60 flex items-center justify-center p-4 modal-animate">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl transform transition-all">
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl shadow-sm">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <!-- 🌟 已經將標題改為純意境文字 -->
+                <h3 class="text-lg font-bold text-gray-800 tracking-wide">心之所向終能抵達</h3>
+            </div>
+            <input type="password" id="adminPasswordInput" class="w-full border border-gray-300 rounded-xl p-3.5 mb-5 focus:ring-2 focus:ring-indigo-500 outline-none text-center tracking-widest text-lg" placeholder="請輸入密碼" onkeypress="if(event.key === 'Enter') verifyPassword()">
+            <div class="flex justify-between gap-3">
+                <button onclick="closePasswordModal()" class="w-1/2 py-3 rounded-xl text-gray-600 bg-gray-100 hover:bg-gray-200 font-bold transition active:scale-95">取消</button>
+                <button onclick="verifyPassword()" class="w-1/2 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition shadow-sm active:scale-95">確認</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理模式切換列 -->
     <div id="adminToggleBar" class="hidden bg-gray-800 border-b border-gray-700 sticky top-0 z-50 shadow-md">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="text-white font-bold flex items-center gap-2">
@@ -47,13 +74,13 @@
                     <span id="customerShopName">西門町Candy服飾</span>
                 </div>
                 <!-- 🔒 秘密通道 -->
-                <button onclick="enterAdmin()" id="btnLock" class="text-gray-300 hover:text-indigo-500 transition p-2">
+                <button onclick="openPasswordModal()" id="btnLock" class="text-gray-300 hover:text-indigo-500 transition p-2">
                     <i class="fa-solid fa-lock"></i>
                 </button>
             </div>
 
             <div class="bg-rose-50 text-rose-600 text-xs py-2 px-4 text-center font-bold shadow-inner flex justify-center items-center gap-1">
-                <i class="fa-solid fa-circle-exclamation"></i> 現貨有限，看中請立刻點按鈕保留！
+                <i class="fa-solid fa-circle-exclamation"></i> 現貨有限，看中請立刻點按鈕私訊保留！
             </div>
 
             <div id="customerProductList" class="p-4 flex flex-col gap-5 pb-20">
@@ -69,10 +96,11 @@
         <div id="viewAdmin" class="hidden max-w-4xl mx-auto px-4 py-6 space-y-6">
             
             <div class="bg-indigo-50 border border-indigo-200 text-indigo-800 p-4 rounded-xl flex items-start gap-3 shadow-sm">
-                <i class="fa-solid fa-circle-info mt-1"></i>
+                <i class="fa-solid fa-seedling mt-1 text-indigo-600"></i>
                 <div>
                     <strong class="block mb-1">歡迎回來，老闆娘！</strong>
-                    <p class="text-sm">之前的紅色錯誤已經被徹底消滅了，請安心上架！</p>
+                    <!-- 🌟 更新為您專屬的語錄 -->
+                    <p class="text-sm leading-relaxed font-medium">真正改變人生的，從來不是奇蹟，而是日復一日的累積。</p>
                 </div>
             </div>
 
@@ -175,23 +203,49 @@
         window.productsData = [];
         let base64Image = null;
 
+        // 提示框
         window.showToast = function(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `fixed top-10 left-1/2 z-[100] px-6 py-3 rounded-full shadow-lg text-white font-bold text-sm tracking-wide toast-animate whitespace-nowrap ${type === 'success' ? 'bg-[#06C755]' : (type === 'purple' ? 'bg-indigo-600' : 'bg-red-500')}`;
-            toast.innerHTML = type === 'success' ? `<i class="fa-solid fa-check-circle mr-2"></i>${message}` : (type === 'purple' ? `<i class="fa-solid fa-floppy-disk mr-2"></i>${message}` : `<i class="fa-solid fa-circle-exclamation mr-2"></i>${message}`);
+            toast.innerHTML = type === 'success' ? `<i class="fa-solid fa-check-circle mr-2"></i>${message}` : `<i class="fa-solid fa-circle-exclamation mr-2"></i>${message}`;
             document.body.appendChild(toast);
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
         };
 
-        window.enterAdmin = function() {
-            const pwd = prompt("請輸入密碼(1101)：");
+        // 🌟 放大圖片功能
+        window.openImageModal = function(url) {
+            document.getElementById('expandedImg').src = url;
+            document.getElementById('imageModal').classList.remove('hidden');
+        };
+        window.closeImageModal = function() {
+            document.getElementById('imageModal').classList.add('hidden');
+        };
+
+        // 🌟 美化的密碼輸入框功能
+        window.openPasswordModal = function() {
+            document.getElementById('passwordModal').classList.remove('hidden');
+            document.getElementById('adminPasswordInput').value = '';
+            setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
+        };
+        window.closePasswordModal = function() {
+            document.getElementById('passwordModal').classList.add('hidden');
+        };
+        window.verifyPassword = function() {
+            const pwd = document.getElementById('adminPasswordInput').value;
             if (pwd === "1101") {
+                closePasswordModal();
+                showToast("密碼正確！歡迎進入後台");
                 document.getElementById('adminToggleBar').classList.remove('hidden');
                 document.getElementById('btnLock').classList.add('hidden');
                 switchView('admin');
+            } else {
+                showToast("密碼錯誤！", "error");
+                document.getElementById('adminPasswordInput').value = '';
+                document.getElementById('adminPasswordInput').focus();
             }
         };
 
+        // 店鋪設定
         const settingsRef = doc(db, 'settings', 'shopInfo');
         onSnapshot(settingsRef, (docSnap) => {
             if (docSnap.exists()) {
@@ -216,11 +270,11 @@
             } catch (err) {
                 showToast(`儲存失敗`, "error");
             }
-
             btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 永久儲存設定';
             btn.disabled = false;
         };
 
+        // 讀取資料
         function processAndSortData(snapshot) {
             const fetched = [];
             snapshot.forEach(doc => fetched.push({ id: doc.id, ...doc.data() }));
@@ -233,13 +287,11 @@
         }
 
         const productsRef = collection(db, 'products');
-        
         onSnapshot(productsRef, (snapshot) => {
             window.productsData = processAndSortData(snapshot);
             renderProducts();
         }, (error) => {
             console.error("資料庫讀取錯誤", error);
-            showToast("無法連線，請稍後再試", "error");
         });
 
         window.forceRefresh = async function() {
@@ -254,6 +306,7 @@
             }
         };
 
+        // 上架功能
         window.previewImage = function(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -334,16 +387,15 @@
             else showToast("老闆娘還沒設定 LINE 連結喔！", "error");
         };
 
+        // 渲染畫面
         function renderProducts() {
             const adminList = document.getElementById('adminProductList');
             const customerList = document.getElementById('customerProductList');
             if(adminList) adminList.innerHTML = ''; 
             if(customerList) customerList.innerHTML = '';
 
-            // 安全讀取店名，避免當機
             const shopInput = document.getElementById('inputShopName');
             const shopName = shopInput ? shopInput.value : '西門町Candy服飾';
-            
             const customerShopName = document.getElementById('customerShopName');
             if (customerShopName) customerShopName.innerText = shopName;
 
@@ -357,7 +409,8 @@
                 if(adminList) {
                     adminList.innerHTML += `
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex overflow-hidden">
-                            <img src="${p.imageUrl}" class="w-24 h-24 object-cover flex-shrink-0 bg-gray-100">
+                            <!-- 🌟 後台圖片加入點擊放大功能 -->
+                            <img src="${p.imageUrl}" class="w-24 h-24 object-cover flex-shrink-0 bg-gray-100 cursor-pointer" onclick="openImageModal('${p.imageUrl}')">
                             <div class="p-3 flex-1 flex flex-col justify-between">
                                 <div>
                                     <h4 class="font-bold text-gray-800 text-sm line-clamp-1">${p.title}</h4>
@@ -375,9 +428,13 @@
                 if(customerList) {
                     customerList.innerHTML += `
                         <div class="bg-white rounded-2xl shadow-md overflow-hidden">
-                            <div class="aspect-[4/5] w-full bg-gray-100 relative">
-                                <img src="${p.imageUrl}" class="w-full h-full object-cover">
+                            <div class="aspect-[4/5] w-full bg-gray-100 relative group">
+                                <!-- 🌟 前台圖片加入點擊放大功能 -->
+                                <img src="${p.imageUrl}" class="w-full h-full object-cover cursor-pointer" onclick="openImageModal('${p.imageUrl}')">
                                 <div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">🔥 已售出 ${p.soldCount} 件</div>
+                                <div class="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white p-1.5 rounded-full opacity-75 pointer-events-none">
+                                    <i class="fa-solid fa-magnifying-glass-plus text-sm"></i>
+                                </div>
                             </div>
                             <div class="p-4">
                                 <h2 class="text-lg font-bold text-gray-800 mb-1">${p.title}</h2>
