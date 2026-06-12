@@ -17,7 +17,7 @@
 </head>
 <body class="bg-gray-200">
 
-    <!-- 🌟 老闆娘專屬的隱藏切換列 (密碼正確才會出現) -->
+    <!-- 🌟 老闆娘專屬的隱藏切換列 -->
     <div id="adminToggleBar" class="hidden bg-gray-800 border-b border-gray-700 sticky top-0 z-50 shadow-md">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="text-white font-bold flex items-center gap-2">
@@ -38,37 +38,33 @@
     <div class="w-full pb-20">
 
         <!-- ========================================== -->
-        <!-- 模式 B：客人看型錄 (這是預設畫面，客人只看得到這個) -->
+        <!-- 模式 B：客人看型錄 -->
         <!-- ========================================== -->
         <div id="viewCustomer" class="max-w-md mx-auto bg-gray-50 min-h-screen shadow-xl relative">
-            <!-- 頂部招牌 -->
             <div class="bg-white px-4 py-4 shadow-sm sticky top-0 z-40 flex justify-between items-center">
                 <div class="font-bold text-lg text-gray-800 flex items-center gap-2">
                     <i class="fa-solid fa-store text-indigo-600"></i>
                     <span id="customerShopName">西門町Candy服飾</span>
                 </div>
-                <!-- 🔒 秘密通道：只有老闆娘知道點這裡 -->
+                <!-- 🔒 秘密通道 -->
                 <button onclick="enterAdmin()" id="btnLock" class="text-gray-300 hover:text-indigo-500 transition p-2">
                     <i class="fa-solid fa-lock"></i>
                 </button>
             </div>
 
-            <!-- 跑馬燈 -->
             <div class="bg-rose-50 text-rose-600 text-xs py-2 px-4 text-center font-bold shadow-inner flex justify-center items-center gap-1">
                 <i class="fa-solid fa-circle-exclamation"></i> 現貨有限，看中請立刻點按鈕保留！
             </div>
 
-            <!-- 商品列表 -->
             <div id="customerProductList" class="p-4 flex flex-col gap-5 pb-20">
-                <!-- 載入中畫面 -->
                 <div class="p-8 text-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200 mt-10">
-                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>店鋪整理中...
+                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>店鋪資料讀取中...
                 </div>
             </div>
         </div>
 
         <!-- ========================================== -->
-        <!-- 模式 A：老闆娘後台 (隱藏的，密碼正確才看得到) -->
+        <!-- 模式 A：老闆娘後台 -->
         <!-- ========================================== -->
         <div id="viewAdmin" class="hidden max-w-4xl mx-auto px-4 py-6 space-y-6">
             
@@ -76,7 +72,7 @@
                 <i class="fa-solid fa-circle-info mt-1"></i>
                 <div>
                     <strong class="block mb-1">歡迎回來，老闆娘！</strong>
-                    <p class="text-sm">這是您的秘密後台，客人是絕對看不到這裡的。您可以在這裡安心上架跟設定。</p>
+                    <p class="text-sm">上架成功後「格子變空白」是正常的喔！那是為了方便您直接輸入下一件商品。</p>
                 </div>
             </div>
 
@@ -147,7 +143,13 @@
 
             <!-- 列表區 -->
             <div>
-                <h3 class="font-bold text-gray-700 mb-4"><i class="fa-solid fa-box"></i> 已上架商品管理</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-box"></i> 已上架商品管理</h3>
+                    <!-- 🔄 強制重整按鈕 -->
+                    <button onclick="forceRefresh()" class="text-xs bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full hover:bg-indigo-200 transition font-bold shadow-sm flex items-center gap-1 active:scale-95">
+                        <i class="fa-solid fa-rotate-right"></i> 點我重新讀取
+                    </button>
+                </div>
                 <div id="adminProductList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 </div>
             </div>
@@ -157,7 +159,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // 加入了 getDocs 來做強制重整功能
+        import { getFirestore, collection, onSnapshot, getDocs, addDoc, deleteDoc, doc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ✅ 老闆娘專屬金鑰
         const firebaseConfig = {
@@ -175,10 +178,10 @@
         window.productsData = [];
         let base64Image = null;
 
-        // 提示框
+        // 超質感自動消失提示框
         window.showToast = function(message, type = 'success') {
             const toast = document.createElement('div');
-            toast.className = `fixed top-10 left-1/2 z-[100] px-6 py-3 rounded-full shadow-lg text-white font-bold text-sm tracking-wide toast-animate ${type === 'success' ? 'bg-[#06C755]' : (type === 'purple' ? 'bg-indigo-600' : 'bg-red-500')}`;
+            toast.className = `fixed top-10 left-1/2 z-[100] px-6 py-3 rounded-full shadow-lg text-white font-bold text-sm tracking-wide toast-animate whitespace-nowrap ${type === 'success' ? 'bg-[#06C755]' : (type === 'purple' ? 'bg-indigo-600' : 'bg-red-500')}`;
             toast.innerHTML = type === 'success' ? `<i class="fa-solid fa-check-circle mr-2"></i>${message}` : (type === 'purple' ? `<i class="fa-solid fa-floppy-disk mr-2"></i>${message}` : `<i class="fa-solid fa-circle-exclamation mr-2"></i>${message}`);
             document.body.appendChild(toast);
             setTimeout(() => {
@@ -232,15 +235,37 @@
             btn.disabled = false;
         };
 
+        // 整理陣列與排序的安全寫法
+        function processAndSortData(snapshot) {
+            const fetched = [];
+            snapshot.forEach(doc => fetched.push({ id: doc.id, ...doc.data() }));
+            fetched.sort((a, b) => {
+                const timeA = a.createdAt ? (typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : Date.now()) : 0;
+                const timeB = b.createdAt ? (typeof b.createdAt.toMillis === 'function' ? b.createdAt.toMillis() : Date.now()) : 0;
+                return timeB - timeA;
+            });
+            return fetched;
+        }
+
         // 讀取商品資料庫
         const productsRef = collection(db, 'products');
         onSnapshot(productsRef, (snapshot) => {
-            const fetched = [];
-            snapshot.forEach(doc => fetched.push({ id: doc.id, ...doc.data() }));
-            fetched.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-            window.productsData = fetched;
+            window.productsData = processAndSortData(snapshot);
             renderProducts();
         });
+
+        // 🔄 強制重新讀取按鈕功能
+        window.forceRefresh = async function() {
+            showToast("🔄 正在幫您從雲端抓取最新資料...");
+            try {
+                const querySnapshot = await getDocs(productsRef);
+                window.productsData = processAndSortData(querySnapshot);
+                renderProducts();
+                showToast("✅ 資料重新讀取完成！");
+            } catch (e) {
+                showToast("抓取失敗，請確認網路連線", "error");
+            }
+        };
 
         window.previewImage = function(event) {
             const file = event.target.files[0];
@@ -303,9 +328,17 @@
                 await addDoc(collection(db, 'products'), {
                     imageUrl: base64Image, title: title, price: price, rawText: desc, soldCount: soldCount, createdAt: serverTimestamp()
                 });
-                document.getElementById('inputTitle').value = ''; document.getElementById('inputPrice').value = ''; document.getElementById('inputDesc').value = '';
-                base64Image = null; document.getElementById('imgPreview').classList.add('hidden'); document.getElementById('uploadPlaceholder').classList.remove('hidden'); document.getElementById('fileInput').value = '';
-                showToast("🎉 上架成功！快切換到「預覽型錄」看看");
+                
+                // 為了方便連續上架，成功後清空格子是正常的設計喔！
+                document.getElementById('inputTitle').value = ''; 
+                document.getElementById('inputPrice').value = ''; 
+                document.getElementById('inputDesc').value = '';
+                base64Image = null; 
+                document.getElementById('imgPreview').classList.add('hidden'); 
+                document.getElementById('uploadPlaceholder').classList.remove('hidden'); 
+                document.getElementById('fileInput').value = '';
+                
+                showToast("🎉 上架成功！");
             } catch (err) {
                 showToast("上架失敗，請重試", "error");
             }
@@ -337,7 +370,7 @@
 
             if (window.productsData.length === 0) {
                 adminList.innerHTML = '<div class="col-span-full p-6 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-300">還沒有商品，趕快上架您的第一件美衣吧！</div>';
-                customerList.innerHTML = '<div class="p-8 text-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200 mt-10">老闆娘補貨中，敬請期待...</div>';
+                customerList.innerHTML = '<div class="p-8 text-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200 mt-10">老闆娘努力補貨中，敬請期待...</div>';
                 return;
             }
 
@@ -394,7 +427,6 @@
             }
         };
 
-        // 監聽店名即時改變
         document.getElementById('inputShopName').addEventListener('input', renderProducts);
 
     </script>
