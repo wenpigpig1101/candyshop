@@ -11,6 +11,9 @@
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* 提示框動畫 */
+        @keyframes slideDown { from { transform: translate(-50%, -100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        .toast-animate { animation: slideDown 0.3s ease-out forwards; }
     </style>
 </head>
 <body class="pb-20">
@@ -136,12 +139,9 @@
     <!-- Firebase SDK 與主程式邏輯 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // 移除了 Auth 門禁，直接開放讀寫
         import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ==========================================
-        // ✅ 老闆娘專屬金鑰 (已為您自動填好！)
-        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyBFLjVGT5kkThgxuWpdeLbqNLzYKiWB6CA",
             authDomain: "candyshop-568cc.firebaseapp.com",
@@ -152,37 +152,35 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
 
         window.productsData = [];
         let base64Image = null;
 
-        // 匿名登入 (讓系統知道是您在操作)
-        signInAnonymously(auth).catch((error) => {
-            console.error("登入失敗:", error);
-            if(error.code === 'auth/operation-not-allowed') {
-                alert("老闆娘注意！請回 Firebase 開通 Authentication 裡面的「匿名登入」喔！");
-            }
-        });
+        // 自訂超有質感的提示框
+        window.showToast = function(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-10 left-1/2 z-[100] px-6 py-3 rounded-full shadow-lg text-white font-bold text-sm tracking-wide toast-animate ${type === 'success' ? 'bg-[#06C755]' : 'bg-red-500'}`;
+            toast.innerHTML = type === 'success' ? `<i class="fa-solid fa-check-circle mr-2"></i>${message}` : `<i class="fa-solid fa-circle-exclamation mr-2"></i>${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.5s ease';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        };
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // 讀取商品資料庫
-                const productsRef = collection(db, 'products');
-                onSnapshot(productsRef, (snapshot) => {
-                    const fetched = [];
-                    snapshot.forEach(doc => fetched.push({ id: doc.id, ...doc.data() }));
-                    fetched.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-                    window.productsData = fetched;
-                    renderProducts();
-                }, (error) => {
-                    console.error("讀取失敗:", error);
-                    if(error.code === 'permission-denied') {
-                         alert("老闆娘注意！請回 Firebase 確認 Firestore 資料庫是否設定為「測試模式」喔！");
-                    }
-                });
-            }
+        // 直接讀取商品，不需經過門禁檢查
+        const productsRef = collection(db, 'products');
+        onSnapshot(productsRef, (snapshot) => {
+            const fetched = [];
+            snapshot.forEach(doc => fetched.push({ id: doc.id, ...doc.data() }));
+            fetched.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+            window.productsData = fetched;
+            renderProducts();
+        }, (error) => {
+            console.error("資料讀取失敗:", error);
+            showToast("無法連線到倉庫，請確認資料庫是否開啟", "error");
         });
 
         window.previewImage = function(event) {
@@ -218,7 +216,7 @@
             const descField = document.getElementById('inputDesc');
             
             if (!title) {
-                alert("老闆娘，請先在上面輸入「商品名稱」，我才能幫您想文案喔！");
+                showToast("老闆娘，請先輸入「商品名稱」喔！", "error");
                 return;
             }
 
@@ -250,9 +248,9 @@
             const price = document.getElementById('inputPrice').value.trim();
             const desc = document.getElementById('inputDesc').value.trim();
 
-            if (!base64Image) return alert("老闆娘，請記得上傳商品照片喔！");
-            if (!title) return alert("請輸入「商品名稱」！");
-            if (!price) return alert("請輸入「價格」！");
+            if (!base64Image) { showToast("老闆娘，忘記傳照片囉！", "error"); return; }
+            if (!title) { showToast("請輸入「商品名稱」喔！", "error"); return; }
+            if (!price) { showToast("請輸入「價格」喔！", "error"); return; }
             
             document.getElementById('btnPublish').innerText = '資料上傳中...';
             document.getElementById('btnPublish').disabled = true;
@@ -260,7 +258,6 @@
             const soldCount = Math.floor(Math.random() * 40) + 10; 
 
             try {
-                // 將資料存入您的 Firebase 資料庫
                 await addDoc(collection(db, 'products'), {
                     imageUrl: base64Image,
                     title: title,
@@ -277,9 +274,10 @@
                 document.getElementById('imgPreview').classList.add('hidden');
                 document.getElementById('uploadPlaceholder').classList.remove('hidden');
                 document.getElementById('fileInput').value = '';
-                alert("上架成功！可以切換到「客人看型錄」看結果喔！");
+                
+                showToast("🎉 上架成功！快切換到「客人看型錄」看看");
             } catch (err) {
-                alert("上架失敗，請重試");
+                showToast("上架失敗，請重試", "error");
                 console.error(err);
             }
 
@@ -288,15 +286,16 @@
         };
 
         window.deleteProduct = async function(id) {
-            if(confirm("確定要下架刪除嗎？")) {
+            if(confirm("確定要下架刪除這件商品嗎？")) {
                 await deleteDoc(doc(db, 'products', id));
+                showToast("🗑️ 商品已成功下架");
             }
         };
 
         window.buyProduct = function() {
             const link = document.getElementById('inputLineLink').value;
             if(link) window.open(link, '_blank');
-            else alert("老闆娘還沒設定 LINE 連結喔！");
+            else showToast("老闆娘還沒設定 LINE 連結喔！", "error");
         };
 
         function renderProducts() {
@@ -309,8 +308,8 @@
             document.getElementById('customerShopName').innerText = shopName;
 
             if (window.productsData.length === 0) {
-                adminList.innerHTML = '<div class="col-span-full p-6 text-center text-gray-400 bg-white rounded-xl border">還沒有商品，快點上架吧！</div>';
-                customerList.innerHTML = '<div class="p-6 text-center text-gray-400 bg-white rounded-xl">老闆娘補貨中...</div>';
+                adminList.innerHTML = '<div class="col-span-full p-6 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-300">還沒有商品，趕快上架您的第一件美衣吧！</div>';
+                customerList.innerHTML = '<div class="p-8 text-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200 mt-10">老闆娘補貨中，敬請期待...</div>';
                 return;
             }
 
@@ -324,12 +323,12 @@
                                 <div class="text-rose-600 font-bold mt-1">NT$ ${p.price}</div>
                             </div>
                             <div class="text-right mt-2">
-                                <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded text-sm transition"><i class="fa-solid fa-trash"></i> 下架</button>
+                                <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded text-sm transition font-bold"><i class="fa-solid fa-trash"></i> 下架</button>
                             </div>
                         </div>
                     </div>`;
 
-                const descHtml = p.rawText ? `<div class="bg-gray-50 p-3 rounded-xl text-sm text-gray-600 mb-4 whitespace-pre-wrap">${p.rawText}</div>` : `<div class="mb-2"></div>`;
+                const descHtml = p.rawText ? `<div class="bg-gray-50 p-3 rounded-xl text-sm text-gray-600 mb-4 whitespace-pre-wrap leading-relaxed">${p.rawText}</div>` : `<div class="mb-2"></div>`;
 
                 customerList.innerHTML += `
                     <div class="bg-white rounded-2xl shadow-md overflow-hidden">
@@ -341,7 +340,7 @@
                             <h2 class="text-lg font-bold text-gray-800 mb-1">${p.title}</h2>
                             <div class="text-2xl font-bold text-rose-600 mb-3">NT$ ${p.price}</div>
                             ${descHtml}
-                            <button onclick="buyProduct()" class="w-full bg-[#06C755] text-white font-bold text-base py-3.5 rounded-xl flex justify-center items-center gap-2 shadow-sm">
+                            <button onclick="buyProduct()" class="w-full bg-[#06C755] text-white font-bold text-base py-3.5 rounded-xl flex justify-center items-center gap-2 shadow-sm active:scale-95 transition">
                                 <i class="fa-brands fa-line text-xl"></i> 點我傳 LINE 詢問現貨
                             </button>
                         </div>
