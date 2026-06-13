@@ -33,7 +33,7 @@
         <img id="expandedImg" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
     </div>
 
-    <!-- 🌟 密碼輸入 Modal -->
+    <!-- 🌟 專屬密碼輸入 Modal -->
     <div id="passwordModal" class="hidden fixed inset-0 z-[150] bg-black bg-opacity-60 flex items-center justify-center p-4 modal-animate">
         <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl transform transition-all">
             <div class="text-center mb-5">
@@ -223,8 +223,6 @@
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">尺寸/規格簡介 (選填)</label>
                             <input type="text" id="inputMeasurements" placeholder="例如：胸圍50吋以下可穿 衣長70公分" class="w-full border border-gray-300 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                            
-                            <!-- 🌟 新增 S-XL 可穿標籤 -->
                             <div class="flex flex-wrap gap-2 mt-2" id="fitTagsContainer">
                                 <button type="button" onclick="toggleFitTag(this)" class="fit-tag bg-gray-100 text-gray-500 px-2 py-1 rounded text-xs font-bold border transition">S~L可穿</button>
                                 <button type="button" onclick="toggleFitTag(this)" class="fit-tag bg-gray-100 text-gray-500 px-2 py-1 rounded text-xs font-bold border transition">S-XL可穿</button>
@@ -236,12 +234,12 @@
                             </div>
                         </div>
 
+                        <!-- 🌟 智慧短語精靈區塊 -->
                         <div class="border border-purple-200 bg-purple-50/50 rounded-xl p-3 mt-2">
                             <div class="flex justify-between items-center mb-2">
                                 <label class="block text-sm font-bold text-purple-800"><i class="fa-solid fa-wand-magic-sparkles"></i> 智慧短語精靈 (點擊加入介紹)</label>
                             </div>
                             
-                            <!-- 分類 1: 材質舒適 -->
                             <div class="mb-3">
                                 <div class="text-xs font-bold text-purple-600 mb-1">☁️ 材質與舒適度 (左右滑動看更多)</div>
                                 <div class="phrase-scroll flex gap-2">
@@ -258,7 +256,6 @@
                                 </div>
                             </div>
                             
-                            <!-- 分類 2: 修飾版型 -->
                             <div class="mb-3">
                                 <div class="text-xs font-bold text-purple-600 mb-1">✂️ 版型與修飾度 (左右滑動看更多)</div>
                                 <div class="phrase-scroll flex gap-2">
@@ -275,7 +272,6 @@
                                 </div>
                             </div>
 
-                            <!-- 分類 3: 風格百搭 -->
                             <div class="mb-3">
                                 <div class="text-xs font-bold text-purple-600 mb-1">☕️ 風格與百搭性 (左右滑動看更多)</div>
                                 <div class="phrase-scroll flex gap-2">
@@ -292,7 +288,6 @@
                                 </div>
                             </div>
 
-                            <!-- 分類 4: 推坑熱銷 -->
                             <div class="mb-2">
                                 <div class="text-xs font-bold text-purple-600 mb-1">🔥 推坑與急迫感 (左右滑動看更多)</div>
                                 <div class="phrase-scroll flex gap-2">
@@ -717,6 +712,7 @@
             element.classList.replace('border-transparent', 'border-indigo-500');
         };
 
+        // 🌟 更新前台顯示 (全景不裁切圖片)
         function renderProducts() {
             const adminList = document.getElementById('adminProductList');
             const customerList = document.getElementById('customerProductList');
@@ -738,7 +734,7 @@
 
                     adminList.innerHTML += `
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex p-3 gap-3 items-center ${pStatus==='hidden'?'opacity-60':''}">
-                            <img src="${coverImage}" class="w-16 h-16 object-cover rounded-lg cursor-pointer" onclick="openImageModal('${coverImage}')">
+                            <img src="${coverImage}" class="w-16 h-16 object-cover bg-gray-100 rounded-lg cursor-pointer" onclick="openImageModal('${coverImage}')">
                             <div class="flex-1">
                                 <div class="flex items-center justify-between mb-1">
                                     <h4 class="font-bold text-gray-800 text-sm line-clamp-1">${p.title}</h4>
@@ -782,7 +778,7 @@
                         thumbnailsHtml += `<div class="flex gap-2 px-4 mt-3 overflow-x-auto hide-scrollbar pb-1">`;
                         imgArray.forEach((url, idx) => {
                             const borderClass = idx === 0 ? 'border-indigo-500' : 'border-transparent';
-                            thumbnailsHtml += `<img src="${url}" class="w-14 h-14 rounded-lg object-cover cursor-pointer border-2 ${borderClass} transition hover:opacity-80 flex-shrink-0 shadow-sm" onclick="changeMainImage(this, '${url}', '${p.id}')">`;
+                            thumbnailsHtml += `<img src="${url}" class="w-14 h-14 bg-gray-100 rounded-lg object-cover cursor-pointer border-2 ${borderClass} transition hover:opacity-80 flex-shrink-0 shadow-sm" onclick="changeMainImage(this, '${url}', '${p.id}')">`;
                         });
                         thumbnailsHtml += `</div>`;
                     }
@@ -799,11 +795,15 @@
                         fitTagsHtml += '</div>';
                     }
 
+                    // 🌟 改變了這裡：把 aspect-[4/5] 拿掉，換成 w-full h-auto object-contain 不裁切模式！
                     customerList.innerHTML += `
                         <div class="bg-white rounded-2xl shadow-md overflow-hidden pb-4 mb-2">
-                            <div class="aspect-[4/5] w-full bg-gray-100 relative group overflow-hidden">
-                                <img id="mainImg-${p.id}" src="${coverImage}" class="w-full h-full object-cover cursor-pointer transition-opacity duration-300 ${imgClass}" onclick="openImageModal(this.src)">
+                            <div class="w-full bg-gray-100 relative group overflow-hidden flex justify-center items-center min-h-[250px]">
+                                <img id="mainImg-${p.id}" src="${coverImage}" class="w-full h-auto max-h-[600px] object-contain cursor-pointer transition-opacity duration-300 ${imgClass}" onclick="openImageModal(this.src)">
                                 ${badgeHtml}
+                                <div class="absolute bottom-3 right-3 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-80 pointer-events-none backdrop-blur-sm">
+                                    <i class="fa-solid fa-expand text-sm"></i>
+                                </div>
                             </div>
                             ${thumbnailsHtml}
                             <div class="px-4 mt-4">
