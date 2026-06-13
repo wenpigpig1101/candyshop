@@ -72,15 +72,6 @@
         </div>
     </div>
 
-    <!-- 🌟 右下角懸浮 LINE -->
-    <div id="floatingLineBtn" class="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-2">
-        <div class="bg-white text-rose-500 text-sm font-bold px-4 py-2.5 rounded-2xl shadow-xl border border-rose-100 relative max-w-[200px] text-center">
-            聯絡豬小編點這裡❤️
-            <div class="absolute -bottom-1.5 right-5 w-3.5 h-3.5 bg-white border-b border-r border-rose-100 transform rotate-45"></div>
-        </div>
-        <button onclick="openLine()" class="w-16 h-16 bg-[#06C755] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"><i class="fa-brands fa-line text-4xl"></i></button>
-    </div>
-
     <!-- 管理列 -->
     <div id="adminToggleBar" class="hidden bg-gray-800 border-b border-gray-700 sticky top-0 z-50 shadow-md">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
@@ -105,14 +96,26 @@
                     <div class="font-bold text-xl text-gray-800 flex items-center gap-2 tracking-wide">
                         <i class="fa-solid fa-store text-indigo-600"></i> <span id="customerShopName">Candy服飾</span>
                     </div>
-                    <div class="flex gap-3 text-xl text-gray-400">
+                    <!-- 🌟 加入 FB 圖示在右上角導覽列 -->
+                    <div class="flex gap-4 text-xl text-gray-400 items-center">
+                        <button onclick="openLine()" id="iconLine" class="text-[#06C755] hover:opacity-80 transition hidden"><i class="fa-brands fa-line"></i></button>
+                        <button onclick="openFb()" id="iconFb" class="text-blue-600 hover:opacity-80 transition hidden"><i class="fa-brands fa-facebook"></i></button>
                         <a id="linkIg" href="#" target="_blank" class="hover:text-pink-500 hidden"><i class="fa-brands fa-instagram"></i></a>
                         <a id="linkShopee" href="#" target="_blank" class="hover:text-orange-500 hidden"><i class="fa-solid fa-bag-shopping"></i></a>
-                        <button onclick="openPasswordModal()" id="btnLock" class="hover:text-indigo-500 transition"><i class="fa-solid fa-lock text-sm"></i></button>
+                        <button onclick="openPasswordModal()" id="btnLock" class="hover:text-indigo-500 transition ml-1"><i class="fa-solid fa-lock text-sm"></i></button>
                     </div>
                 </div>
                 
-                <!-- 🌟 動態跑馬燈佈告欄 (行銷大絕招) -->
+                <a id="linkFbBanner" href="#" target="_blank" class="hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2.5 flex items-center justify-between shadow-sm active:bg-blue-700 transition">
+                        <div class="flex items-center gap-2">
+                            <div class="bg-white text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm"><i class="fa-brands fa-facebook-f"></i></div>
+                            <span class="text-sm font-bold tracking-wide">點我加入FB社團，看豬小編最新直播！</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-sm animate-bounce-x"></i>
+                    </div>
+                </a>
+                
                 <div class="h-10 bg-rose-50 border-b border-rose-100 overflow-hidden relative flex items-center px-3 shadow-inner">
                     <div class="flex-shrink-0 bg-rose-100 text-rose-500 w-6 h-6 rounded-full flex items-center justify-center mr-2 shadow-sm z-10">
                         <i class="fa-solid fa-bullhorn text-xs animate-pulse"></i>
@@ -172,7 +175,7 @@
                     <div><label class="block text-sm font-bold text-gray-700 mb-1">店鋪名稱</label><input type="text" id="inputShopName" value="西門町Candy服飾" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none"></div>
                     <div><label class="block text-sm font-bold text-gray-700 mb-1">客服 LINE 網址</label><input type="text" id="inputLineLink" placeholder="必填：https://line.me/..." class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#06C755] outline-none"></div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1"><i class="fa-brands fa-facebook text-blue-600"></i> FB 粉專網址 (選填)</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1"><i class="fa-brands fa-facebook text-blue-600"></i> FB 導流橫幅網址 (社團/粉專)</label>
                         <input type="text" id="inputFbLink" placeholder="https://facebook.com/..." class="w-full border border-blue-300 bg-blue-50 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div><label class="block text-sm font-bold text-gray-700 mb-1"><i class="fa-brands fa-instagram text-pink-500"></i> IG 主頁網址 (選填)</label><input type="text" id="inputIgLink" placeholder="https://instagram.com/..." class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500"></div>
@@ -243,7 +246,6 @@
                                 <label class="block text-sm font-bold text-purple-800"><i class="fa-solid fa-wand-magic-sparkles"></i> 智慧短語精靈 (點擊加入介紹)</label>
                             </div>
                             
-                            <!-- 🌟 新增分類 5: 社群回饋 -->
                             <div class="mb-3">
                                 <div class="text-xs font-bold text-blue-600 mb-1">💬 社群回饋與互動 (口碑推薦)</div>
                                 <div class="phrase-scroll flex gap-2">
@@ -468,7 +470,6 @@
             } else { box.classList.add('hidden'); }
         }
 
-        // 🌟 跑馬燈切換邏輯
         let tickerIdx = 0;
         setInterval(() => {
             const ticker = document.getElementById('newsTicker');
@@ -497,9 +498,13 @@
                 
                 const linkIg = document.getElementById('linkIg');
                 const linkShopee = document.getElementById('linkShopee');
+                const iconLine = document.getElementById('iconLine');
+                const iconFb = document.getElementById('iconFb');
 
                 if(data.igLink) { linkIg.href = data.igLink; linkIg.classList.remove('hidden'); } else { linkIg.classList.add('hidden'); }
                 if(data.shopeeLink) { linkShopee.href = data.shopeeLink; linkShopee.classList.remove('hidden'); } else { linkShopee.classList.add('hidden'); }
+                if(data.lineLink) { iconLine.classList.remove('hidden'); } else { iconLine.classList.add('hidden'); }
+                if(data.fbLink) { iconFb.classList.remove('hidden'); } else { iconFb.classList.add('hidden'); }
             }
         });
 
@@ -694,26 +699,22 @@
             btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 儲存修改'; btn.disabled = false;
         };
 
-        // 🌟 一般的開啟 LINE (跑馬燈與右下角懸浮用)
         window.openLine = function() {
-            if(window.currentLineLink) window.open(window.currentLineLink, '_blank'); 
+            if(window.currentLineLink) window.location.href = window.currentLineLink;
             else showToast("豬小編還沒設定 LINE 喔！", "error");
         };
 
-        // 🌟 開啟 FB 
         window.openFb = function() {
-            if(window.currentFbLink) window.open(window.currentFbLink, '_blank'); 
+            if(window.currentFbLink) window.location.href = window.currentFbLink;
             else showToast("豬小編還沒設定 FB 喔！", "error");
         };
 
-        // 🌟 黑科技：一鍵複製並跳轉 LINE 
         window.buyProduct = function(title, price) {
             if(!window.currentLineLink) { showToast("豬小編還沒設定 LINE 喔！", "error"); return; }
             
             if(title && price) {
                 const msg = `豬小編你好，我想詢問這款：${title} (NT$${price}) 還有貨嗎？`;
                 
-                // 創造隱藏文字框來完美複製 (支援所有手機)
                 const tempInput = document.createElement("textarea");
                 tempInput.value = msg;
                 document.body.appendChild(tempInput);
@@ -721,11 +722,10 @@
                 document.execCommand("copy");
                 document.body.removeChild(tempInput);
                 
-                showToast("✅ 已複製商品資訊！正在前往 LINE...", "success", 2000);
-                setTimeout(() => window.open(window.currentLineLink, '_blank'), 1500);
+                showToast("✅ 已複製文字！請在 LINE 貼上發送", "success");
+                window.location.href = window.currentLineLink;
             } else {
-                // 如果沒有傳入商品名稱 (例如點擊右下角懸浮按鈕)
-                window.open(window.currentLineLink, '_blank');
+                window.location.href = window.currentLineLink;
             }
         };
 
@@ -834,7 +834,6 @@
                         fitTagsHtml += '</div>';
                     }
 
-                    // 🌟 每一件商品專屬的「一鍵詢問黑科技」按鈕
                     const buyBtnHtml = `
                         <button onclick="buyProduct('${p.title}', '${p.price}')" class="w-full mt-4 bg-[#06C755] text-white font-bold text-sm py-3.5 rounded-xl flex justify-center items-center gap-2 shadow-md hover:bg-green-600 transition active:scale-95">
                             <i class="fa-brands fa-line text-lg"></i> 💬 傳 LINE 詢問此款
@@ -860,7 +859,7 @@
                                 ${measurementsHtml}
                                 ${videoLinkHtml}
                                 ${descHtml}
-                                ${buyBtnHtml} <!-- 🌟 專屬詢問按鈕出現了 -->
+                                ${buyBtnHtml}
                             </div>
                         </div>`;
                 }
@@ -881,16 +880,13 @@
         window.switchView = function(mode) {
             const vAdmin = document.getElementById('viewAdmin'); const vCustomer = document.getElementById('viewCustomer');
             const btnAdmin = document.getElementById('btnAdmin'); const btnCustomer = document.getElementById('btnCustomer');
-            const floatingLineBtn = document.getElementById('floatingLineBtn');
 
             if (mode === 'admin') {
                 if(vAdmin) vAdmin.classList.remove('hidden'); if(vCustomer) vCustomer.classList.add('hidden');
-                if(floatingLineBtn) floatingLineBtn.classList.add('hidden'); 
                 if(btnAdmin) btnAdmin.className = "px-4 py-2 rounded-full text-sm font-bold transition-all bg-indigo-600 text-white shadow-sm flex items-center gap-1";
                 if(btnCustomer) btnCustomer.className = "px-4 py-2 rounded-full text-sm font-bold transition-all bg-transparent text-gray-300 hover:text-white flex items-center gap-1";
             } else {
                 if(vAdmin) vAdmin.classList.add('hidden'); if(vCustomer) vCustomer.classList.remove('hidden');
-                if(floatingLineBtn) floatingLineBtn.classList.remove('hidden'); 
                 if(btnCustomer) btnCustomer.className = "px-4 py-2 rounded-full text-sm font-bold transition-all bg-[#06C755] text-white shadow-sm flex items-center gap-1";
                 if(btnAdmin) btnAdmin.className = "px-4 py-2 rounded-full text-sm font-bold transition-all bg-transparent text-gray-300 hover:text-white flex items-center gap-1";
                 renderProducts();
