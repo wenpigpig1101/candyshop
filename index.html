@@ -75,10 +75,10 @@
     <!-- 🌟 右下角懸浮 LINE -->
     <div id="floatingLineBtn" class="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-2">
         <div class="bg-white text-rose-500 text-sm font-bold px-4 py-2.5 rounded-2xl shadow-xl border border-rose-100 relative max-w-[200px] text-center">
-            截圖私訊豬小編詢問喔❤️
+            聯絡豬小編點這裡❤️
             <div class="absolute -bottom-1.5 right-5 w-3.5 h-3.5 bg-white border-b border-r border-rose-100 transform rotate-45"></div>
         </div>
-        <button onclick="buyProduct()" class="w-16 h-16 bg-[#06C755] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"><i class="fa-brands fa-line text-4xl"></i></button>
+        <button onclick="openLine()" class="w-16 h-16 bg-[#06C755] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"><i class="fa-brands fa-line text-4xl"></i></button>
     </div>
 
     <!-- 管理列 -->
@@ -112,15 +112,19 @@
                     </div>
                 </div>
                 
-                <a id="linkFbBanner" href="#" target="_blank" class="hidden">
-                    <div class="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2.5 flex items-center justify-between shadow-sm active:bg-blue-700 transition">
-                        <div class="flex items-center gap-2">
-                            <div class="bg-white text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm"><i class="fa-brands fa-facebook-f"></i></div>
-                            <span class="text-sm font-bold tracking-wide">點我加入FB社團，看豬小編最新直播！</span>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-sm animate-bounce-x"></i>
+                <!-- 🌟 動態跑馬燈佈告欄 (行銷大絕招) -->
+                <div class="h-10 bg-rose-50 border-b border-rose-100 overflow-hidden relative flex items-center px-3 shadow-inner">
+                    <div class="flex-shrink-0 bg-rose-100 text-rose-500 w-6 h-6 rounded-full flex items-center justify-center mr-2 shadow-sm z-10">
+                        <i class="fa-solid fa-bullhorn text-xs animate-pulse"></i>
                     </div>
-                </a>
+                    <div class="flex-1 overflow-hidden h-full relative">
+                        <div id="newsTicker" class="absolute w-full flex flex-col transition-transform duration-500 text-xs font-bold tracking-wide">
+                            <div class="h-10 flex items-center text-rose-600 cursor-pointer hover:underline" onclick="openLine()">📢 歡慶新品上架！首購現折50元快找豬小編領取！</div>
+                            <div class="h-10 flex items-center text-blue-600 cursor-pointer hover:underline" onclick="openFb()">👗 不定期FB粉專開直播，看豬小編實穿再送精美小禮物！</div>
+                            <div class="h-10 flex items-center text-gray-700">📦 7-11取貨貨到付款，運費+60，滿千免運</div>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="px-3 pt-3 pb-1">
                     <div class="relative bg-gray-100 rounded-full flex items-center px-3 py-2 mb-2 border border-gray-200">
@@ -168,7 +172,7 @@
                     <div><label class="block text-sm font-bold text-gray-700 mb-1">店鋪名稱</label><input type="text" id="inputShopName" value="西門町Candy服飾" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none"></div>
                     <div><label class="block text-sm font-bold text-gray-700 mb-1">客服 LINE 網址</label><input type="text" id="inputLineLink" placeholder="必填：https://line.me/..." class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#06C755] outline-none"></div>
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1"><i class="fa-brands fa-facebook text-blue-600"></i> FB 導流橫幅網址 (社團/粉專)</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1"><i class="fa-brands fa-facebook text-blue-600"></i> FB 粉專網址 (選填)</label>
                         <input type="text" id="inputFbLink" placeholder="https://facebook.com/..." class="w-full border border-blue-300 bg-blue-50 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div><label class="block text-sm font-bold text-gray-700 mb-1"><i class="fa-brands fa-instagram text-pink-500"></i> IG 主頁網址 (選填)</label><input type="text" id="inputIgLink" placeholder="https://instagram.com/..." class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500"></div>
@@ -239,6 +243,16 @@
                                 <label class="block text-sm font-bold text-purple-800"><i class="fa-solid fa-wand-magic-sparkles"></i> 智慧短語精靈 (點擊加入介紹)</label>
                             </div>
                             
+                            <!-- 🌟 新增分類 5: 社群回饋 -->
+                            <div class="mb-3">
+                                <div class="text-xs font-bold text-blue-600 mb-1">💬 社群回饋與互動 (口碑推薦)</div>
+                                <div class="phrase-scroll flex gap-2">
+                                    <button type="button" onclick="addPhrase('💬 這款在 LINE 上被姐姐問翻了，恭喜許願敲碗成功！')" class="flex-shrink-0 bg-white border border-blue-200 text-blue-700 hover:text-white hover:bg-blue-500 px-2 py-1 rounded text-xs font-bold transition whitespace-nowrap shadow-sm">💬 LINE群問翻許願成功</button>
+                                    <button type="button" onclick="addPhrase('🔥 FB 直播這件被問爆，真的超修飾！')" class="flex-shrink-0 bg-white border border-blue-200 text-blue-700 hover:text-white hover:bg-blue-500 px-2 py-1 rounded text-xs font-bold transition whitespace-nowrap shadow-sm">🔥 FB直播被問爆</button>
+                                    <button type="button" onclick="addPhrase('🥰 收到實品的客人都秀給我看了，真的超美！')" class="flex-shrink-0 bg-white border border-blue-200 text-blue-700 hover:text-white hover:bg-blue-500 px-2 py-1 rounded text-xs font-bold transition whitespace-nowrap shadow-sm">🥰 客人狂曬實品照</button>
+                                </div>
+                            </div>
+
                             <div class="mb-3">
                                 <div class="text-xs font-bold text-purple-600 mb-1">☁️ 材質與舒適度 (左右滑動看更多)</div>
                                 <div class="phrase-scroll flex gap-2">
@@ -368,13 +382,16 @@
         window.currentCategoryFilter = 'all'; 
         window.currentSearchQuery = '';       
         window.customPhrases = []; 
+        
+        window.currentLineLink = '';
+        window.currentFbLink = '';
 
-        window.showToast = function(message, type = 'success') {
+        window.showToast = function(message, type = 'success', duration = 2500) {
             const toast = document.createElement('div');
             toast.className = `fixed top-10 left-1/2 z-[100] px-6 py-3 rounded-full shadow-lg text-white font-bold text-sm tracking-wide toast-animate whitespace-nowrap ${type === 'success' ? 'bg-[#06C755]' : (type === 'purple' ? 'bg-indigo-600' : 'bg-red-500')}`;
             toast.innerHTML = type === 'success' ? `<i class="fa-solid fa-check-circle mr-2"></i>${message}` : `<i class="fa-solid fa-circle-exclamation mr-2"></i>${message}`;
             document.body.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 2500);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, duration);
         };
 
         window.openImageModal = function(url) { document.getElementById('expandedImg').src = url; document.getElementById('imageModal').classList.remove('hidden'); };
@@ -406,11 +423,7 @@
 
         window.addPhrase = function(text) {
             const descArea = document.getElementById('inputDesc');
-            if (descArea.value.trim() === '') {
-                descArea.value = text;
-            } else {
-                descArea.value += '\n' + text;
-            }
+            if (descArea.value.trim() === '') { descArea.value = text; } else { descArea.value += '\n' + text; }
             descArea.classList.add('ring-2', 'ring-purple-400', 'bg-purple-50');
             setTimeout(() => descArea.classList.remove('ring-2', 'ring-purple-400', 'bg-purple-50'), 300);
         };
@@ -419,10 +432,8 @@
             const input = document.getElementById('inputCustomPhrase');
             const text = input.value.trim();
             if(!text) return;
-            
             window.customPhrases.push(text);
             input.value = '';
-            
             try {
                 await setDoc(doc(db, 'settings', 'shopInfo'), { customPhrases: window.customPhrases }, { merge: true });
                 renderCustomPhrases();
@@ -454,10 +465,18 @@
                         </div>
                     `;
                 });
-            } else {
-                box.classList.add('hidden');
-            }
+            } else { box.classList.add('hidden'); }
         }
+
+        // 🌟 跑馬燈切換邏輯
+        let tickerIdx = 0;
+        setInterval(() => {
+            const ticker = document.getElementById('newsTicker');
+            if(ticker) {
+                tickerIdx = (tickerIdx + 1) % 3;
+                ticker.style.transform = `translateY(-${tickerIdx * 2.5}rem)`; 
+            }
+        }, 3500);
 
         const settingsRef = doc(db, 'settings', 'shopInfo');
         onSnapshot(settingsRef, (docSnap) => {
@@ -469,28 +488,18 @@
                 if(document.getElementById('inputFbLink')) document.getElementById('inputFbLink').value = data.fbLink || '';
                 if(document.getElementById('inputShopeeLink')) document.getElementById('inputShopeeLink').value = data.shopeeLink || '';
                 
-                if(data.customPhrases) {
-                    window.customPhrases = data.customPhrases;
-                    renderCustomPhrases();
-                }
+                window.currentLineLink = data.lineLink || '';
+                window.currentFbLink = data.fbLink || '';
+
+                if(data.customPhrases) { window.customPhrases = data.customPhrases; renderCustomPhrases(); }
 
                 document.getElementById('customerShopName').innerText = data.shopName || 'Candy服飾';
                 
                 const linkIg = document.getElementById('linkIg');
                 const linkShopee = document.getElementById('linkShopee');
-                const linkFbBanner = document.getElementById('linkFbBanner');
 
                 if(data.igLink) { linkIg.href = data.igLink; linkIg.classList.remove('hidden'); } else { linkIg.classList.add('hidden'); }
                 if(data.shopeeLink) { linkShopee.href = data.shopeeLink; linkShopee.classList.remove('hidden'); } else { linkShopee.classList.add('hidden'); }
-                
-                if(data.fbLink) { 
-                    linkFbBanner.href = data.fbLink; 
-                    linkFbBanner.classList.remove('hidden'); 
-                    linkFbBanner.classList.add('block'); 
-                } else { 
-                    linkFbBanner.classList.add('hidden'); 
-                    linkFbBanner.classList.remove('block'); 
-                }
             }
         });
 
@@ -625,7 +634,6 @@
         }
         window.removeDraft = function(index) { window.draftProducts.splice(index, 1); renderDrafts(); };
 
-        // 🌟 瘋搶數量升級：產生 300 ~ 500 件
         window.publishAllDrafts = async function() {
             if(window.draftProducts.length === 0) return;
             const btn = document.getElementById('btnPublishAll');
@@ -636,7 +644,7 @@
                         imageUrls: item.imageUrls, imageUrl: item.imageUrls[0], videoLink: item.videoLink || '',
                         title: item.title, price: item.price, rawText: item.desc, tag: item.tag || 'new', 
                         category: item.category || 'top', measurements: item.measurements || '', fitTags: item.fitTags || [], status: item.status || 'active',
-                        soldCount: Math.floor(Math.random() * 201) + 300, // 🌟 新增商品隨機產生 300 ~ 500 件
+                        soldCount: Math.floor(Math.random() * 201) + 300, 
                         createdAt: serverTimestamp()
                     });
                 }
@@ -686,9 +694,39 @@
             btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> 儲存修改'; btn.disabled = false;
         };
 
-        window.buyProduct = function() {
-            const link = document.getElementById('inputLineLink') ? document.getElementById('inputLineLink').value : '';
-            if(link) window.open(link, '_blank'); else showToast("豬小編還沒設定 LINE 喔！", "error");
+        // 🌟 一般的開啟 LINE (跑馬燈與右下角懸浮用)
+        window.openLine = function() {
+            if(window.currentLineLink) window.open(window.currentLineLink, '_blank'); 
+            else showToast("豬小編還沒設定 LINE 喔！", "error");
+        };
+
+        // 🌟 開啟 FB 
+        window.openFb = function() {
+            if(window.currentFbLink) window.open(window.currentFbLink, '_blank'); 
+            else showToast("豬小編還沒設定 FB 喔！", "error");
+        };
+
+        // 🌟 黑科技：一鍵複製並跳轉 LINE 
+        window.buyProduct = function(title, price) {
+            if(!window.currentLineLink) { showToast("豬小編還沒設定 LINE 喔！", "error"); return; }
+            
+            if(title && price) {
+                const msg = `豬小編你好，我想詢問這款：${title} (NT$${price}) 還有貨嗎？`;
+                
+                // 創造隱藏文字框來完美複製 (支援所有手機)
+                const tempInput = document.createElement("textarea");
+                tempInput.value = msg;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                
+                showToast("✅ 已複製商品資訊！正在前往 LINE...", "success", 2000);
+                setTimeout(() => window.open(window.currentLineLink, '_blank'), 1500);
+            } else {
+                // 如果沒有傳入商品名稱 (例如點擊右下角懸浮按鈕)
+                window.open(window.currentLineLink, '_blank');
+            }
         };
 
         window.setCategoryFilter = function(cat, btn) {
@@ -724,7 +762,6 @@
                 const coverImage = imgArray[0];
                 const pStatus = p.status || 'active'; 
                 
-                // 🌟 自動幫舊商品補血，確保大於 300 件
                 let finalSoldCount = p.soldCount || 328;
                 if (finalSoldCount < 300) finalSoldCount = Math.floor(Math.random() * 201) + 300; 
 
@@ -765,7 +802,6 @@
 
                     let badgeHtml = '';
                     if (p.tag === 'pinned') badgeHtml = '<div class="absolute top-3 left-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-10 border border-yellow-300">👑 鎮店推薦必買</div>';
-                    // 🌟 顯示 300~500 的霸氣銷量
                     else if (p.tag === 'hot') badgeHtml = `<div class="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-rose-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-10 border border-red-400">🔥 姐姐瘋搶 ${finalSoldCount} 件</div>`;
                     else if (p.tag === 'sale') badgeHtml = '<div class="absolute top-3 left-3 bg-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-10 border border-rose-400">💸 限時特價搶購</div>';
                     else badgeHtml = '<div class="absolute top-3 left-3 bg-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-10">✨ 最新上架</div>';
@@ -798,6 +834,13 @@
                         fitTagsHtml += '</div>';
                     }
 
+                    // 🌟 每一件商品專屬的「一鍵詢問黑科技」按鈕
+                    const buyBtnHtml = `
+                        <button onclick="buyProduct('${p.title}', '${p.price}')" class="w-full mt-4 bg-[#06C755] text-white font-bold text-sm py-3.5 rounded-xl flex justify-center items-center gap-2 shadow-md hover:bg-green-600 transition active:scale-95">
+                            <i class="fa-brands fa-line text-lg"></i> 💬 傳 LINE 詢問此款
+                        </button>
+                    `;
+
                     customerList.innerHTML += `
                         <div class="bg-white rounded-2xl shadow-md overflow-hidden pb-4 mb-2">
                             <div class="w-full bg-gray-100 relative group overflow-hidden flex justify-center items-center min-h-[250px]">
@@ -817,6 +860,7 @@
                                 ${measurementsHtml}
                                 ${videoLinkHtml}
                                 ${descHtml}
+                                ${buyBtnHtml} <!-- 🌟 專屬詢問按鈕出現了 -->
                             </div>
                         </div>`;
                 }
