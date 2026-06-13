@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Candy-專屬型錄</title>
+    <title>西門町Candy服飾 - 專屬型錄</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -25,7 +25,7 @@
         <img id="expandedImg" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
     </div>
 
-    <!-- 🌟 老闆娘專屬密碼輸入 Modal -->
+    <!-- 🌟 密碼輸入 Modal -->
     <div id="passwordModal" class="hidden fixed inset-0 z-[150] bg-black bg-opacity-60 flex items-center justify-center p-4 modal-animate">
         <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl transform transition-all">
             <div class="text-center mb-5">
@@ -82,10 +82,13 @@
                     <i class="fa-solid fa-store text-indigo-600"></i>
                     <span id="customerShopName">西門町Candy服飾</span>
                 </div>
-                <!-- 🔒 秘密通道 -->
                 <button onclick="openPasswordModal()" id="btnLock" class="text-gray-300 hover:text-indigo-500 transition p-2">
                     <i class="fa-solid fa-lock"></i>
                 </button>
+            </div>
+
+            <div class="bg-rose-50 text-rose-600 text-xs py-2 px-4 text-center font-bold shadow-inner flex justify-center items-center gap-1">
+                <i class="fa-solid fa-circle-exclamation"></i> 現貨有限，看中請立刻點按鈕保留！
             </div>
 
             <div id="customerProductList" class="p-4 flex flex-col gap-6">
@@ -129,28 +132,31 @@
             <!-- 編輯區 -->
             <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
                 <div class="bg-[#06C755] text-white p-4 flex items-center gap-2">
-                    <i class="fa-solid fa-camera-retro text-xl"></i><h2 class="text-lg font-bold">新增商品 (含行銷標籤)</h2>
+                    <i class="fa-solid fa-camera-retro text-xl"></i><h2 class="text-lg font-bold">新增商品 (免儲存空間費)</h2>
                 </div>
                 <div class="p-5 flex flex-col md:flex-row gap-6">
                     
-                    <div class="w-full md:w-1/3 border-2 border-dashed border-gray-300 rounded-2xl p-4 flex flex-col items-center justify-center relative min-h-[280px]">
-                        <div id="previewContainer" class="w-full flex flex-wrap gap-3 justify-center items-center hidden mb-2"></div>
-                        <div id="uploadPlaceholder" class="text-center p-4 cursor-pointer hover:bg-gray-50 transition w-full h-full flex flex-col items-center justify-center rounded-xl" onclick="document.getElementById('fileInput').click()">
-                            <div class="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-3">
-                                <i class="fa-solid fa-images text-3xl text-[#06C755]"></i>
+                    <!-- 左邊：照片上傳 -->
+                    <div class="w-full md:w-1/3 flex flex-col gap-3">
+                        <div class="w-full border-2 border-dashed border-gray-300 rounded-2xl p-4 flex flex-col items-center justify-center relative min-h-[200px]">
+                            <div id="previewContainer" class="w-full flex flex-wrap gap-2 justify-center items-center hidden mb-2"></div>
+                            
+                            <div id="uploadPlaceholder" class="text-center p-2 cursor-pointer hover:bg-gray-50 transition w-full h-full flex flex-col items-center justify-center rounded-xl" onclick="document.getElementById('fileInput').click()">
+                                <div class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-2">
+                                    <i class="fa-solid fa-images text-2xl text-[#06C755]"></i>
+                                </div>
+                                <span class="text-gray-600 font-bold block text-sm">選取衣服照片 <span class="text-red-500">*</span></span>
+                                <span class="text-xs text-gray-400 mt-1 block">(選完一張可再加，最多4張)</span>
                             </div>
-                            <span class="text-gray-600 font-bold block">點擊選取衣服照片</span>
-                            <span class="text-xs text-gray-400 mt-1 block">(選完一張可再加，最多4張)</span>
+                            <input type="file" id="fileInput" accept="image/*" multiple class="hidden" onchange="previewImages(event)">
                         </div>
-                        <input type="file" id="fileInput" accept="image/*" multiple class="hidden" onchange="previewImages(event)">
                     </div>
 
                     <div class="w-full md:w-2/3 flex flex-col justify-between">
                         <div class="space-y-4">
                             
-                            <!-- 🌟 新增：行銷標籤選擇區 -->
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">吸睛行銷標籤 <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">吸睛行銷標籤</label>
                                 <div class="flex flex-wrap gap-2">
                                     <button type="button" onclick="selectTag(this, 'new')" class="tag-btn border-2 border-indigo-500 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full font-bold text-xs transition shadow-sm">✨ 最新上架</button>
                                     <button type="button" onclick="selectTag(this, 'hot')" class="tag-btn border-2 border-transparent bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full font-bold text-xs transition">🔥 爆款熱銷</button>
@@ -160,14 +166,23 @@
                                 <input type="hidden" id="inputTag" value="new">
                             </div>
 
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">商品名稱 <span class="text-red-500">*</span></label>
-                                <input type="text" id="inputTitle" placeholder="例如：天絲高腰寬褲" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#06C755] outline-none">
+                            <div class="flex gap-3">
+                                <div class="flex-1">
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">商品名稱 <span class="text-red-500">*</span></label>
+                                    <input type="text" id="inputTitle" placeholder="例如：天絲高腰寬褲" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#06C755] outline-none">
+                                </div>
+                                <div class="w-32">
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">價格 <span class="text-red-500">*</span></label>
+                                    <input type="number" id="inputPrice" placeholder="200" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#06C755] outline-none">
+                                </div>
                             </div>
-                            
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-1">價格 (NT$) <span class="text-red-500">*</span></label>
-                                <input type="number" id="inputPrice" placeholder="例如：200" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#06C755] outline-none">
+
+                            <!-- 🌟 新增：IG/YT 影片網址欄位 (不花錢導流版) -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                                <label class="block text-sm font-bold text-blue-800 mb-1 flex items-center gap-1">
+                                    <i class="fa-brands fa-instagram"></i> 外連實穿影片 (選填，免儲存費)
+                                </label>
+                                <input type="text" id="inputVideoLink" placeholder="請貼上 IG 或 TikTok 的貼文網址" class="w-full border border-blue-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-400 outline-none">
                             </div>
 
                             <div class="relative">
@@ -218,6 +233,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // 🌟 只用完全免費的 Firestore 儲存照片跟文字
         import { getFirestore, collection, onSnapshot, getDocs, addDoc, deleteDoc, doc, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -236,12 +252,12 @@
         window.base64ImagesArray = []; 
         window.draftProducts = []; 
 
-        window.showToast = function(message, type = 'success') {
+        window.showToast = function(message, type = 'success', duration = 3000) {
             const toast = document.createElement('div');
             toast.className = `fixed top-10 left-1/2 z-[100] px-6 py-3 rounded-full shadow-lg text-white font-bold text-sm tracking-wide toast-animate whitespace-nowrap ${type === 'success' ? 'bg-[#06C755]' : (type === 'purple' ? 'bg-indigo-600' : 'bg-red-500')}`;
             toast.innerHTML = type === 'success' ? `<i class="fa-solid fa-check-circle mr-2"></i>${message}` : `<i class="fa-solid fa-circle-exclamation mr-2"></i>${message}`;
             document.body.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, duration);
         };
 
         window.openImageModal = function(url) {
@@ -275,7 +291,6 @@
             }
         };
 
-        // 🌟 標籤選擇 UI 邏輯
         window.selectTag = function(btn, tagValue) {
             document.getElementById('inputTag').value = tagValue;
             const btns = btn.parentElement.querySelectorAll('.tag-btn');
@@ -318,19 +333,14 @@
             btn.disabled = false;
         };
 
-        // 🌟 最關鍵的「排序」邏輯 (置頂優先)
         function processAndSortData(snapshot) {
             const fetched = [];
             snapshot.forEach(doc => fetched.push({ id: doc.id, ...doc.data() }));
             fetched.sort((a, b) => {
-                // 1. 先判斷是否為「置頂 (pinned)」
                 const aPinned = a.tag === 'pinned' ? 1 : 0;
                 const bPinned = b.tag === 'pinned' ? 1 : 0;
-                if (aPinned !== bPinned) {
-                    return bPinned - aPinned; // 置頂的排前面
-                }
+                if (aPinned !== bPinned) return bPinned - aPinned; 
                 
-                // 2. 如果都不是置頂(或都是)，再依照時間新舊排序
                 const timeA = a.createdAt ? (typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : Date.now()) : 0;
                 const timeB = b.createdAt ? (typeof b.createdAt.toMillis === 'function' ? b.createdAt.toMillis() : Date.now()) : 0;
                 return timeB - timeA;
@@ -368,7 +378,7 @@
             const filesToProcess = Math.min(files.length, spaceLeft);
             
             if (files.length > spaceLeft) {
-                showToast("每件商品最多只能展示 4 張照片喔！", "purple");
+                showToast("每件商品最多 4 張照片喔！", "purple");
             }
 
             for (let i = 0; i < filesToProcess; i++) {
@@ -450,32 +460,34 @@
             const price = document.getElementById('inputPrice').value.trim();
             const desc = document.getElementById('inputDesc').value.trim();
             const tag = document.getElementById('inputTag').value;
+            const videoLink = document.getElementById('inputVideoLink').value.trim(); // 🌟 讀取影片網址
 
-            if (window.base64ImagesArray.length === 0) { showToast("請至少上傳一張照片喔！", "error"); return; }
+            if (window.base64ImagesArray.length === 0) { showToast("請至少上傳一張照片當封面喔！", "error"); return; }
             if (!title || !price) { showToast("名稱、價格都要填喔！", "error"); return; }
 
             window.draftProducts.push({
                 imageUrls: [...window.base64ImagesArray],
+                videoLink: videoLink, // 🌟 存入影片網址
                 title: title,
                 price: price,
                 desc: desc,
-                tag: tag // 🌟 存入標籤
+                tag: tag
             });
 
             // 清空準備下一件
             document.getElementById('inputTitle').value = ''; 
             document.getElementById('inputPrice').value = ''; 
             document.getElementById('inputDesc').value = '';
-            
-            // 恢復預設標籤為 new
+            document.getElementById('inputVideoLink').value = ''; // 清空影片網址
             document.getElementById('inputTag').value = 'new';
             const btns = document.querySelectorAll('.tag-btn');
             if(btns.length > 0) window.selectTag(btns[0], 'new');
 
             window.base64ImagesArray = []; 
             renderPreviewBox(); 
+
             renderDrafts();
-            showToast("✅ 已加入待上架清單！您可以繼續打下一件", "purple");
+            showToast("✅ 已加入待上架清單！", "purple");
         };
 
         function renderDrafts() {
@@ -494,8 +506,7 @@
 
             window.draftProducts.forEach((p, index) => {
                 const imgCount = p.imageUrls.length > 1 ? `<div class="absolute bottom-0 right-0 bg-indigo-600 text-white text-[10px] px-1 rounded-sm">+${p.imageUrls.length-1}</div>` : '';
-                
-                // 顯示草稿標籤
+                const vidIcon = p.videoLink ? `<span class="bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded ml-1"><i class="fa-brands fa-instagram"></i> 影片</span>` : '';
                 let tagStr = '';
                 if(p.tag === 'pinned') tagStr = '<span class="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded ml-1">置頂</span>';
                 else if(p.tag === 'hot') tagStr = '<span class="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded ml-1">爆款</span>';
@@ -507,7 +518,7 @@
                             ${imgCount}
                         </div>
                         <div class="px-3 flex-1">
-                            <h4 class="font-bold text-gray-800 text-sm line-clamp-1 flex items-center">${p.title} ${tagStr}</h4>
+                            <h4 class="font-bold text-gray-800 text-sm line-clamp-1 flex items-center">${p.title} ${tagStr} ${vidIcon}</h4>
                             <div class="text-rose-600 font-bold text-xs mt-1">NT$ ${p.price}</div>
                         </div>
                         <button onclick="removeDraft(${index})" class="text-gray-400 hover:bg-red-50 hover:text-red-500 w-10 h-10 rounded-full flex items-center justify-center transition active:scale-95">
@@ -523,11 +534,12 @@
             renderDrafts();
         };
 
+        // 🌟 批次上傳 (只傳純文字跟照片)
         window.publishAllDrafts = async function() {
             if(window.draftProducts.length === 0) return;
 
             const btn = document.getElementById('btnPublishAll');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 正在努力批次上架中，請稍候...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 上傳中，請稍候...';
             btn.disabled = true;
 
             try {
@@ -535,10 +547,11 @@
                     await addDoc(collection(db, 'products'), {
                         imageUrls: item.imageUrls,
                         imageUrl: item.imageUrls[0], 
+                        videoLink: item.videoLink || '', // 🌟 存入影片網址
                         title: item.title, 
                         price: item.price, 
                         rawText: item.desc, 
-                        tag: item.tag || 'new', // 🌟 將標籤送上雲端
+                        tag: item.tag || 'new', 
                         soldCount: Math.floor(Math.random() * 40) + 10, 
                         createdAt: serverTimestamp()
                     });
@@ -546,7 +559,7 @@
                 
                 window.draftProducts = [];
                 renderDrafts();
-                showToast("🎉 全部商品批次上架成功！可以去預覽看看囉！");
+                showToast("🎉 全部商品批次上架成功！", "success", 3000);
 
             } catch (err) {
                 showToast("上架發生錯誤，請重試", "error");
@@ -602,7 +615,6 @@
                 const imgArray = p.imageUrls && p.imageUrls.length > 0 ? p.imageUrls : [p.imageUrl];
                 const coverImage = imgArray[0];
 
-                // 🌟 判斷標籤顏色與文字
                 let badgeColor = 'bg-indigo-500';
                 let badgeText = `✨ 最新上架`;
                 let adminTagHtml = '';
@@ -621,16 +633,17 @@
                     adminTagHtml = '<span class="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded-full ml-2">💸 特價</span>';
                 }
 
+                const vidBadge = p.videoLink ? '<span class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded-full ml-1"><i class="fa-brands fa-instagram"></i> 影片</span>' : '';
+
                 if(adminList) {
                     adminList.innerHTML += `
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex overflow-hidden">
                             <div class="relative w-24 h-24 flex-shrink-0">
                                 <img src="${coverImage}" class="w-full h-full object-cover cursor-pointer" onclick="openImageModal('${coverImage}')">
-                                ${imgArray.length > 1 ? `<div class="absolute bottom-1 right-1 bg-black bg-opacity-60 text-white text-[10px] px-1.5 rounded-md">+${imgArray.length - 1}</div>` : ''}
                             </div>
                             <div class="p-3 flex-1 flex flex-col justify-between">
                                 <div>
-                                    <h4 class="font-bold text-gray-800 text-sm line-clamp-1 flex items-center">${p.title} ${adminTagHtml}</h4>
+                                    <h4 class="font-bold text-gray-800 text-sm line-clamp-1 flex items-center">${p.title} ${adminTagHtml} ${vidBadge}</h4>
                                     <div class="text-rose-600 font-bold mt-1">NT$ ${p.price}</div>
                                 </div>
                                 <div class="text-right mt-2">
@@ -652,21 +665,30 @@
 
                 const descHtml = p.rawText ? `<div class="bg-gray-50 p-3 rounded-xl text-sm text-gray-600 mt-3 mx-4 mb-4 whitespace-pre-wrap leading-relaxed">${p.rawText}</div>` : `<div class="mb-4"></div>`;
 
+                // 🌟 前台客人顯示影片導流按鈕
+                const videoLinkHtml = p.videoLink ? `
+                    <a href="${p.videoLink}" target="_blank" class="w-full bg-blue-50 border border-blue-200 text-blue-600 font-bold text-sm py-3 rounded-xl flex justify-center items-center gap-2 shadow-sm hover:bg-blue-100 transition mt-2 active:scale-95">
+                        <i class="fa-brands fa-instagram text-lg"></i> 點我看老闆娘實穿短影音
+                    </a>
+                ` : '';
+
                 if(customerList) {
                     customerList.innerHTML += `
                         <div class="bg-white rounded-2xl shadow-md overflow-hidden pb-2">
                             <div class="aspect-[4/5] w-full bg-gray-100 relative group">
                                 <img id="mainImg-${p.id}" src="${coverImage}" class="w-full h-full object-cover cursor-pointer transition-opacity duration-300" onclick="openImageModal(this.src)">
-                                <!-- 🌟 動態顯示行銷徽章 -->
                                 <div class="absolute top-3 left-3 ${badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-black/20">${badgeText}</div>
                                 <div class="absolute bottom-3 right-3 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-80 pointer-events-none backdrop-blur-sm">
                                     <i class="fa-solid fa-expand text-sm"></i>
                                 </div>
                             </div>
+                            
                             ${thumbnailsHtml}
+                            
                             <div class="px-4 mt-3">
                                 <h2 class="text-lg font-bold text-gray-800 mb-1">${p.title}</h2>
                                 <div class="text-2xl font-bold text-rose-600">NT$ ${p.price}</div>
+                                ${videoLinkHtml} <!-- 顯示影片按鈕 -->
                             </div>
                             ${descHtml}
                         </div>`;
