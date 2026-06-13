@@ -88,11 +88,7 @@
                 </button>
             </div>
 
-            <div class="bg-rose-50 text-rose-600 text-xs py-2 px-4 text-center font-bold shadow-inner flex justify-center items-center gap-1">
-                <i class="fa-solid fa-circle-exclamation"></i> 現貨有限，看中請立刻點按鈕保留！
-            </div>
-
-            <div id="customerProductList" class="p-4 flex flex-col gap-5">
+            <div id="customerProductList" class="p-4 flex flex-col gap-6">
                 <div class="p-8 text-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200 mt-10">
                     <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>店鋪資料讀取中...
                 </div>
@@ -133,24 +129,37 @@
             <!-- 編輯區 -->
             <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
                 <div class="bg-[#06C755] text-white p-4 flex items-center gap-2">
-                    <i class="fa-solid fa-camera-retro text-xl"></i><h2 class="text-lg font-bold">新增商品 (可批次上傳)</h2>
+                    <i class="fa-solid fa-camera-retro text-xl"></i><h2 class="text-lg font-bold">新增商品 (含行銷標籤)</h2>
                 </div>
                 <div class="p-5 flex flex-col md:flex-row gap-6">
                     
-                    <div class="w-full md:w-1/3 border-2 border-dashed border-gray-300 rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition relative min-h-[280px]" onclick="document.getElementById('fileInput').click()">
-                        <div id="previewContainer" class="w-full flex flex-wrap gap-2 justify-center hidden mb-2"></div>
-                        <div id="uploadPlaceholder" class="text-center p-4">
+                    <div class="w-full md:w-1/3 border-2 border-dashed border-gray-300 rounded-2xl p-4 flex flex-col items-center justify-center relative min-h-[280px]">
+                        <div id="previewContainer" class="w-full flex flex-wrap gap-3 justify-center items-center hidden mb-2"></div>
+                        <div id="uploadPlaceholder" class="text-center p-4 cursor-pointer hover:bg-gray-50 transition w-full h-full flex flex-col items-center justify-center rounded-xl" onclick="document.getElementById('fileInput').click()">
                             <div class="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-3">
                                 <i class="fa-solid fa-images text-3xl text-[#06C755]"></i>
                             </div>
                             <span class="text-gray-600 font-bold block">點擊選取衣服照片</span>
-                            <span class="text-xs text-gray-400 mt-1 block">(建議同款 1~4 張)</span>
+                            <span class="text-xs text-gray-400 mt-1 block">(選完一張可再加，最多4張)</span>
                         </div>
                         <input type="file" id="fileInput" accept="image/*" multiple class="hidden" onchange="previewImages(event)">
                     </div>
 
                     <div class="w-full md:w-2/3 flex flex-col justify-between">
                         <div class="space-y-4">
+                            
+                            <!-- 🌟 新增：行銷標籤選擇區 -->
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">吸睛行銷標籤 <span class="text-red-500">*</span></label>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" onclick="selectTag(this, 'new')" class="tag-btn border-2 border-indigo-500 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full font-bold text-xs transition shadow-sm">✨ 最新上架</button>
+                                    <button type="button" onclick="selectTag(this, 'hot')" class="tag-btn border-2 border-transparent bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full font-bold text-xs transition">🔥 爆款熱銷</button>
+                                    <button type="button" onclick="selectTag(this, 'pinned')" class="tag-btn border-2 border-transparent bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full font-bold text-xs transition">👑 鎮店置頂</button>
+                                    <button type="button" onclick="selectTag(this, 'sale')" class="tag-btn border-2 border-transparent bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full font-bold text-xs transition">💸 限時特價</button>
+                                </div>
+                                <input type="hidden" id="inputTag" value="new">
+                            </div>
+
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-1">商品名稱 <span class="text-red-500">*</span></label>
                                 <input type="text" id="inputTitle" placeholder="例如：天絲高腰寬褲" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#06C755] outline-none">
@@ -165,14 +174,13 @@
                                 <div class="flex justify-between items-end mb-1">
                                     <label class="block text-sm font-bold text-gray-700">產品介紹</label>
                                     <button type="button" onclick="generateCopywriting()" class="text-xs bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full font-bold hover:bg-purple-200 transition flex items-center gap-1 shadow-sm active:scale-95">
-                                        <i class="fa-solid fa-wand-magic-sparkles"></i> 點我一鍵生文案
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i> 一鍵生文案
                                     </button>
                                 </div>
                                 <textarea id="inputDesc" class="w-full border border-gray-300 rounded-xl p-3 resize-none focus:ring-2 focus:ring-[#06C755] outline-none" rows="3" placeholder="按右上角一鍵生文案，或是自己打字喔！"></textarea>
                             </div>
                         </div>
 
-                        <!-- 🌟 變更為加入待上架清單 -->
                         <button id="btnAddToDraft" class="mt-4 w-full bg-indigo-50 border-2 border-indigo-600 text-indigo-700 font-bold text-lg py-4 rounded-xl flex justify-center items-center gap-2 hover:bg-indigo-100 transition active:scale-[0.98]" onclick="addToDraft()">
                             <i class="fa-solid fa-plus"></i> 先加入「待上架清單」
                         </button>
@@ -180,15 +188,13 @@
                 </div>
             </div>
 
-            <!-- 🌟 待上架清單區 (新的工作區) -->
+            <!-- 待上架清單區 -->
             <div id="draftSection" class="bg-indigo-50 rounded-2xl shadow-inner border border-indigo-100 p-5 hidden">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-bold text-indigo-800 text-lg flex items-center gap-2"><i class="fa-solid fa-box-open"></i> 📦 待上架清單 (<span id="draftCount">0</span>)</h3>
                 </div>
                 
-                <div id="draftList" class="flex flex-col gap-3 mb-5 max-h-[400px] overflow-y-auto pr-2">
-                    <!-- 這裡會顯示準備上架的衣服 -->
-                </div>
+                <div id="draftList" class="flex flex-col gap-3 mb-5 max-h-[400px] overflow-y-auto pr-2"></div>
 
                 <button id="btnPublishAll" onclick="publishAllDrafts()" class="w-full bg-[#06C755] text-white font-bold text-lg py-4 rounded-xl flex justify-center items-center gap-2 shadow-lg hover:bg-green-600 transition active:scale-[0.98]">
                     <i class="fa-solid fa-cloud-arrow-up"></i> 確認無誤，一次全部上架！
@@ -228,7 +234,7 @@
 
         window.productsData = [];
         window.base64ImagesArray = []; 
-        window.draftProducts = []; // 🌟 新增：存放準備批次上傳的商品
+        window.draftProducts = []; 
 
         window.showToast = function(message, type = 'success') {
             const toast = document.createElement('div');
@@ -269,6 +275,23 @@
             }
         };
 
+        // 🌟 標籤選擇 UI 邏輯
+        window.selectTag = function(btn, tagValue) {
+            document.getElementById('inputTag').value = tagValue;
+            const btns = btn.parentElement.querySelectorAll('.tag-btn');
+            btns.forEach(b => {
+                b.className = "tag-btn border-2 border-transparent bg-gray-100 text-gray-500 px-3 py-1.5 rounded-full font-bold text-xs transition";
+            });
+            
+            let activeClass = "";
+            if (tagValue === 'pinned') activeClass = "border-yellow-400 bg-yellow-50 text-yellow-700 shadow-sm";
+            else if (tagValue === 'hot') activeClass = "border-red-400 bg-red-50 text-red-700 shadow-sm";
+            else if (tagValue === 'sale') activeClass = "border-rose-400 bg-rose-50 text-rose-700 shadow-sm";
+            else activeClass = "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm";
+            
+            btn.className = `tag-btn border-2 ${activeClass} px-3 py-1.5 rounded-full font-bold text-xs transition`;
+        };
+
         const settingsRef = doc(db, 'settings', 'shopInfo');
         onSnapshot(settingsRef, (docSnap) => {
             if (docSnap.exists()) {
@@ -295,10 +318,19 @@
             btn.disabled = false;
         };
 
+        // 🌟 最關鍵的「排序」邏輯 (置頂優先)
         function processAndSortData(snapshot) {
             const fetched = [];
             snapshot.forEach(doc => fetched.push({ id: doc.id, ...doc.data() }));
             fetched.sort((a, b) => {
+                // 1. 先判斷是否為「置頂 (pinned)」
+                const aPinned = a.tag === 'pinned' ? 1 : 0;
+                const bPinned = b.tag === 'pinned' ? 1 : 0;
+                if (aPinned !== bPinned) {
+                    return bPinned - aPinned; // 置頂的排前面
+                }
+                
+                // 2. 如果都不是置頂(或都是)，再依照時間新舊排序
                 const timeA = a.createdAt ? (typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : Date.now()) : 0;
                 const timeB = b.createdAt ? (typeof b.createdAt.toMillis === 'function' ? b.createdAt.toMillis() : Date.now()) : 0;
                 return timeB - timeA;
@@ -324,48 +356,76 @@
             }
         };
 
-        window.previewImages = function(event) {
+        window.previewImages = async function(event) {
             const files = event.target.files;
             if (!files || files.length === 0) return;
-            window.base64ImagesArray = []; 
-            document.getElementById('previewContainer').innerHTML = '';
+            
             document.getElementById('uploadPlaceholder').classList.add('hidden');
             document.getElementById('previewContainer').classList.remove('hidden');
             
-            let loadedCount = 0;
-            const maxFiles = Math.min(files.length, 4); 
-            if(files.length > 4) showToast("為了閱讀流暢，最多幫您抓取前 4 張照片喔！", "purple");
-
-            for (let i = 0; i < maxFiles; i++) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width, height = img.height;
-                        const MAX = 600; 
-                        if (width > height) { if (width > MAX) { height *= MAX / width; width = MAX; } } 
-                        else { if (height > MAX) { width *= MAX / height; height = MAX; } }
-                        canvas.width = width; canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        window.base64ImagesArray.push(canvas.toDataURL('image/jpeg', 0.6));
-                        loadedCount++;
-                        if(loadedCount === maxFiles) renderPreviewBox();
-                    }
-                };
-                reader.readAsDataURL(files[i]);
+            const currentCount = window.base64ImagesArray.length;
+            const spaceLeft = 4 - currentCount;
+            const filesToProcess = Math.min(files.length, spaceLeft);
+            
+            if (files.length > spaceLeft) {
+                showToast("每件商品最多只能展示 4 張照片喔！", "purple");
             }
+
+            for (let i = 0; i < filesToProcess; i++) {
+                await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.src = e.target.result;
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width, height = img.height;
+                            const MAX = 600; 
+                            if (width > height) { if (width > MAX) { height *= MAX / width; width = MAX; } } 
+                            else { if (height > MAX) { width *= MAX / height; height = MAX; } }
+                            canvas.width = width; canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            window.base64ImagesArray.push(canvas.toDataURL('image/jpeg', 0.6));
+                            resolve();
+                        }
+                    };
+                    reader.readAsDataURL(files[i]);
+                });
+            }
+            renderPreviewBox();
+            event.target.value = ''; 
         };
 
         function renderPreviewBox() {
             const container = document.getElementById('previewContainer');
             container.innerHTML = '';
-            window.base64ImagesArray.forEach(src => {
-                container.innerHTML += `<div class="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 shadow-sm"><img src="${src}" class="w-full h-full object-cover"></div>`;
+            
+            window.base64ImagesArray.forEach((src, index) => {
+                container.innerHTML += `
+                    <div class="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 shadow-sm flex-shrink-0">
+                        <img src="${src}" class="w-full h-full object-cover">
+                        <button onclick="removeImage(${index})" class="absolute top-0 right-0 bg-red-500 text-white w-5 h-5 text-[10px] font-bold flex items-center justify-center rounded-bl-lg active:scale-90 transition">&times;</button>
+                    </div>`;
             });
+
+            if (window.base64ImagesArray.length > 0 && window.base64ImagesArray.length < 4) {
+                container.innerHTML += `
+                    <div onclick="document.getElementById('fileInput').click()" class="w-16 h-16 rounded-lg border-2 border-dashed border-indigo-300 flex flex-col items-center justify-center cursor-pointer hover:bg-indigo-50 flex-shrink-0 text-indigo-500 active:scale-95 transition">
+                        <i class="fa-solid fa-plus text-xl"></i>
+                    </div>`;
+            }
+
+            if (window.base64ImagesArray.length === 0) {
+                document.getElementById('previewContainer').classList.add('hidden');
+                document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            }
         }
+
+        window.removeImage = function(index) {
+            window.base64ImagesArray.splice(index, 1);
+            renderPreviewBox();
+        };
 
         window.generateCopywriting = function() {
             const title = document.getElementById('inputTitle').value;
@@ -385,38 +445,39 @@
             }, 300); 
         };
 
-        // 🌟 加入草稿區功能
         window.addToDraft = function() {
             const title = document.getElementById('inputTitle').value.trim();
             const price = document.getElementById('inputPrice').value.trim();
             const desc = document.getElementById('inputDesc').value.trim();
+            const tag = document.getElementById('inputTag').value;
 
             if (window.base64ImagesArray.length === 0) { showToast("請至少上傳一張照片喔！", "error"); return; }
             if (!title || !price) { showToast("名稱、價格都要填喔！", "error"); return; }
 
-            // 存入草稿陣列
             window.draftProducts.push({
-                imageUrls: [...window.base64ImagesArray], // 複製陣列
+                imageUrls: [...window.base64ImagesArray],
                 title: title,
                 price: price,
-                desc: desc
+                desc: desc,
+                tag: tag // 🌟 存入標籤
             });
 
-            // 清空輸入框
+            // 清空準備下一件
             document.getElementById('inputTitle').value = ''; 
             document.getElementById('inputPrice').value = ''; 
             document.getElementById('inputDesc').value = '';
-            window.base64ImagesArray = []; 
-            document.getElementById('previewContainer').innerHTML = '';
-            document.getElementById('previewContainer').classList.add('hidden');
-            document.getElementById('uploadPlaceholder').classList.remove('hidden'); 
-            document.getElementById('fileInput').value = '';
+            
+            // 恢復預設標籤為 new
+            document.getElementById('inputTag').value = 'new';
+            const btns = document.querySelectorAll('.tag-btn');
+            if(btns.length > 0) window.selectTag(btns[0], 'new');
 
+            window.base64ImagesArray = []; 
+            renderPreviewBox(); 
             renderDrafts();
             showToast("✅ 已加入待上架清單！您可以繼續打下一件", "purple");
         };
 
-        // 🌟 渲染草稿清單
         function renderDrafts() {
             const draftSection = document.getElementById('draftSection');
             const draftList = document.getElementById('draftList');
@@ -432,28 +493,36 @@
             draftList.innerHTML = '';
 
             window.draftProducts.forEach((p, index) => {
+                const imgCount = p.imageUrls.length > 1 ? `<div class="absolute bottom-0 right-0 bg-indigo-600 text-white text-[10px] px-1 rounded-sm">+${p.imageUrls.length-1}</div>` : '';
+                
+                // 顯示草稿標籤
+                let tagStr = '';
+                if(p.tag === 'pinned') tagStr = '<span class="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded ml-1">置頂</span>';
+                else if(p.tag === 'hot') tagStr = '<span class="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded ml-1">爆款</span>';
+                
                 draftList.innerHTML += `
                     <div class="bg-white rounded-xl shadow-sm border border-indigo-100 flex overflow-hidden p-2 items-center">
-                        <img src="${p.imageUrls[0]}" class="w-16 h-16 object-cover rounded-lg flex-shrink-0 border border-gray-100">
+                        <div class="relative w-16 h-16 flex-shrink-0">
+                            <img src="${p.imageUrls[0]}" class="w-full h-full object-cover rounded-lg border border-gray-100">
+                            ${imgCount}
+                        </div>
                         <div class="px-3 flex-1">
-                            <h4 class="font-bold text-gray-800 text-sm line-clamp-1">${p.title}</h4>
+                            <h4 class="font-bold text-gray-800 text-sm line-clamp-1 flex items-center">${p.title} ${tagStr}</h4>
                             <div class="text-rose-600 font-bold text-xs mt-1">NT$ ${p.price}</div>
                         </div>
-                        <button onclick="removeDraft(${index})" class="text-red-400 hover:bg-red-50 w-10 h-10 rounded-full flex items-center justify-center transition active:scale-95">
-                            <i class="fa-solid fa-xmark text-lg"></i>
+                        <button onclick="removeDraft(${index})" class="text-gray-400 hover:bg-red-50 hover:text-red-500 w-10 h-10 rounded-full flex items-center justify-center transition active:scale-95">
+                            <i class="fa-solid fa-trash text-lg"></i>
                         </button>
                     </div>
                 `;
             });
         }
 
-        // 🌟 刪除單一草稿
         window.removeDraft = function(index) {
             window.draftProducts.splice(index, 1);
             renderDrafts();
         };
 
-        // 🌟 批次上傳至 Firebase
         window.publishAllDrafts = async function() {
             if(window.draftProducts.length === 0) return;
 
@@ -462,20 +531,19 @@
             btn.disabled = true;
 
             try {
-                // 使用迴圈將草稿一件一件送上雲端
                 for(const item of window.draftProducts) {
                     await addDoc(collection(db, 'products'), {
                         imageUrls: item.imageUrls,
-                        imageUrl: item.imageUrls[0], // 兼容
+                        imageUrl: item.imageUrls[0], 
                         title: item.title, 
                         price: item.price, 
                         rawText: item.desc, 
+                        tag: item.tag || 'new', // 🌟 將標籤送上雲端
                         soldCount: Math.floor(Math.random() * 40) + 10, 
                         createdAt: serverTimestamp()
                     });
                 }
                 
-                // 全部成功後清空草稿
                 window.draftProducts = [];
                 renderDrafts();
                 showToast("🎉 全部商品批次上架成功！可以去預覽看看囉！");
@@ -534,6 +602,25 @@
                 const imgArray = p.imageUrls && p.imageUrls.length > 0 ? p.imageUrls : [p.imageUrl];
                 const coverImage = imgArray[0];
 
+                // 🌟 判斷標籤顏色與文字
+                let badgeColor = 'bg-indigo-500';
+                let badgeText = `✨ 最新上架`;
+                let adminTagHtml = '';
+
+                if (p.tag === 'pinned') {
+                    badgeColor = 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 border border-yellow-300';
+                    badgeText = `👑 鎮店推薦必買`;
+                    adminTagHtml = '<span class="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-0.5 rounded-full ml-2">👑 置頂</span>';
+                } else if (p.tag === 'hot') {
+                    badgeColor = 'bg-gradient-to-r from-red-500 to-rose-600 border border-red-400';
+                    badgeText = `🔥 姐姐瘋搶 ${p.soldCount || 30} 件`;
+                    adminTagHtml = '<span class="bg-red-100 text-red-800 text-[10px] px-2 py-0.5 rounded-full ml-2">🔥 爆款</span>';
+                } else if (p.tag === 'sale') {
+                    badgeColor = 'bg-rose-500 border border-rose-400';
+                    badgeText = `💸 限時特價搶購`;
+                    adminTagHtml = '<span class="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded-full ml-2">💸 特價</span>';
+                }
+
                 if(adminList) {
                     adminList.innerHTML += `
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex overflow-hidden">
@@ -543,7 +630,7 @@
                             </div>
                             <div class="p-3 flex-1 flex flex-col justify-between">
                                 <div>
-                                    <h4 class="font-bold text-gray-800 text-sm line-clamp-1">${p.title}</h4>
+                                    <h4 class="font-bold text-gray-800 text-sm line-clamp-1 flex items-center">${p.title} ${adminTagHtml}</h4>
                                     <div class="text-rose-600 font-bold mt-1">NT$ ${p.price}</div>
                                 </div>
                                 <div class="text-right mt-2">
@@ -570,7 +657,8 @@
                         <div class="bg-white rounded-2xl shadow-md overflow-hidden pb-2">
                             <div class="aspect-[4/5] w-full bg-gray-100 relative group">
                                 <img id="mainImg-${p.id}" src="${coverImage}" class="w-full h-full object-cover cursor-pointer transition-opacity duration-300" onclick="openImageModal(this.src)">
-                                <div class="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">🔥 已售出 ${p.soldCount} 件</div>
+                                <!-- 🌟 動態顯示行銷徽章 -->
+                                <div class="absolute top-3 left-3 ${badgeColor} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-black/20">${badgeText}</div>
                                 <div class="absolute bottom-3 right-3 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-80 pointer-events-none backdrop-blur-sm">
                                     <i class="fa-solid fa-expand text-sm"></i>
                                 </div>
