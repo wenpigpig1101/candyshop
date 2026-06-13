@@ -19,7 +19,7 @@
         @keyframes bounce-x { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(3px); } }
         .animate-bounce-x { animation: bounce-x 1s infinite; }
         /* 隱藏滾動條但可滾動的短語區 */
-        .phrase-scroll { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .phrase-scroll { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
         .phrase-scroll::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -110,11 +110,12 @@
                     </div>
                 </div>
                 
+                <!-- 🌟 方案 C：超級導流橫幅公告 (已拿掉"私密"兩字) -->
                 <a id="linkFbBanner" href="#" target="_blank" class="hidden">
                     <div class="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2.5 flex items-center justify-between shadow-sm active:bg-blue-700 transition">
                         <div class="flex items-center gap-2">
                             <div class="bg-white text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm"><i class="fa-brands fa-facebook-f"></i></div>
-                            <span class="text-sm font-bold tracking-wide">點我加入FB私密社團，看豬小編最新直播！</span>
+                            <span class="text-sm font-bold tracking-wide">點我加入FB社團，看豬小編最新直播！</span>
                         </div>
                         <i class="fa-solid fa-chevron-right text-sm animate-bounce-x"></i>
                     </div>
@@ -231,57 +232,90 @@
                             </div>
                         </div>
 
-                        <!-- 🌟 智慧短語精靈區塊 -->
+                        <!-- 🌟 智慧短語精靈區塊 (40句全解放) -->
                         <div class="border border-purple-200 bg-purple-50/50 rounded-xl p-3 mt-2">
                             <div class="flex justify-between items-center mb-2">
                                 <label class="block text-sm font-bold text-purple-800"><i class="fa-solid fa-wand-magic-sparkles"></i> 智慧短語精靈 (點擊加入介紹)</label>
                             </div>
                             
-                            <!-- 短語分類 1: 材質 -->
-                            <div class="mb-2">
-                                <div class="text-xs font-bold text-purple-600 mb-1">☁️ 材質舒適</div>
+                            <!-- 分類 1: 材質舒適 -->
+                            <div class="mb-3">
+                                <div class="text-xs font-bold text-purple-600 mb-1">☁️ 材質與舒適度 (左右滑動看更多)</div>
                                 <div class="phrase-scroll flex gap-2">
                                     <button type="button" onclick="addPhrase('☁️ 雲朵般柔軟親膚，穿起來完全零刺癢！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">☁️ 雲朵親膚零刺癢</button>
                                     <button type="button" onclick="addPhrase('🧊 涼感冰絲面料，夏天穿出門絕對不悶熱！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🧊 涼感冰絲不悶熱</button>
                                     <button type="button" onclick="addPhrase('🧘‍♀️ 超彈力材質，大動作也不卡卡，超級好活動！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🧘‍♀️ 超彈力不卡卡</button>
+                                    <button type="button" onclick="addPhrase('✨ 高級訂製雪紡，手感滑順、自帶仙女光澤！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">✨ 雪紡自帶仙女光澤</button>
                                     <button type="button" onclick="addPhrase('🧺 挺版不易皺面料，洗完免熨燙，懶人必備神物！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🧺 挺版免熨燙</button>
-                                    <button type="button" onclick="addPhrase('🛡️ 高磅數材質，質感超好、單穿也完全不透光！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🛡️ 高磅數不透光</button>
+                                    <button type="button" onclick="addPhrase('🛡️ 高磅數純棉，質感超好、單穿也完全不透光！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🛡️ 高磅數不透光</button>
+                                    <button type="button" onclick="addPhrase('🌬️ 透氣排汗不黏膩，台灣的悶熱天氣穿剛剛好！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🌬️ 透氣排汗不黏膩</button>
+                                    <button type="button" onclick="addPhrase('🧸 軟糯 Q 彈針織，像被擁抱一樣的舒服觸感！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🧸 軟糯Q彈超舒服</button>
+                                    <button type="button" onclick="addPhrase('💎 微光澤綢緞面料，一穿上高級感直接拉滿！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">💎 微光澤高級感</button>
+                                    <button type="button" onclick="addPhrase('🧵 親膚抗起球處理，耐洗耐穿，CP 值超級高！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🧵 抗起球超高CP值</button>
                                 </div>
                             </div>
                             
-                            <!-- 短語分類 2: 版型 -->
-                            <div class="mb-2">
-                                <div class="text-xs font-bold text-purple-600 mb-1">✂️ 修飾版型</div>
+                            <!-- 分類 2: 修飾版型 -->
+                            <div class="mb-3">
+                                <div class="text-xs font-bold text-purple-600 mb-1">✂️ 版型與修飾度 (左右滑動看更多)</div>
                                 <div class="phrase-scroll flex gap-2">
                                     <button type="button" onclick="addPhrase('🪄 魔法顯瘦剪裁，完美隱藏小腹與腰間肉肉！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🪄 魔法顯瘦藏小腹</button>
                                     <button type="button" onclick="addPhrase('✂️ A字修飾版型，假胯寬、大腿肉一秒消失！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">✂️ A字修飾假胯寬</button>
                                     <button type="button" onclick="addPhrase('🎀 超舒適寬版鬆緊腰，吃飽喝足也完全不勒肚！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🎀 鬆緊腰不勒肚</button>
-                                    <button type="button" onclick="addPhrase('📐 高腰設計視覺秒變三七身大長腿！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">📐 高腰秒變大長腿</button>
+                                    <button type="button" onclick="addPhrase('📐 獨家訂製比例，高腰設計視覺秒變三七身大長腿！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">📐 高腰秒變大長腿</button>
+                                    <button type="button" onclick="addPhrase('✨ 顯瘦 V 領設計，拉長脖子線條、超修飾臉型！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">✨ V領修飾臉型</button>
                                     <button type="button" onclick="addPhrase('👗 垂墜感極佳，走起路來有風，自帶女神氣場！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">👗 垂墜感女神氣場</button>
+                                    <button type="button" onclick="addPhrase('🌸 微澎袖/落肩設計，完美修飾手臂掰掰肉！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🌸 完美修飾掰掰肉</button>
+                                    <button type="button" onclick="addPhrase('📏 挺版立體剪裁，不挑身形，誰穿誰好看！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">📏 挺版剪裁不挑身形</button>
+                                    <button type="button" onclick="addPhrase('👖 神奇神褲版型，不顯臀寬，背面看也超修飾！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">👖 神褲版型不顯臀</button>
+                                    <button type="button" onclick="addPhrase('🌟 縮腰綁帶/抓皺設計，輕鬆拉出完美螞蟻腰！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🌟 輕鬆拉出螞蟻腰</button>
                                 </div>
                             </div>
 
-                            <!-- 短語分類 3: 推坑 -->
+                            <!-- 分類 3: 風格百搭 -->
+                            <div class="mb-3">
+                                <div class="text-xs font-bold text-purple-600 mb-1">☕️ 風格與百搭性 (左右滑動看更多)</div>
+                                <div class="phrase-scroll flex gap-2">
+                                    <button type="button" onclick="addPhrase('☕️ 慵懶微甜風，日常出門倒垃圾、逛超商也好看！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">☕️ 慵懶微甜風</button>
+                                    <button type="button" onclick="addPhrase('🥂 氣質滿分神款，穿去約會、喝下午茶絕對被稱讚！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🥂 約會氣質滿分</button>
+                                    <button type="button" onclick="addPhrase('💼 微正式知性風，上班通勤穿這件專業又好看！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">💼 上班通勤微正式</button>
+                                    <button type="button" onclick="addPhrase('👖 百搭不出錯，隨便搭件牛仔褲或西裝褲就完美！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">👖 隨便搭都好看</button>
+                                    <button type="button" onclick="addPhrase('🏖️ 渡假必備款，帶去海邊拍照絕對超級出片！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🏖️ 渡假海邊超能拍</button>
+                                    <button type="button" onclick="addPhrase('👟 休閒感十足，搭雙小白鞋就能輕鬆出門！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">👟 搭小白鞋輕鬆出門</button>
+                                    <button type="button" onclick="addPhrase('🧥 疊穿神品，單穿好看、當內搭也超有層次！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🧥 疊穿神品超有層次</button>
+                                    <button type="button" onclick="addPhrase('✨ 質感小姊姊風，套上一件就能輕鬆展現好品味！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">✨ 質感小姊姊風</button>
+                                    <button type="button" onclick="addPhrase('🖤 經典不敗款，不管過了幾年拿出來穿依然時髦！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🖤 經典不敗超時髦</button>
+                                    <button type="button" onclick="addPhrase('🎀 兩穿設計/多種穿法，一件抵兩件，造型超百變！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🎀 兩穿設計超百變</button>
+                                </div>
+                            </div>
+
+                            <!-- 分類 4: 推坑熱銷 -->
                             <div class="mb-2">
-                                <div class="text-xs font-bold text-purple-600 mb-1">🔥 推坑熱銷</div>
+                                <div class="text-xs font-bold text-purple-600 mb-1">🔥 推坑與急迫感 (左右滑動看更多)</div>
                                 <div class="phrase-scroll flex gap-2">
                                     <button type="button" onclick="addPhrase('🔥 正韓連線爆款，實體攤位一上架就立刻被秒殺！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🔥 正韓連線秒殺款</button>
                                     <button type="button" onclick="addPhrase('🛍️ 實體顏色真的超美，豬小編自己也偷偷包色了！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🛍️ 豬小編偷偷包色</button>
                                     <button type="button" onclick="addPhrase('⏳ 廠商斷貨預警，這批現貨賣完真的不知道何時補！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">⏳ 斷貨預警要買要快</button>
                                     <button type="button" onclick="addPhrase('💎 獨家訂製款，外面絕對找不到一模一樣的質感！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">💎 獨家訂製好質感</button>
+                                    <button type="button" onclick="addPhrase('💯 買過都說讚的超高回購款，錯過絕對會搥心肝！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">💯 超高回購不買後悔</button>
+                                    <button type="button" onclick="addPhrase('👑 本期鎮店之寶，客人看到實品幾乎都直接打包！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">👑 鎮店之寶直接打包</button>
+                                    <button type="button" onclick="addPhrase('💸 超佛心甜甜價，這個材質賣這價格真的買到賺到！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">💸 佛心甜甜價買到賺到</button>
+                                    <button type="button" onclick="addPhrase('🎁 廠商獨家釋出微量現貨，要搶要快，手慢無喔！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🎁 限量現貨手慢無</button>
+                                    <button type="button" onclick="addPhrase('✨ 質感好到沒話說，收到實品絕對會驚呼太超值！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">✨ 收到實品驚呼超值</button>
+                                    <button type="button" onclick="addPhrase('🏃‍♀️ 現貨數量真的個位數，看中請立刻截圖私訊保留！')" class="bg-white border border-purple-200 text-gray-600 hover:text-purple-600 hover:border-purple-400 px-2 py-1 rounded text-xs transition whitespace-nowrap">🏃‍♀️ 數量剩個位數快截圖</button>
                                 </div>
                             </div>
 
                             <!-- 自訂短語庫 (動態生成) -->
                             <div id="customPhraseBox" class="mb-2 hidden">
-                                <div class="text-xs font-bold text-purple-600 mb-1">🌟 豬小編專屬短語</div>
+                                <div class="text-xs font-bold text-purple-600 mb-1">🌟 豬小編專屬自訂短語</div>
                                 <div id="customPhraseList" class="phrase-scroll flex gap-2"></div>
                             </div>
 
                             <!-- 新增自訂短語 -->
                             <div class="flex gap-2 mt-3 pt-3 border-t border-purple-200">
-                                <input type="text" id="inputCustomPhrase" placeholder="輸入想內建的短語..." class="flex-1 text-xs border border-purple-200 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-purple-400">
-                                <button type="button" onclick="saveCustomPhrase()" class="bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold hover:bg-purple-200 transition">新增</button>
+                                <input type="text" id="inputCustomPhrase" placeholder="輸入想內建的專屬短語..." class="flex-1 text-xs border border-purple-200 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-purple-400">
+                                <button type="button" onclick="saveCustomPhrase()" class="bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold hover:bg-purple-200 transition">新增短語</button>
                             </div>
                         </div>
 
@@ -338,7 +372,7 @@
         window.draftProducts = []; 
         window.currentCategoryFilter = 'all'; 
         window.currentSearchQuery = '';       
-        window.customPhrases = []; // 🌟 儲存自訂短語
+        window.customPhrases = []; 
 
         window.showToast = function(message, type = 'success') {
             const toast = document.createElement('div');
@@ -375,7 +409,6 @@
             }
         };
 
-        // 🌟 點擊自動加入介紹框
         window.addPhrase = function(text) {
             const descArea = document.getElementById('inputDesc');
             if (descArea.value.trim() === '') {
@@ -383,12 +416,10 @@
             } else {
                 descArea.value += '\n' + text;
             }
-            // 讓框框閃一下提醒加入了
             descArea.classList.add('ring-2', 'ring-purple-400', 'bg-purple-50');
             setTimeout(() => descArea.classList.remove('ring-2', 'ring-purple-400', 'bg-purple-50'), 300);
         };
 
-        // 🌟 儲存與渲染自訂短語
         window.saveCustomPhrase = async function() {
             const input = document.getElementById('inputCustomPhrase');
             const text = input.value.trim();
@@ -420,7 +451,6 @@
                 box.classList.remove('hidden');
                 list.innerHTML = '';
                 window.customPhrases.forEach((phrase, idx) => {
-                    // 擷取前幾個字當按鈕標題
                     const shortTitle = phrase.length > 10 ? phrase.substring(0, 10) + '...' : phrase;
                     list.innerHTML += `
                         <div class="relative inline-block group">
