@@ -16,6 +16,12 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .modal-animate { animation: fadeIn 0.2s ease-out forwards; }
         .sold-out-overlay { filter: grayscale(80%) brightness(0.7); }
+        /* 🌟 箭頭閃動動畫 */
+        @keyframes bounce-x { 
+            0%, 100% { transform: translateX(0); } 
+            50% { transform: translateX(3px); } 
+        }
+        .animate-bounce-x { animation: bounce-x 1s infinite; }
     </style>
 </head>
 <body class="bg-gray-200">
@@ -68,7 +74,7 @@
     <!-- 🌟 右下角懸浮 LINE -->
     <div id="floatingLineBtn" class="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-2">
         <div class="bg-white text-rose-500 text-sm font-bold px-4 py-2.5 rounded-2xl shadow-xl border border-rose-100 relative max-w-[200px] text-center">
-            截圖私訊老闆娘詢問喔❤️
+            截圖私訊豬小編詢問喔❤️
             <div class="absolute -bottom-1.5 right-5 w-3.5 h-3.5 bg-white border-b border-r border-rose-100 transform rotate-45"></div>
         </div>
         <button onclick="buyProduct()" class="w-16 h-16 bg-[#06C755] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"><i class="fa-brands fa-line text-4xl"></i></button>
@@ -79,7 +85,7 @@
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="text-white font-bold flex items-center gap-2"><i class="fa-solid fa-user-shield text-[#06C755]"></i> 管理模式</div>
             <div class="flex bg-gray-700 rounded-full p-1">
-                <button id="btnAdmin" onclick="switchView('admin')" class="px-4 py-2 rounded-full text-sm font-bold transition-all bg-indigo-600 text-white shadow-sm flex items-center gap-1"><i class="fa-solid fa-box-open"></i> 後台</button>
+                <button id="btnAdmin" onclick="switchView('admin')" class="px-4 py-2 rounded-full text-sm font-bold transition-all bg-indigo-600 text-white shadow-sm flex items-center gap-1"><i class="fa-solid fa-box-open"></i> 豬小編後台</button>
                 <button id="btnCustomer" onclick="switchView('customer')" class="px-4 py-2 rounded-full text-sm font-bold transition-all bg-transparent text-gray-300 hover:text-white flex items-center gap-1"><i class="fa-solid fa-mobile-screen"></i> 預覽</button>
             </div>
         </div>
@@ -100,18 +106,26 @@
                         <i class="fa-solid fa-store text-indigo-600"></i> <span id="customerShopName">Candy服飾</span>
                     </div>
                     <div class="flex gap-3 text-xl text-gray-400">
-                        <!-- 🌟 社群導流圖示 -->
                         <a id="linkIg" href="#" target="_blank" class="hover:text-pink-500 hidden"><i class="fa-brands fa-instagram"></i></a>
-                        <a id="linkFb" href="#" target="_blank" class="hover:text-blue-600 hidden"><i class="fa-brands fa-facebook"></i></a>
                         <a id="linkShopee" href="#" target="_blank" class="hover:text-orange-500 hidden"><i class="fa-solid fa-bag-shopping"></i></a>
-                        
                         <button onclick="openPasswordModal()" id="btnLock" class="hover:text-indigo-500 transition"><i class="fa-solid fa-lock text-sm"></i></button>
                     </div>
                 </div>
                 
-                <!-- 🌟 分類滑動列與搜尋 -->
-                <div class="px-3 pt-2 pb-1">
-                    <div class="relative bg-gray-100 rounded-full flex items-center px-3 py-2 mb-2">
+                <!-- 🌟 方案 C：超級導流橫幅公告 -->
+                <a id="linkFbBanner" href="#" target="_blank" class="hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2.5 flex items-center justify-between shadow-sm active:bg-blue-700 transition">
+                        <div class="flex items-center gap-2">
+                            <div class="bg-white text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm"><i class="fa-brands fa-facebook-f"></i></div>
+                            <span class="text-sm font-bold tracking-wide">點我加入FB粉專，看豬小編最新直播實穿！</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-sm animate-bounce-x"></i>
+                    </div>
+                </a>
+                
+                <!-- 分類滑動列與搜尋 -->
+                <div class="px-3 pt-3 pb-1">
+                    <div class="relative bg-gray-100 rounded-full flex items-center px-3 py-2 mb-2 border border-gray-200">
                         <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
                         <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="搜尋款式或關鍵字..." class="bg-transparent w-full ml-2 outline-none text-sm text-gray-700">
                     </div>
@@ -129,7 +143,7 @@
             <!-- 商品流 -->
             <div id="customerProductList" class="p-4 flex flex-col gap-6">
                 <div class="p-8 text-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200 mt-10">
-                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>店鋪整理中...
+                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>豬小編整理中...
                 </div>
             </div>
             
@@ -139,18 +153,29 @@
         </div>
 
         <!-- ========================================== -->
-        <!-- 模式 A：老闆娘全能後台 -->
+        <!-- 模式 A：豬小編全能後台 -->
         <!-- ========================================== -->
         <div id="viewAdmin" class="hidden max-w-4xl mx-auto px-4 py-6 space-y-6">
             
-            <!-- 🌟 設定區 (加入社群連結) -->
+            <div class="bg-indigo-50 border border-indigo-200 text-indigo-800 p-4 rounded-xl flex items-start gap-3 shadow-sm">
+                <i class="fa-solid fa-seedling mt-1 text-indigo-600"></i>
+                <div>
+                    <strong class="block mb-1">歡迎回來，豬小編！</strong>
+                    <p class="text-sm leading-relaxed font-medium">真正改變人生的，從來不是奇蹟，而是日復一日的累積。</p>
+                </div>
+            </div>
+
+            <!-- 設定區 -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                 <h3 class="font-bold text-indigo-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-gear"></i> 店鋪與導流設定</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label class="block text-sm font-bold text-gray-700 mb-1">店鋪名稱</label><input type="text" id="inputShopName" value="西門町Candy服飾" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none"></div>
                     <div><label class="block text-sm font-bold text-gray-700 mb-1">客服 LINE 網址</label><input type="text" id="inputLineLink" placeholder="必填：https://line.me/..." class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-[#06C755] outline-none"></div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1"><i class="fa-brands fa-facebook text-blue-600"></i> FB 導流橫幅網址 (社團/粉專)</label>
+                        <input type="text" id="inputFbLink" placeholder="https://facebook.com/..." class="w-full border border-blue-300 bg-blue-50 rounded-xl p-3 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
                     <div><label class="block text-sm font-bold text-gray-700 mb-1"><i class="fa-brands fa-instagram text-pink-500"></i> IG 主頁網址 (選填)</label><input type="text" id="inputIgLink" placeholder="https://instagram.com/..." class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500"></div>
-                    <div><label class="block text-sm font-bold text-gray-700 mb-1"><i class="fa-brands fa-facebook text-blue-600"></i> FB 粉專網址 (選填)</label><input type="text" id="inputFbLink" placeholder="https://facebook.com/..." class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500"></div>
                     <div><label class="block text-sm font-bold text-gray-700 mb-1"><i class="fa-solid fa-bag-shopping text-orange-500"></i> 蝦皮賣場網址 (選填)</label><input type="text" id="inputShopeeLink" placeholder="https://shopee.tw/..." class="w-full border border-gray-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500"></div>
                 </div>
                 <button onclick="saveSettings()" class="mt-4 w-full bg-indigo-600 text-white font-bold py-3 rounded-xl flex justify-center items-center gap-2 shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition">
@@ -158,14 +183,13 @@
                 </button>
             </div>
 
-            <!-- 🌟 全新精緻上架區 -->
+            <!-- 新增商品區 -->
             <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
                 <div class="bg-[#06C755] text-white p-4 flex items-center justify-between">
                     <div class="flex items-center gap-2"><i class="fa-solid fa-camera-retro text-xl"></i><h2 class="text-lg font-bold">新增款式</h2></div>
                 </div>
                 <div class="p-5 flex flex-col md:flex-row gap-6">
                     
-                    <!-- 左：圖片與影片 -->
                     <div class="w-full md:w-1/3 flex flex-col gap-3">
                         <div class="w-full border-2 border-dashed border-gray-300 rounded-2xl p-4 flex flex-col items-center justify-center relative min-h-[160px]">
                             <div id="previewContainer" class="w-full flex flex-wrap gap-2 justify-center items-center hidden mb-2"></div>
@@ -179,7 +203,6 @@
                         <div><input type="text" id="inputVideoLink" placeholder="🎥 貼上 IG 實穿影片網址 (選填)" class="w-full border border-blue-200 bg-blue-50 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-400 outline-none"></div>
                     </div>
 
-                    <!-- 右：詳細資料與分類 -->
                     <div class="w-full md:w-2/3 flex flex-col justify-between space-y-4">
                         
                         <div class="flex gap-3">
@@ -202,7 +225,6 @@
                             <div class="w-28"><label class="block text-sm font-bold text-gray-700 mb-1">價格 <span class="text-red-500">*</span></label><input type="number" id="inputPrice" class="w-full border border-gray-300 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-[#06C755]"></div>
                         </div>
 
-                        <!-- 🌟 尺寸與身形標籤 -->
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">尺寸/規格簡介 (選填)</label>
                             <input type="text" id="inputMeasurements" placeholder="例如：胸寬50 長65 / 有彈性" class="w-full border border-gray-300 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
@@ -233,14 +255,13 @@
                 <button id="btnPublishAll" onclick="publishAllDrafts()" class="w-full bg-[#06C755] text-white font-bold text-lg py-4 rounded-xl flex justify-center items-center gap-2 shadow-lg hover:bg-green-600 transition active:scale-[0.98]"><i class="fa-solid fa-cloud-arrow-up"></i> 確認無誤，全部上架！</button>
             </div>
 
-            <!-- 🌟 管理列表區 (加入狀態按鈕) -->
+            <!-- 管理列表區 -->
             <div>
                 <div class="flex items-center justify-between mb-4 mt-8">
                     <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> 商品狀態管理</h3>
                     <button onclick="forceRefresh()" class="text-xs bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-bold shadow-sm flex items-center gap-1 active:scale-95"><i class="fa-solid fa-rotate-right"></i> 重新讀取</button>
                 </div>
                 <div id="adminProductList" class="flex flex-col gap-3">
-                    <!-- 商品管理條列 -->
                 </div>
             </div>
         </div>
@@ -295,7 +316,6 @@
             }
         };
 
-        // 🌟 身形標籤按鈕邏輯
         window.toggleFitTag = function(btn) {
             btn.classList.toggle('active-fit-tag');
             if (btn.classList.contains('active-fit-tag')) {
@@ -305,7 +325,7 @@
             }
         };
 
-        // 讀寫設定 (加入FB與其他社群連結)
+        // 讀寫設定 
         const settingsRef = doc(db, 'settings', 'shopInfo');
         onSnapshot(settingsRef, (docSnap) => {
             if (docSnap.exists()) {
@@ -316,16 +336,23 @@
                 if(document.getElementById('inputFbLink')) document.getElementById('inputFbLink').value = data.fbLink || '';
                 if(document.getElementById('inputShopeeLink')) document.getElementById('inputShopeeLink').value = data.shopeeLink || '';
                 
-                // 更新前台
                 document.getElementById('customerShopName').innerText = data.shopName || 'Candy服飾';
                 
                 const linkIg = document.getElementById('linkIg');
-                const linkFb = document.getElementById('linkFb'); 
                 const linkShopee = document.getElementById('linkShopee');
+                const linkFbBanner = document.getElementById('linkFbBanner');
 
                 if(data.igLink) { linkIg.href = data.igLink; linkIg.classList.remove('hidden'); } else { linkIg.classList.add('hidden'); }
-                if(data.fbLink) { linkFb.href = data.fbLink; linkFb.classList.remove('hidden'); } else { linkFb.classList.add('hidden'); }
                 if(data.shopeeLink) { linkShopee.href = data.shopeeLink; linkShopee.classList.remove('hidden'); } else { linkShopee.classList.add('hidden'); }
+                
+                if(data.fbLink) { 
+                    linkFbBanner.href = data.fbLink; 
+                    linkFbBanner.classList.remove('hidden'); 
+                    linkFbBanner.classList.add('block'); 
+                } else { 
+                    linkFbBanner.classList.add('hidden'); 
+                    linkFbBanner.classList.remove('block'); 
+                }
             }
         });
 
@@ -412,7 +439,7 @@
         window.removeImage = function(index) { window.base64ImagesArray.splice(index, 1); renderPreviewBox(); };
         window.generateCopywriting = function() {
             const title = document.getElementById('inputTitle').value; const descField = document.getElementById('inputDesc');
-            if (!title) { showToast("請先輸入名稱喔！", "error"); return; }
+            if (!title) { showToast("豬小編，請先輸入名稱喔！", "error"); return; }
             descField.value = "🤖 正在為您寫厲害的銷售文案...";
             setTimeout(() => {
                 let desc = "這款實品超級美！材質舒服版型修飾，現貨有限，喜歡趕快帶回家～"; 
@@ -422,7 +449,6 @@
             }, 300); 
         };
 
-        // 🌟 收集資料進草稿
         window.addToDraft = function() {
             const title = document.getElementById('inputTitle').value.trim();
             const price = document.getElementById('inputPrice').value.trim();
@@ -430,7 +456,6 @@
             if (window.base64ImagesArray.length === 0) { showToast("請至少上一張照片！", "error"); return; }
             if (!title || !price) { showToast("名稱、價格必填喔！", "error"); return; }
 
-            // 收集選中的標籤
             let selectedFitTags = [];
             document.querySelectorAll('.active-fit-tag').forEach(btn => selectedFitTags.push(btn.innerText));
 
@@ -447,7 +472,6 @@
                 status: 'active' 
             });
 
-            // 清空
             document.getElementById('inputTitle').value = ''; document.getElementById('inputPrice').value = ''; 
             document.getElementById('inputDesc').value = ''; document.getElementById('inputVideoLink').value = ''; 
             document.getElementById('inputMeasurements').value = '';
@@ -492,7 +516,6 @@
             btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> 確認無誤，全部上架！'; btn.disabled = false;
         };
 
-        // 🌟 變更商品狀態 
         window.changeStatus = async function(id, newStatus) {
             try {
                 await updateDoc(doc(db, 'products', id), { status: newStatus });
@@ -504,7 +527,6 @@
             if(confirm("確定要徹底刪除這件商品嗎？(建議可以使用隱藏功能)")) { await deleteDoc(doc(db, 'products', id)); showToast("已刪除"); }
         };
 
-        // 🌟 編輯商品資料
         window.openEditModal = function(id) {
             const p = window.productsData.find(item => item.id === id);
             if(!p) return;
@@ -537,10 +559,9 @@
 
         window.buyProduct = function() {
             const link = document.getElementById('inputLineLink') ? document.getElementById('inputLineLink').value : '';
-            if(link) window.open(link, '_blank'); else showToast("老闆娘還沒設定 LINE 喔！", "error");
+            if(link) window.open(link, '_blank'); else showToast("豬小編還沒設定 LINE 喔！", "error");
         };
 
-        // 🌟 前台分類與搜尋過濾
         window.setCategoryFilter = function(cat, btn) {
             window.currentCategoryFilter = cat;
             const btns = document.querySelectorAll('.cat-btn');
@@ -561,7 +582,6 @@
             element.classList.replace('border-transparent', 'border-indigo-500');
         };
 
-        // 🌟 核心渲染功能
         function renderProducts() {
             const adminList = document.getElementById('adminProductList');
             const customerList = document.getElementById('customerProductList');
@@ -575,7 +595,6 @@
                 const coverImage = imgArray[0];
                 const pStatus = p.status || 'active'; 
 
-                // ==================== 後台管理條列 ====================
                 if(adminList) {
                     let statusHtml = '';
                     if(pStatus === 'active') statusHtml = '<span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-bold">上架中</span>';
@@ -601,7 +620,6 @@
                         </div>`;
                 }
 
-                // ==================== 前台客人過濾與顯示 ====================
                 if(customerList) {
                     if(pStatus === 'hidden') return;
                     if(window.currentCategoryFilter !== 'all' && p.category !== window.currentCategoryFilter) return;
@@ -634,7 +652,7 @@
                         thumbnailsHtml += `</div>`;
                     }
 
-                    const videoLinkHtml = p.videoLink ? `<a href="${p.videoLink}" target="_blank" class="inline-block mt-3 bg-blue-50 border border-blue-200 text-blue-600 font-bold text-xs px-4 py-2 rounded-lg hover:bg-blue-100 transition"><i class="fa-brands fa-instagram text-base"></i> 點我看老闆娘實穿影片</a>` : '';
+                    const videoLinkHtml = p.videoLink ? `<a href="${p.videoLink}" target="_blank" class="inline-block mt-3 bg-blue-50 border border-blue-200 text-blue-600 font-bold text-xs px-4 py-2 rounded-lg hover:bg-blue-100 transition"><i class="fa-brands fa-instagram text-base"></i> 點我看豬小編實穿影片</a>` : '';
                     const descHtml = p.rawText ? `<div class="bg-gray-50 p-3 rounded-xl text-sm text-gray-600 mt-3 whitespace-pre-wrap leading-relaxed">${p.rawText}</div>` : '';
                     
                     let measurementsHtml = '';
@@ -669,7 +687,7 @@
 
             if(customerList) {
                 if (window.productsData.length === 0) {
-                    customerList.innerHTML = '<div class="p-8 text-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200 mt-10">老闆娘準備中...</div>';
+                    customerList.innerHTML = '<div class="p-8 text-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200 mt-10">豬小編準備中...</div>';
                     document.getElementById('noResultMsg').classList.add('hidden');
                 } else if (visibleCount === 0) {
                     document.getElementById('noResultMsg').classList.remove('hidden');
