@@ -7,6 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     
+    <!-- 🌟 專屬社群名片與 SEO 標籤 (已完美設定) -->
     <title>西門町Candy服飾 - 專屬型錄</title>
     <meta name="description" content="✨ 歡迎光臨 Candy 服飾！週週上架百搭顯瘦新款，S~3XL都能找到命定款。點擊查看豬小編最新實穿，專屬VIP快速看款下單！">
     <meta property="og:title" content="西門町Candy服飾 - 專屬VIP型錄">
@@ -18,7 +19,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; scroll-behavior: smooth; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes slideDown { from { transform: translate(-50%, -100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
@@ -30,16 +31,17 @@
         .animate-bounce-x { animation: bounce-x 1s infinite; }
         .phrase-scroll { overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 6px; }
         .phrase-scroll::-webkit-scrollbar { display: none; }
+        /* 🌟 直達車高光閃爍特效 */
+        @keyframes highlight-pulse { 0% { box-shadow: 0 0 0 0 rgba(2fb, 113, 133, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(2fb, 113, 133, 0); } 100% { box-shadow: 0 0 0 0 rgba(2fb, 113, 133, 0); } }
+        .target-highlight { animation: highlight-pulse 2s ease-out 3; border: 2px solid #fb7185; }
     </style>
 </head>
 <body class="bg-gray-200 relative">
 
-    <!-- 🌟 回到頂部按鈕 (平滑滾動) -->
     <button id="backToTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="hidden fixed bottom-6 right-6 z-[100] w-12 h-12 bg-gray-800 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all opacity-80 hover:opacity-100">
         <i class="fa-solid fa-arrow-up text-xl"></i>
     </button>
 
-    <!-- 🌟 全螢幕圖片放大 Modal -->
     <div id="imageModal" class="hidden fixed inset-0 z-[200] bg-black bg-opacity-90 flex items-center justify-center p-4 modal-animate" onclick="closeImageModal()">
         <span class="absolute top-4 right-4 text-white text-4xl cursor-pointer hover:text-gray-300 transition" onclick="closeImageModal()">&times;</span>
         <img id="expandedImg" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
@@ -94,7 +96,6 @@
                 </div>
                 <div><label class="block text-sm font-bold text-gray-700 mb-1">尺寸/材質說明</label><input type="text" id="editMeasurements" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none"></div>
                 <div><label class="block text-sm font-bold text-gray-700 mb-1">詳細介紹</label><textarea id="editDesc" rows="3" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea></div>
-                <!-- 🌟 編輯時也可勾選實穿資訊 -->
                 <div class="flex items-center gap-2 bg-pink-50 p-2 rounded-lg border border-pink-200">
                     <input type="checkbox" id="editShowModelInfo" class="w-4 h-4 text-pink-600 rounded focus:ring-pink-500 cursor-pointer">
                     <label for="editShowModelInfo" class="text-sm font-bold text-pink-800 cursor-pointer">顯示「豬小編實穿參考」</label>
@@ -367,7 +368,6 @@
                         <div class="relative mt-2">
                             <label class="block text-sm font-bold text-gray-700 mb-1">產品介紹框 (點擊上方短語會自動加入)</label>
                             <textarea id="inputDesc" class="w-full border border-gray-300 rounded-xl p-3 resize-none outline-none focus:ring-2 focus:ring-[#06C755]" rows="4" placeholder="請點選上方短語，或直接在這裡打字喔！"></textarea>
-                            <!-- 🌟 實穿參考勾選框 -->
                             <div class="mt-3 bg-pink-50 border border-pink-200 rounded-xl p-3 flex items-center gap-2 cursor-pointer shadow-sm hover:bg-pink-100 transition" onclick="document.getElementById('inputShowModelInfo').click()">
                                 <input type="checkbox" id="inputShowModelInfo" class="w-4 h-4 text-pink-600 rounded focus:ring-pink-500 cursor-pointer pointer-events-none">
                                 <label class="text-sm font-bold text-pink-800 cursor-pointer select-none flex-1 pointer-events-none">☑️ 標示：豬小編實穿參考 (163cm/48kg)</label>
@@ -426,6 +426,7 @@
         
         window.currentLineLink = '';
         window.currentFbLink = '';
+        window.hasAutoScrolled = false; // 控制直達車只捲動一次
 
         window.showToast = function(message, type = 'success', duration = 2500) {
             const toast = document.createElement('div');
@@ -435,7 +436,6 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, duration);
         };
 
-        // 🌟 滾動監聽 (回到頂部按鈕)
         window.addEventListener('scroll', () => {
             const btn = document.getElementById('backToTopBtn');
             if (window.scrollY > 400) { btn.classList.remove('hidden'); } else { btn.classList.add('hidden'); }
@@ -656,13 +656,13 @@
                 measurements: document.getElementById('inputMeasurements').value.trim(),
                 fitTags: selectedFitTags,
                 status: 'active',
-                showModelInfo: document.getElementById('inputShowModelInfo').checked // 🌟 儲存勾選狀態
+                showModelInfo: document.getElementById('inputShowModelInfo').checked 
             });
 
             document.getElementById('inputTitle').value = ''; document.getElementById('inputPrice').value = ''; 
             document.getElementById('inputDesc').value = ''; document.getElementById('inputVideoLink').value = ''; 
             document.getElementById('inputMeasurements').value = '';
-            document.getElementById('inputShowModelInfo').checked = false; // 清空勾選
+            document.getElementById('inputShowModelInfo').checked = false; 
             document.querySelectorAll('.active-fit-tag').forEach(btn => window.toggleFitTag(btn)); 
             window.base64ImagesArray = []; renderPreviewBox(); renderDrafts();
             showToast("✅ 已加入清單！", "purple");
@@ -696,7 +696,7 @@
                         imageUrls: item.imageUrls, imageUrl: item.imageUrls[0], videoLink: item.videoLink || '',
                         title: item.title, price: item.price, rawText: item.desc, tag: item.tag || 'new', 
                         category: item.category || 'top', measurements: item.measurements || '', fitTags: item.fitTags || [], status: item.status || 'active',
-                        showModelInfo: item.showModelInfo || false, // 🌟 存入資料庫
+                        showModelInfo: item.showModelInfo || false, 
                         soldCount: Math.floor(Math.random() * 201) + 300, 
                         createdAt: serverTimestamp()
                     });
@@ -726,7 +726,7 @@
             document.getElementById('editCategory').value = p.category || 'top';
             document.getElementById('editMeasurements').value = p.measurements || '';
             document.getElementById('editDesc').value = p.rawText || '';
-            document.getElementById('editShowModelInfo').checked = p.showModelInfo || false; // 🌟 載入狀態
+            document.getElementById('editShowModelInfo').checked = p.showModelInfo || false; 
             document.getElementById('editModal').classList.remove('hidden');
         };
 
@@ -741,7 +741,7 @@
                     category: document.getElementById('editCategory').value,
                     measurements: document.getElementById('editMeasurements').value,
                     rawText: document.getElementById('editDesc').value,
-                    showModelInfo: document.getElementById('editShowModelInfo').checked // 🌟 更新狀態
+                    showModelInfo: document.getElementById('editShowModelInfo').checked 
                 });
                 document.getElementById('editModal').classList.add('hidden');
                 showToast("修改成功！", "purple");
@@ -789,10 +789,11 @@
             }
         };
 
-        // 🌟 新增：一鍵分享閨蜜功能
-        window.shareProduct = function(title, price) {
-            const currentUrl = window.location.origin + window.location.pathname; // 抓取乾淨網址
-            const shareText = `欸你看這件超美！\n[ ${title} ] 只要 NT$${price}\n👉 點這裡逛逛：\n${currentUrl}`;
+        // 🌟 更新版分享黑科技：加入直達商品 ID (?p=xxx)
+        window.shareProduct = function(id, title, price) {
+            // 抓取網址並加上直達參數 ?p={id}
+            const currentUrl = window.location.origin + window.location.pathname + '?p=' + id;
+            const shareText = `欸你看這件超美！\n[ ${title} ] 只要 NT$${price}\n👉 點這裡直接看這件：\n${currentUrl}`;
             
             const tempInput = document.createElement("textarea");
             tempInput.value = shareText;
@@ -801,7 +802,7 @@
             document.execCommand("copy");
             document.body.removeChild(tempInput);
             
-            showToast("✨ 已複製連結！快去貼給閨蜜看吧", "purple");
+            showToast("✨ 已複製直達連結！快去貼給閨蜜看吧", "purple");
         };
 
         window.setCategoryFilter = function(cat, btn) {
@@ -909,27 +910,27 @@
                         fitTagsHtml += '</div>';
                     }
 
-                    // 🌟 實穿參考顯示邏輯
                     const modelInfoHtml = p.showModelInfo ? `
                         <div class="mt-3 bg-pink-50 border border-pink-200 text-pink-800 text-xs font-bold p-3 rounded-xl leading-relaxed shadow-sm">
                             🙋‍♀️ 豬小編實穿參考：身高 163cm / 體重 48kg / 平常穿 M 號。有任何尺寸問題歡迎傳 LINE 討論喔！
                         </div>
                     ` : '';
 
-                    // 🌟 新增分享給閨蜜按鈕
+                    // 🌟 分享按鈕升級：傳入 p.id
                     const buyBtnHtml = `
                         <div class="flex gap-2 mt-4">
                             <button onclick="buyProduct('${p.title}', '${p.price}')" class="flex-1 bg-[#06C755] text-white font-bold text-sm py-3.5 rounded-xl flex justify-center items-center gap-2 shadow-md hover:bg-green-600 transition active:scale-95">
                                 <i class="fa-brands fa-line text-lg"></i> 💬 傳 LINE 詢問此款
                             </button>
-                            <button onclick="shareProduct('${p.title}', '${p.price}')" class="w-14 bg-indigo-100 text-indigo-600 font-bold text-sm rounded-xl flex justify-center items-center shadow-sm hover:bg-indigo-200 transition active:scale-95 flex-shrink-0" title="分享給閨蜜">
+                            <button onclick="shareProduct('${p.id}', '${p.title}', '${p.price}')" class="w-14 bg-indigo-100 text-indigo-600 font-bold text-sm rounded-xl flex justify-center items-center shadow-sm hover:bg-indigo-200 transition active:scale-95 flex-shrink-0" title="分享給閨蜜">
                                 <i class="fa-solid fa-share-nodes text-lg"></i>
                             </button>
                         </div>
                     `;
 
+                    // 🌟 外層加入了 id="product-${p.id}" 讓直達車可以定位
                     customerList.innerHTML += `
-                        <div class="bg-white rounded-2xl shadow-md overflow-hidden pb-4 mb-2">
+                        <div id="product-${p.id}" class="bg-white rounded-2xl shadow-md overflow-hidden pb-4 mb-2 transition-all duration-500">
                             <div class="w-full bg-gray-100 relative group overflow-hidden flex justify-center items-center min-h-[250px]">
                                 <img id="mainImg-${p.id}" src="${coverImage}" class="w-full h-auto max-h-[600px] object-contain cursor-pointer transition-opacity duration-300 ${imgClass}" onclick="openImageModal(this.src)">
                                 ${badgeHtml}
@@ -963,6 +964,21 @@
                 } else {
                     document.getElementById('noResultMsg').classList.add('hidden');
                 }
+            }
+
+            // 🌟 黑科技：處理直達車網址 (?p=商品ID)
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetId = urlParams.get('p');
+            // 確保有找到指定商品，且只有網頁剛載入時滾動一次
+            if (targetId && !window.hasAutoScrolled) {
+                setTimeout(() => {
+                    const targetEl = document.getElementById('product-' + targetId);
+                    if (targetEl) {
+                        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        targetEl.classList.add('target-highlight'); // 發出粉紅閃爍光芒
+                        window.hasAutoScrolled = true;
+                    }
+                }, 800); // 稍微延遲讓圖片載入，確保滾動位置精準
             }
         }
 
