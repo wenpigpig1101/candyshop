@@ -6,7 +6,15 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    
+    <!-- 🌟 更新：專屬社群名片與 SEO 標籤 (S~3XL版) -->
     <title>西門町Candy服飾 - 專屬型錄</title>
+    <meta name="description" content="✨ 歡迎光臨 Candy 服飾！週週上架百搭顯瘦新款，S~3XL都能找到命定款。點擊查看豬小編最新實穿，專屬VIP快速看款下單！">
+    <meta property="og:title" content="西門町Candy服飾 - 專屬VIP型錄">
+    <meta property="og:description" content="✨ 歡迎光臨 Candy 服飾！週週上架百搭顯瘦新款，S~3XL都能找到命定款。點擊查看豬小編最新實穿，專屬VIP快速看款下單！">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="西門町Candy服飾">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -31,6 +39,24 @@
     <div id="imageModal" class="hidden fixed inset-0 z-[200] bg-black bg-opacity-90 flex items-center justify-center p-4 modal-animate" onclick="closeImageModal()">
         <span class="absolute top-4 right-4 text-white text-4xl cursor-pointer hover:text-gray-300 transition" onclick="closeImageModal()">&times;</span>
         <img id="expandedImg" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+    </div>
+
+    <!-- 🌟 LINE 防呆教學 Modal (全新黑科技) -->
+    <div id="lineInstructionModal" class="hidden fixed inset-0 z-[250] bg-black bg-opacity-70 flex items-center justify-center p-4 modal-animate transition-opacity">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center transform transition-transform scale-100">
+            <div class="w-16 h-16 bg-[#06C755] text-white rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg animate-bounce">
+                <i class="fa-regular fa-paste"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-3 tracking-wide">商品資訊已複製！</h3>
+            <div class="text-gray-600 mb-6 leading-relaxed font-medium bg-gray-50 p-4 rounded-xl border border-gray-100">
+                正在為您跳轉 LINE...<br>
+                請在對話框 <strong class="text-rose-500 text-lg">長按 ➡️ 貼上</strong><br>
+                就可以傳送給豬小編囉！
+            </div>
+            <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden shadow-inner">
+                <div id="lineProgressBar" class="bg-[#06C755] h-full w-0 transition-all duration-[1800ms] ease-linear"></div>
+            </div>
+        </div>
     </div>
 
     <!-- 🌟 密碼輸入 Modal -->
@@ -96,7 +122,6 @@
                     <div class="font-bold text-xl text-gray-800 flex items-center gap-2 tracking-wide">
                         <i class="fa-solid fa-store text-indigo-600"></i> <span id="customerShopName">Candy服飾</span>
                     </div>
-                    <!-- 🌟 加入 FB 圖示在右上角導覽列 -->
                     <div class="flex gap-4 text-xl text-gray-400 items-center">
                         <button onclick="openLine()" id="iconLine" class="text-[#06C755] hover:opacity-80 transition hidden"><i class="fa-brands fa-line"></i></button>
                         <button onclick="openFb()" id="iconFb" class="text-blue-600 hover:opacity-80 transition hidden"><i class="fa-brands fa-facebook"></i></button>
@@ -709,12 +734,14 @@
             else showToast("豬小編還沒設定 FB 喔！", "error");
         };
 
+        // 🌟 升級版黑科技：顯示動畫並明確教客人「長按貼上」，然後才跳轉
         window.buyProduct = function(title, price) {
             if(!window.currentLineLink) { showToast("豬小編還沒設定 LINE 喔！", "error"); return; }
             
             if(title && price) {
                 const msg = `豬小編你好，我想詢問這款：${title} (NT$${price}) 還有貨嗎？`;
                 
+                // 執行背景複製
                 const tempInput = document.createElement("textarea");
                 tempInput.value = msg;
                 document.body.appendChild(tempInput);
@@ -722,8 +749,21 @@
                 document.execCommand("copy");
                 document.body.removeChild(tempInput);
                 
-                showToast("✅ 已複製文字！請在 LINE 貼上發送", "success");
-                window.location.href = window.currentLineLink;
+                // 打開教學視窗
+                const modal = document.getElementById('lineInstructionModal');
+                const progressBar = document.getElementById('lineProgressBar');
+                modal.classList.remove('hidden');
+                
+                // 讓進度條跑動畫 (1.8秒)
+                setTimeout(() => { progressBar.style.width = '100%'; }, 50);
+                
+                // 2 秒後關閉視窗並跳轉 LINE
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    progressBar.style.width = '0%'; // 重置進度條
+                    window.location.href = window.currentLineLink;
+                }, 2000);
+                
             } else {
                 window.location.href = window.currentLineLink;
             }
