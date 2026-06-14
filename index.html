@@ -32,7 +32,12 @@
         .phrase-scroll::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="bg-gray-200">
+<body class="bg-gray-200 relative">
+
+    <!-- 🌟 回到頂部按鈕 (平滑滾動) -->
+    <button id="backToTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="hidden fixed bottom-6 right-6 z-[100] w-12 h-12 bg-gray-800 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-gray-700 hover:scale-105 active:scale-95 transition-all opacity-80 hover:opacity-100">
+        <i class="fa-solid fa-arrow-up text-xl"></i>
+    </button>
 
     <!-- 🌟 全螢幕圖片放大 Modal -->
     <div id="imageModal" class="hidden fixed inset-0 z-[200] bg-black bg-opacity-90 flex items-center justify-center p-4 modal-animate" onclick="closeImageModal()">
@@ -40,7 +45,7 @@
         <img id="expandedImg" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
     </div>
 
-    <!-- 🌟 LINE 防呆教學 Modal (加長到 4 秒) -->
+    <!-- 🌟 LINE 防呆教學 Modal -->
     <div id="lineInstructionModal" class="hidden fixed inset-0 z-[250] bg-black bg-opacity-70 flex items-center justify-center p-4 modal-animate transition-opacity">
         <div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center transform transition-transform scale-100">
             <div class="w-16 h-16 bg-[#06C755] text-white rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg animate-bounce">
@@ -53,7 +58,6 @@
                 就可以傳送給豬小編囉！
             </div>
             <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden shadow-inner">
-                <!-- 🌟 這裡把動畫時間改成 3800ms (配合4秒的跳轉) -->
                 <div id="lineProgressBar" class="bg-[#06C755] h-full w-0 transition-all duration-[3800ms] ease-linear"></div>
             </div>
         </div>
@@ -77,7 +81,7 @@
     <!-- 🌟 商品編輯 Modal -->
     <div id="editModal" class="hidden fixed inset-0 z-[150] bg-black bg-opacity-60 flex items-center justify-center p-4 modal-animate">
         <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 class="font-bold text-lg mb-4 text-indigo-800 flex items-center gap-2"><i class="fa-solid fa-pen-to-square"></i> 編輯商品 (文字/分類)</h3>
+            <h3 class="font-bold text-lg mb-4 text-indigo-800 flex items-center gap-2"><i class="fa-solid fa-pen-to-square"></i> 編輯商品</h3>
             <input type="hidden" id="editProdId">
             <div class="space-y-4">
                 <div><label class="block text-sm font-bold text-gray-700 mb-1">商品名稱</label><input type="text" id="editTitle" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none"></div>
@@ -90,6 +94,11 @@
                 </div>
                 <div><label class="block text-sm font-bold text-gray-700 mb-1">尺寸/材質說明</label><input type="text" id="editMeasurements" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none"></div>
                 <div><label class="block text-sm font-bold text-gray-700 mb-1">詳細介紹</label><textarea id="editDesc" rows="3" class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea></div>
+                <!-- 🌟 編輯時也可勾選實穿資訊 -->
+                <div class="flex items-center gap-2 bg-pink-50 p-2 rounded-lg border border-pink-200">
+                    <input type="checkbox" id="editShowModelInfo" class="w-4 h-4 text-pink-600 rounded focus:ring-pink-500 cursor-pointer">
+                    <label for="editShowModelInfo" class="text-sm font-bold text-pink-800 cursor-pointer">顯示「豬小編實穿參考」</label>
+                </div>
             </div>
             <div class="flex justify-end gap-3 mt-6">
                 <button onclick="document.getElementById('editModal').classList.add('hidden')" class="px-5 py-2 rounded-xl text-gray-600 bg-gray-100 hover:bg-gray-200 font-bold transition">取消</button>
@@ -358,9 +367,14 @@
                         <div class="relative mt-2">
                             <label class="block text-sm font-bold text-gray-700 mb-1">產品介紹框 (點擊上方短語會自動加入)</label>
                             <textarea id="inputDesc" class="w-full border border-gray-300 rounded-xl p-3 resize-none outline-none focus:ring-2 focus:ring-[#06C755]" rows="4" placeholder="請點選上方短語，或直接在這裡打字喔！"></textarea>
+                            <!-- 🌟 實穿參考勾選框 -->
+                            <div class="mt-3 bg-pink-50 border border-pink-200 rounded-xl p-3 flex items-center gap-2 cursor-pointer shadow-sm hover:bg-pink-100 transition" onclick="document.getElementById('inputShowModelInfo').click()">
+                                <input type="checkbox" id="inputShowModelInfo" class="w-4 h-4 text-pink-600 rounded focus:ring-pink-500 cursor-pointer pointer-events-none">
+                                <label class="text-sm font-bold text-pink-800 cursor-pointer select-none flex-1 pointer-events-none">☑️ 標示：豬小編實穿參考 (163cm/48kg)</label>
+                            </div>
                         </div>
 
-                        <button onclick="addToDraft()" class="w-full bg-indigo-50 border-2 border-indigo-600 text-indigo-700 font-bold py-3.5 rounded-xl flex justify-center items-center gap-2 hover:bg-indigo-100 transition active:scale-[0.98]">
+                        <button onclick="addToDraft()" class="w-full mt-4 bg-indigo-50 border-2 border-indigo-600 text-indigo-700 font-bold py-3.5 rounded-xl flex justify-center items-center gap-2 hover:bg-indigo-100 transition active:scale-[0.98]">
                             <i class="fa-solid fa-plus"></i> 加入「待上架清單」
                         </button>
                     </div>
@@ -420,6 +434,12 @@
             document.body.appendChild(toast);
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, duration);
         };
+
+        // 🌟 滾動監聽 (回到頂部按鈕)
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('backToTopBtn');
+            if (window.scrollY > 400) { btn.classList.remove('hidden'); } else { btn.classList.add('hidden'); }
+        });
 
         window.openImageModal = function(url) { document.getElementById('expandedImg').src = url; document.getElementById('imageModal').classList.remove('hidden'); };
         window.closeImageModal = function() { document.getElementById('imageModal').classList.add('hidden'); };
@@ -635,12 +655,14 @@
                 category: document.getElementById('inputCategory').value,
                 measurements: document.getElementById('inputMeasurements').value.trim(),
                 fitTags: selectedFitTags,
-                status: 'active' 
+                status: 'active',
+                showModelInfo: document.getElementById('inputShowModelInfo').checked // 🌟 儲存勾選狀態
             });
 
             document.getElementById('inputTitle').value = ''; document.getElementById('inputPrice').value = ''; 
             document.getElementById('inputDesc').value = ''; document.getElementById('inputVideoLink').value = ''; 
             document.getElementById('inputMeasurements').value = '';
+            document.getElementById('inputShowModelInfo').checked = false; // 清空勾選
             document.querySelectorAll('.active-fit-tag').forEach(btn => window.toggleFitTag(btn)); 
             window.base64ImagesArray = []; renderPreviewBox(); renderDrafts();
             showToast("✅ 已加入清單！", "purple");
@@ -674,6 +696,7 @@
                         imageUrls: item.imageUrls, imageUrl: item.imageUrls[0], videoLink: item.videoLink || '',
                         title: item.title, price: item.price, rawText: item.desc, tag: item.tag || 'new', 
                         category: item.category || 'top', measurements: item.measurements || '', fitTags: item.fitTags || [], status: item.status || 'active',
+                        showModelInfo: item.showModelInfo || false, // 🌟 存入資料庫
                         soldCount: Math.floor(Math.random() * 201) + 300, 
                         createdAt: serverTimestamp()
                     });
@@ -703,6 +726,7 @@
             document.getElementById('editCategory').value = p.category || 'top';
             document.getElementById('editMeasurements').value = p.measurements || '';
             document.getElementById('editDesc').value = p.rawText || '';
+            document.getElementById('editShowModelInfo').checked = p.showModelInfo || false; // 🌟 載入狀態
             document.getElementById('editModal').classList.remove('hidden');
         };
 
@@ -716,7 +740,8 @@
                     price: document.getElementById('editPrice').value,
                     category: document.getElementById('editCategory').value,
                     measurements: document.getElementById('editMeasurements').value,
-                    rawText: document.getElementById('editDesc').value
+                    rawText: document.getElementById('editDesc').value,
+                    showModelInfo: document.getElementById('editShowModelInfo').checked // 🌟 更新狀態
                 });
                 document.getElementById('editModal').classList.add('hidden');
                 showToast("修改成功！", "purple");
@@ -734,7 +759,6 @@
             else showToast("豬小編還沒設定 FB 喔！", "error");
         };
 
-        // 🌟 更新版黑科技：把教學動畫延長為 4 秒
         window.buyProduct = function(title, price) {
             if(!window.currentLineLink) { showToast("豬小編還沒設定 LINE 喔！", "error"); return; }
             
@@ -754,7 +778,6 @@
                 
                 setTimeout(() => { progressBar.style.width = '100%'; }, 50);
                 
-                // 🌟 改為 4000 毫秒 (4秒)
                 setTimeout(() => {
                     modal.classList.add('hidden');
                     setTimeout(() => { progressBar.style.width = '0%'; }, 300);
@@ -764,6 +787,21 @@
             } else {
                 window.location.href = window.currentLineLink;
             }
+        };
+
+        // 🌟 新增：一鍵分享閨蜜功能
+        window.shareProduct = function(title, price) {
+            const currentUrl = window.location.origin + window.location.pathname; // 抓取乾淨網址
+            const shareText = `欸你看這件超美！\n[ ${title} ] 只要 NT$${price}\n👉 點這裡逛逛：\n${currentUrl}`;
+            
+            const tempInput = document.createElement("textarea");
+            tempInput.value = shareText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            
+            showToast("✨ 已複製連結！快去貼給閨蜜看吧", "purple");
         };
 
         window.setCategoryFilter = function(cat, btn) {
@@ -871,10 +909,23 @@
                         fitTagsHtml += '</div>';
                     }
 
+                    // 🌟 實穿參考顯示邏輯
+                    const modelInfoHtml = p.showModelInfo ? `
+                        <div class="mt-3 bg-pink-50 border border-pink-200 text-pink-800 text-xs font-bold p-3 rounded-xl leading-relaxed shadow-sm">
+                            🙋‍♀️ 豬小編實穿參考：身高 163cm / 體重 48kg / 平常穿 M 號。有任何尺寸問題歡迎傳 LINE 討論喔！
+                        </div>
+                    ` : '';
+
+                    // 🌟 新增分享給閨蜜按鈕
                     const buyBtnHtml = `
-                        <button onclick="buyProduct('${p.title}', '${p.price}')" class="w-full mt-4 bg-[#06C755] text-white font-bold text-sm py-3.5 rounded-xl flex justify-center items-center gap-2 shadow-md hover:bg-green-600 transition active:scale-95">
-                            <i class="fa-brands fa-line text-lg"></i> 💬 傳 LINE 詢問此款
-                        </button>
+                        <div class="flex gap-2 mt-4">
+                            <button onclick="buyProduct('${p.title}', '${p.price}')" class="flex-1 bg-[#06C755] text-white font-bold text-sm py-3.5 rounded-xl flex justify-center items-center gap-2 shadow-md hover:bg-green-600 transition active:scale-95">
+                                <i class="fa-brands fa-line text-lg"></i> 💬 傳 LINE 詢問此款
+                            </button>
+                            <button onclick="shareProduct('${p.title}', '${p.price}')" class="w-14 bg-indigo-100 text-indigo-600 font-bold text-sm rounded-xl flex justify-center items-center shadow-sm hover:bg-indigo-200 transition active:scale-95 flex-shrink-0" title="分享給閨蜜">
+                                <i class="fa-solid fa-share-nodes text-lg"></i>
+                            </button>
+                        </div>
                     `;
 
                     customerList.innerHTML += `
@@ -896,6 +947,7 @@
                                 ${measurementsHtml}
                                 ${videoLinkHtml}
                                 ${descHtml}
+                                ${modelInfoHtml}
                                 ${buyBtnHtml}
                             </div>
                         </div>`;
