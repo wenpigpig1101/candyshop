@@ -21,6 +21,8 @@
     .animate-fade-in-bg { animation: fadeInBg 0.2s ease-out; }
     .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
     body { -webkit-tap-highlight-color: transparent; }
+    /* 隱藏預設的 datalist 箭頭 (針對某些瀏覽器優化) */
+    input::-webkit-calendar-picker-indicator { display: none !important; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
@@ -66,26 +68,43 @@
       return [storedValue, setStoredValue];
     }
 
+    const splitOptions = (str) => {
+      if (!str) return [];
+      return str.split(/[\/／,，、\s]+/).map(s => s.trim()).filter(Boolean);
+    };
+
     function App() {
       const [activeTab, setActiveTab] = useState('products');
       
       const [products, setProducts] = useLocalStorage('daigou_products_v1', []);
       const [orders, setOrders] = useLocalStorage('daigou_orders_v1', []);
 
+      // UI 狀態
       const [showAddProduct, setShowAddProduct] = useState(false);
+      const [editingProductId, setEditingProductId] = useState(null); 
+      
       const [showAddOrder, setShowAddOrder] = useState(false);
+      const [editingOrderId, setEditingOrderId] = useState(null); 
       const [selectedProductForOrder, setSelectedProductForOrder] = useState(null);
       
       const [newProduct, setNewProduct] = useState({ name: '', cost: '', price: '', styles: '', sizes: '', image: null });
       const [newOrder, setNewOrder] = useState({ customer: '', style: '', size: '', quantity: 1 });
+      
       const [orderSearch, setOrderSearch] = useState('');
       const [orderFilterStatus, setOrderFilterStatus] = useState('all');
+      const [orderViewMode, setOrderViewMode] = useState('time'); // 'time' 依時間(明細) | 'customer' 依顧客統整
 
       const [viewCustomer, setViewCustomer] = useState(null);
       const [viewProductInfo, setViewProductInfo] = useState(null);
 
       const fileInputRef = useRef(null);
       const importInputRef = useRef(null);
+
+      // --- 取得所有歷史客人的名字 (防呆選單用) ---
+      const uniqueCustomers = useMemo(() => {
+        const names = orders.map(o => o.customer);
+        return [...new Set(names)].filter(Boolean).sort();
+      }, [orders]);
 
       // --- 圖片壓縮 ---
       const handleImageChange = (e) => {
@@ -161,43 +180,111 @@
         reader.readAsText(file);
       };
 
-      // --- 資料操作 ---
-      const handleAddProduct = (e) => {
+      // --- 商品操作 ---
+      const closeProductModal = () => {
+        setShowAddProduct(false);
+        setEditingProductId(null);
+        setNewProduct({ name: '', cost: '', price: '', styles: '', sizes: '', image: null });
+      };
+
+      const editProduct = (product) => {
+        setNewProduct({
+          name: product.name,
+          cost: product.cost,
+          price: product.price,
+          styles: product.styles ? product.styles.join('/') : '',
+          sizes: product.sizes ? product.sizes.join('/') : '',
+          image: product.image
+        });
+        setEditingProductId(product.id);
+        setShowAddProduct(true);
+      };
+
+      const handleSaveProduct = (e) => {
         e.preventDefault();
-        const splitRegex = /[\/／,，、\s]+/; 
         
-        const product = {
-          id: `p${Date.now()}`,
+        const productData = {
           name: newProduct.name.trim(),
           cost: Number(newProduct.cost),
           price: Number(newProduct.price),
-          styles: newProduct.styles ? newProduct.styles.split(splitRegex).map(s => s.trim()).filter(Boolean) : [],
-          sizes: newProduct.sizes ? newProduct.sizes.split(splitRegex).map(s => s.trim()).filter(Boolean) : [],
+          styles: splitOptions(newProduct.styles),
+          sizes: splitOptions(newProduct.sizes),
           image: newProduct.image
         };
-        setProducts([product, ...products]);
-        setNewProduct({ name: '', cost: '', price: '', styles: '', sizes: '', image: null });
-        setShowAddProduct(false);
+
+        if (editingProductId) {
+          setProducts(products.map(p => p.id === editingProductId ? { ...p, ...productData } : p));
+        } else {
+          productData.id = `p${Date.now()}`;
+          setProducts([productData, ...products]);
+        }
+        
+        closeProductModal();
+      };
+
+      const deleteProduct = (id) => {
+        if(window.confirm('確定刪除此商品？(已接單的紀錄不會受影響)')) {
+          setProducts(products.filter(p => p.id !== id));
+        }
+      };
+
+      // --- 訂單操作 ---
+      const closeOrderModal = () => {
+        setShowAddOrder(false);
+        setEditingOrderId(null);
+        setSelectedProductForOrder(null);
+        setNewOrder({ customer: '', style: '', size: '', quantity: 1 });
       };
 
       const openOrderForm = (product) => {
         setSelectedProductForOrder(product);
-        setNewOrder({ customer: '', style: product.styles.length > 0 ? product.styles[0] : '', size: product.sizes.length > 0 ? product.sizes[0] : '', quantity: 1 });
+        setNewOrder({ 
+          customer: '', 
+          style: product.styles && product.styles.length > 0 ? product.styles[0] : '', 
+          size: product.sizes && product.sizes.length > 0 ? product.sizes[0] : '', 
+          quantity: 1 
+        });
+        setEditingOrderId(null);
         setShowAddOrder(true);
       };
 
-      const handleAddOrder = (e) => {
-        e.preventDefault();
-        const order = {
-          id: `o${Date.now()}`, productId: selectedProductForOrder.id, customer: newOrder.customer.trim(),
-          style: newOrder.style, size: newOrder.size, quantity: Number(newOrder.quantity), status: 'pending_buy', date: new Date().toISOString().split('T')[0]
-        };
-        setOrders([order, ...orders]);
-        setShowAddOrder(false);
+      const editOrder = (order, product) => {
+        setSelectedProductForOrder(product);
+        setNewOrder({
+          customer: order.customer,
+          style: order.style || '',
+          size: order.size || '',
+          quantity: order.quantity
+        });
+        setEditingOrderId(order.id);
+        setShowAddOrder(true);
       };
 
-      const deleteProduct = (id) => {
-        if(window.confirm('確定刪除此商品？')) setProducts(products.filter(p => p.id !== id));
+      const handleSaveOrder = (e) => {
+        e.preventDefault();
+        
+        if (editingOrderId) {
+          setOrders(orders.map(o => o.id === editingOrderId ? {
+            ...o,
+            customer: newOrder.customer.trim(),
+            style: newOrder.style,
+            size: newOrder.size,
+            quantity: Number(newOrder.quantity)
+          } : o));
+        } else {
+          const order = {
+            id: `o${Date.now()}`, 
+            productId: selectedProductForOrder.id, 
+            customer: newOrder.customer.trim(),
+            style: newOrder.style, 
+            size: newOrder.size, 
+            quantity: Number(newOrder.quantity), 
+            status: 'pending_buy', 
+            date: new Date().toISOString().split('T')[0]
+          };
+          setOrders([order, ...orders]);
+        }
+        closeOrderModal();
       };
 
       const deleteOrder = (id) => {
@@ -221,18 +308,15 @@
       };
 
       // --- 衍生資料運算與排序 ---
-
-      // 1. 商品庫自動排序 (依品名編號由小到大)
       const sortedProducts = useMemo(() => {
         return [...products].sort((a, b) => {
-          // 使用 localeCompare 的 numeric 屬性，讓 '2' 乖乖排在 '10' 前面
           return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
         });
       }, [products]);
 
       const allEnrichedOrders = useMemo(() => {
         return orders.map(order => {
-          const product = products.find(p => p.id === order.productId) || { name: '已刪除商品', image: null, cost: 0, price: 0 };
+          const product = products.find(p => p.id === order.productId) || { name: '已刪除商品', image: null, cost: 0, price: 0, styles: [], sizes: [] };
           return { ...order, product };
         }).sort((a, b) => b.id.localeCompare(a.id));
       }, [orders, products]);
@@ -244,6 +328,33 @@
           return matchTab && matchSearch;
         });
       }, [allEnrichedOrders, orderFilterStatus, orderSearch]);
+
+      // 顧客總表 (以客人為單位群組化) - 這是為了新功能加的！
+      const customerSummaries = useMemo(() => {
+        const grouped = {};
+        enrichedOrders.forEach(order => {
+          if (!grouped[order.customer]) {
+            grouped[order.customer] = {
+              customer: order.customer,
+              totalItems: 0,
+              unpaidTotal: 0,
+              completedItems: 0,
+              orders: []
+            };
+          }
+          grouped[order.customer].orders.push(order);
+          grouped[order.customer].totalItems += order.quantity;
+          
+          if (order.status !== 'completed') {
+            grouped[order.customer].unpaidTotal += (order.product.price * order.quantity);
+          } else {
+            grouped[order.customer].completedItems += order.quantity;
+          }
+        });
+        
+        // 依照未收款金額排序 (欠錢多的排前面)，如果結清了就排後面
+        return Object.values(grouped).sort((a, b) => b.unpaidTotal - a.unpaidTotal);
+      }, [enrichedOrders]);
 
       const purchasingList = useMemo(() => {
         const pending = orders.filter(o => o.status === 'pending_buy');
@@ -263,7 +374,6 @@
           grouped[key].customers.push({ name: order.customer, qty: order.quantity });
         });
         
-        // 2. 叫貨表也自動依商品名稱排序
         return Object.values(grouped).sort((a, b) => {
           return a.productName.localeCompare(b.productName, undefined, { numeric: true, sensitivity: 'base' });
         });
@@ -294,7 +404,7 @@
               <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-blue-50/50 sticky top-0 z-10">
                 <div>
                   <h3 className="font-extrabold text-xl flex items-center gap-2">
-                    <Icon name="user" className="text-blue-600"/> {viewCustomer} <span className="text-sm font-normal text-slate-500">的清單</span>
+                    <Icon name="user" className="text-blue-600"/> {viewCustomer} <span className="text-sm font-normal text-slate-500">的專屬清單</span>
                   </h3>
                   <div className="text-xs font-bold text-red-500 mt-1">未結清總額: ${unpaidTotal.toLocaleString()}</div>
                 </div>
@@ -324,11 +434,13 @@
                         </div>
                         <div className="flex justify-between items-center mt-2">
                           <span className="text-xs font-bold text-slate-700">{order.quantity}件 × ${order.product.price}</span>
-                          {statusConfig.next && (
-                            <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-md">
-                              {statusConfig.actionLabel}
-                            </button>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {statusConfig.next && (
+                              <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-md active:bg-slate-700">
+                                {statusConfig.actionLabel}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -403,6 +515,7 @@
           </header>
 
           <main className="max-w-5xl mx-auto p-4">
+            
             {/* ==================== 分頁 1: 商品庫 ==================== */}
             {activeTab === 'products' && (
               <div className="animate-fade-in">
@@ -419,10 +532,10 @@
                 {showAddProduct && (
                   <div className="bg-white p-5 rounded-2xl shadow-lg border border-slate-200 mb-6 relative z-10">
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="font-bold text-lg">新增商品檔案</h3>
-                      <button onClick={() => setShowAddProduct(false)} className="p-2 bg-slate-100 rounded-full text-slate-500 flex items-center justify-center"><Icon name="xmark" /></button>
+                      <h3 className="font-bold text-lg">{editingProductId ? '編輯商品檔案' : '新增商品檔案'}</h3>
+                      <button onClick={closeProductModal} className="p-2 bg-slate-100 rounded-full text-slate-500 flex items-center justify-center"><Icon name="xmark" /></button>
                     </div>
-                    <form onSubmit={handleAddProduct} className="space-y-4">
+                    <form onSubmit={handleSaveProduct} className="space-y-4">
                       <div className="flex flex-col gap-4">
                         <div className="w-full">
                           {!newProduct.image ? (
@@ -466,21 +579,21 @@
                             </div>
                           </div>
 
-                          {/* 尺碼快捷鍵 */}
                           <div className="flex gap-2 justify-end">
                             <span className="text-[10px] text-slate-400 self-center mr-1">快捷鍵:</span>
                             <button type="button" onClick={() => setNewProduct({...newProduct, sizes: '小/中/大'})} className="px-2.5 py-1 text-xs font-bold bg-blue-50 text-blue-600 rounded border border-blue-100 active:bg-blue-100">小/中/大</button>
                             <button type="button" onClick={() => setNewProduct({...newProduct, sizes: '小/大'})} className="px-2.5 py-1 text-xs font-bold bg-blue-50 text-blue-600 rounded border border-blue-100 active:bg-blue-100">小/大</button>
-                            <button type="button" onClick={() => setNewProduct({...newProduct, sizes: 'F'})} className="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-600 rounded border border-slate-200 active:bg-slate-200">單一尺寸</button>
+                            <button type="button" onClick={() => setNewProduct({...newProduct, sizes: 'F'})} className="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-600 rounded border border-slate-200 active:bg-slate-200">單一</button>
                           </div>
                         </div>
                       </div>
-                      <button type="submit" className="w-full bg-slate-800 text-white py-3.5 rounded-xl font-bold mt-2 active:bg-slate-700 transition">儲存商品建檔</button>
+                      <button type="submit" className="w-full bg-slate-800 text-white py-3.5 rounded-xl font-bold mt-2 active:bg-slate-700 transition">
+                        {editingProductId ? '儲存編輯內容' : '儲存商品建檔'}
+                      </button>
                     </form>
                   </div>
                 )}
 
-                {/* 使用 sortedProducts 進行渲染，確保依品名排序 */}
                 {sortedProducts.length === 0 ? (
                    <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
                     <Icon name="box-open" size={48} className="text-slate-300 mb-3" />
@@ -501,7 +614,15 @@
                           )}
                           <div className="absolute inset-0 bg-black/0 hover:bg-black/5 transition flex items-center justify-center"></div>
                         </div>
-                        <button onClick={(e)=> { e.stopPropagation(); deleteProduct(product.id); }} className="absolute top-2 right-2 bg-white/90 w-8 h-8 rounded-full text-slate-400 active:text-red-500 flex items-center justify-center shadow-sm z-10"><Icon name="trash-can" size={12}/></button>
+                        
+                        <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
+                          <button onClick={(e)=> { e.stopPropagation(); editProduct(product); }} className="bg-white/90 w-8 h-8 rounded-full text-slate-500 active:text-blue-600 flex items-center justify-center shadow-sm">
+                            <Icon name="pen" size={12}/>
+                          </button>
+                          <button onClick={(e)=> { e.stopPropagation(); deleteProduct(product.id); }} className="bg-white/90 w-8 h-8 rounded-full text-slate-400 active:text-red-500 flex items-center justify-center shadow-sm">
+                            <Icon name="trash-can" size={12}/>
+                          </button>
+                        </div>
                         
                         <div className="p-3 flex-1 flex flex-col">
                           <h3 
@@ -527,13 +648,16 @@
               </div>
             )}
 
-            {/* 接單 Modal */}
+            {/* 接單 / 編輯訂單 Modal */}
             {showAddOrder && selectedProductForOrder && (
               <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center animate-fade-in">
                 <div className="bg-white rounded-t-2xl shadow-xl w-full overflow-hidden max-h-[90vh] overflow-y-auto pb-safe">
                   <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
-                    <h3 className="font-bold text-lg flex items-center gap-2"><Icon name="clipboard-list" className="text-blue-600"/> 新增客訂紀錄</h3>
-                    <button onClick={() => setShowAddOrder(false)} className="w-8 h-8 bg-slate-200 rounded-full text-slate-600 flex items-center justify-center"><Icon name="xmark" size={14}/></button>
+                    <h3 className="font-bold text-lg flex items-center gap-2">
+                      <Icon name="clipboard-list" className="text-blue-600"/> 
+                      {editingOrderId ? '編輯客訂紀錄' : '新增客訂紀錄'}
+                    </h3>
+                    <button onClick={closeOrderModal} className="w-8 h-8 bg-slate-200 rounded-full text-slate-600 flex items-center justify-center"><Icon name="xmark" size={14}/></button>
                   </div>
                   
                   <div className="p-5">
@@ -548,17 +672,30 @@
                       </div>
                     </div>
 
-                    <form onSubmit={handleAddOrder} className="space-y-4">
+                    <form onSubmit={handleSaveOrder} className="space-y-4">
+                      {/* 加入 datalist 讓名字可以自動完成防呆 */}
+                      <datalist id="customer-names">
+                        {uniqueCustomers.map(c => <option key={c} value={c} />)}
+                      </datalist>
+
                       <div>
                         <label className="block text-sm font-bold text-slate-700 mb-1">客人姓名/暱稱 <span className="text-red-500">*</span></label>
                         <div className="relative">
                           <div className="absolute left-3 top-3 text-slate-400"><Icon name="user" size={14} /></div>
-                          <input required type="text" value={newOrder.customer} onChange={e=>setNewOrder({...newOrder, customer: e.target.value})} className="w-full p-3 pl-9 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="例如：其、陳小姐" />
+                          <input 
+                            required 
+                            list="customer-names"
+                            type="text" 
+                            value={newOrder.customer} 
+                            onChange={e=>setNewOrder({...newOrder, customer: e.target.value})} 
+                            className="w-full p-3 pl-9 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500" 
+                            placeholder="例如：其、陳小姐 (點擊可選舊客人)" 
+                          />
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4">
-                        {selectedProductForOrder.styles.length > 0 && (
+                        {selectedProductForOrder.styles && selectedProductForOrder.styles.length > 0 && (
                           <div>
                             <label className="block text-sm font-bold text-slate-700 mb-1">選擇款式</label>
                             <select value={newOrder.style} onChange={e=>setNewOrder({...newOrder, style: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none">
@@ -566,7 +703,7 @@
                             </select>
                           </div>
                         )}
-                        {selectedProductForOrder.sizes.length > 0 && (
+                        {selectedProductForOrder.sizes && selectedProductForOrder.sizes.length > 0 && (
                           <div>
                             <label className="block text-sm font-bold text-slate-700 mb-1">選擇尺碼</label>
                             <select value={newOrder.size} onChange={e=>setNewOrder({...newOrder, size: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none">
@@ -582,7 +719,7 @@
                       </div>
 
                       <button type="submit" className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold mt-4 active:bg-blue-700 shadow-md transition">
-                        確認接單
+                        {editingOrderId ? '儲存修改' : '確認接單'}
                       </button>
                     </form>
                   </div>
@@ -595,7 +732,7 @@
               <div className="animate-fade-in">
                 <div className="mb-4">
                   <h2 className="text-lg font-bold text-slate-800">叫貨總表 (待叫貨)</h2>
-                  <p className="text-xs text-emerald-600 font-bold"><Icon name="check" /> 已依品名排序</p>
+                  <p className="text-xs text-slate-500">點擊人名可看出貨單，點擊商品名可看分配表</p>
                 </div>
 
                 {purchasingList.length === 0 ? (
@@ -617,9 +754,9 @@
                           }}
                         >
                           {item.image ? (
-                            <img src={item.image} className="w-16 h-16 rounded-xl object-cover border border-slate-100" alt="img" />
+                            <img src={item.image} className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-slate-100" alt="img" />
                           ) : (
-                            <div className="w-16 h-16 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-300"><Icon name="box" size={24}/></div>
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-300"><Icon name="box" size={24}/></div>
                           )}
                         </div>
 
@@ -634,8 +771,8 @@
                             {item.productName}
                           </h3>
                           <div className="flex flex-wrap gap-1.5 my-1">
-                            {item.style && <span className="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">款: {item.style}</span>}
-                            {item.size && <span className="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">碼: {item.size}</span>}
+                            {item.style && <span className="text-[11px] sm:text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">款: {item.style}</span>}
+                            {item.size && <span className="text-[11px] sm:text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">碼: {item.size}</span>}
                           </div>
                           <div className="flex flex-wrap gap-1 mt-1.5 items-center">
                             <span className="text-[10px] text-slate-400 mr-0.5">訂購人:</span>
@@ -667,12 +804,30 @@
               </div>
             )}
 
-            {/* ==================== 分頁 3: 訂單追蹤 ==================== */}
+            {/* ==================== 分頁 3: 訂單追蹤 (新增顧客總表) ==================== */}
             {activeTab === 'orders' && (
               <div className="animate-fade-in">
                 <div className="mb-4">
-                  <h2 className="text-lg font-bold text-slate-800">訂單追蹤管理</h2>
-                  <p className="text-xs text-slate-500">點擊人名可看出貨單，點擊商品名可看分配表</p>
+                  <div className="flex justify-between items-center mb-1">
+                    <h2 className="text-lg font-bold text-slate-800">理貨與訂單管理</h2>
+                  </div>
+                  <p className="text-xs text-slate-500">追蹤進度，或統整單一客人的未收款</p>
+                </div>
+
+                {/* 雙模式切換按鈕 */}
+                <div className="flex bg-slate-200 p-1 rounded-xl mb-4">
+                  <button 
+                    onClick={() => setOrderViewMode('time')} 
+                    className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'time' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
+                  >
+                    <Icon name="list" className="mr-1" /> 依訂單明細
+                  </button>
+                  <button 
+                    onClick={() => setOrderViewMode('customer')} 
+                    className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'customer' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
+                  >
+                    <Icon name="users" className="mr-1" /> 依顧客總表
+                  </button>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-4 sticky top-16 z-20">
@@ -680,81 +835,120 @@
                     <Icon name="magnifying-glass" size={14} className="text-slate-400 ml-2 mr-2" />
                     <input type="text" placeholder="搜尋客人或商品..." className="w-full bg-transparent outline-none text-sm p-1.5" value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} />
                   </div>
-                  <div className="flex overflow-x-auto hide-scrollbar bg-white p-1">
-                    <button onClick={() => setOrderFilterStatus('all')} className={`whitespace-nowrap px-4 py-2 text-sm font-bold rounded-lg transition-colors ${orderFilterStatus === 'all' ? 'bg-slate-800 text-white' : 'text-slate-500'}`}>全部</button>
-                    {Object.values(STATUSES).map(status => (
-                      <button key={status.id} onClick={() => setOrderFilterStatus(status.id)} className={`whitespace-nowrap px-4 py-2 text-sm font-bold rounded-lg transition-colors ${orderFilterStatus === status.id ? 'bg-slate-800 text-white' : 'text-slate-500'}`}>
-                        {status.label}
-                      </button>
-                    ))}
-                  </div>
+                  
+                  {/* 只有在明細模式才顯示狀態過濾 */}
+                  {orderViewMode === 'time' && (
+                    <div className="flex overflow-x-auto hide-scrollbar bg-white p-1">
+                      <button onClick={() => setOrderFilterStatus('all')} className={`whitespace-nowrap px-4 py-2 text-sm font-bold rounded-lg transition-colors ${orderFilterStatus === 'all' ? 'bg-slate-800 text-white' : 'text-slate-500'}`}>全部</button>
+                      {Object.values(STATUSES).map(status => (
+                        <button key={status.id} onClick={() => setOrderFilterStatus(status.id)} className={`whitespace-nowrap px-4 py-2 text-sm font-bold rounded-lg transition-colors ${orderFilterStatus === status.id ? 'bg-slate-800 text-white' : 'text-slate-500'}`}>
+                          {status.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-3">
-                  {enrichedOrders.length === 0 ? (
-                    <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-400">沒有符合的訂單紀錄</div>
-                  ) : (
-                    enrichedOrders.map(order => {
-                      const statusConfig = STATUSES[order.status.toUpperCase()];
-                      return (
-                        <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                          <div className="p-3 flex gap-3">
-                            <div 
-                              className="shrink-0 active:opacity-70 transition"
-                              onClick={() => {
-                                const prod = products.find(p => p.id === order.productId);
-                                if(prod) setViewProductInfo(prod);
-                              }}
-                            >
-                              {order.product.image ? (
-                                <img src={order.product.image} className="w-16 h-16 rounded-xl object-cover border border-slate-100" alt="img" />
-                              ) : (
-                                <div className="w-16 h-16 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 border border-slate-100"><Icon name="box" size={20}/></div>
-                              )}
+                  {/* 模式 A：依顧客統整 */}
+                  {orderViewMode === 'customer' && (
+                    customerSummaries.length === 0 ? (
+                      <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-400">目前沒有顧客資料</div>
+                    ) : (
+                      customerSummaries.map(summary => (
+                        <div 
+                          key={summary.customer} 
+                          className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center active:bg-slate-50 transition cursor-pointer"
+                          onClick={() => setViewCustomer(summary.customer)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-lg">
+                              {summary.customer.charAt(0)}
                             </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <div className="flex justify-between items-start mb-0.5">
-                                <span 
-                                  className="font-black text-blue-700 underline decoration-blue-200 decoration-2 underline-offset-2 active:text-blue-800 transition"
-                                  onClick={() => setViewCustomer(order.customer)}
-                                >
-                                  {order.customer}
-                                </span>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusConfig.color}`}>{statusConfig.label}</span>
-                              </div>
+                            <div>
+                              <div className="font-bold text-slate-800 text-base">{summary.customer}</div>
+                              <div className="text-xs text-slate-500 mt-0.5">總共 {summary.totalItems} 件商品 (已完成 {summary.completedItems} 件)</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-[10px] text-slate-500 mb-0.5">待收款</div>
+                            <div className={`font-black text-lg ${summary.unpaidTotal > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                              ${summary.unpaidTotal.toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )
+                  )}
+
+                  {/* 模式 B：依訂單明細 (原來的列表) */}
+                  {orderViewMode === 'time' && (
+                    enrichedOrders.length === 0 ? (
+                      <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-400">沒有符合的訂單紀錄</div>
+                    ) : (
+                      enrichedOrders.map(order => {
+                        const statusConfig = STATUSES[order.status.toUpperCase()];
+                        return (
+                          <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="p-3 flex gap-3">
                               <div 
-                                className="text-sm font-bold text-slate-700 truncate active:text-blue-600 inline-block"
+                                className="shrink-0 active:opacity-70 transition"
                                 onClick={() => {
                                   const prod = products.find(p => p.id === order.productId);
                                   if(prod) setViewProductInfo(prod);
                                 }}
                               >
-                                {order.product.name}
+                                {order.product.image ? (
+                                  <img src={order.product.image} className="w-16 h-16 rounded-xl object-cover border border-slate-100" alt="img" />
+                                ) : (
+                                  <div className="w-16 h-16 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 border border-slate-100"><Icon name="box" size={20}/></div>
+                                )}
                               </div>
-                              <div className="text-[11px] text-slate-500 mt-1">
-                                {order.style && <span className="mr-2">款:{order.style}</span>}
-                                {order.size && <span>碼:{order.size}</span>}
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start mb-0.5">
+                                  <span 
+                                    className="font-black text-blue-700 underline decoration-blue-200 decoration-2 underline-offset-2 active:text-blue-800 transition"
+                                    onClick={() => setViewCustomer(order.customer)}
+                                  >
+                                    {order.customer}
+                                  </span>
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusConfig.color}`}>{statusConfig.label}</span>
+                                </div>
+                                <div 
+                                  className="text-sm font-bold text-slate-700 truncate active:text-blue-600 inline-block"
+                                  onClick={() => {
+                                    const prod = products.find(p => p.id === order.productId);
+                                    if(prod) setViewProductInfo(prod);
+                                  }}
+                                >
+                                  {order.product.name}
+                                </div>
+                                <div className="text-[11px] text-slate-500 mt-1">
+                                  {order.style && <span className="mr-2">款:{order.style}</span>}
+                                  {order.size && <span>碼:{order.size}</span>}
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          <div className="bg-slate-50 px-3 py-2 border-t border-slate-100 flex justify-between items-center">
-                            <div className="text-xs font-medium text-slate-600">
-                              {order.quantity}件 × ${order.product.price} = <span className="font-black text-slate-800 text-sm">${order.product.price * order.quantity}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button onClick={() => deleteOrder(order.id)} className="w-8 h-8 rounded-full text-slate-400 bg-white border border-slate-200 flex items-center justify-center shadow-sm"><Icon name="trash-can" size={12} /></button>
-                              {statusConfig.next && (
-                                <button onClick={() => advanceOrderStatus(order.id, order.status)} className="bg-blue-100 text-blue-700 active:bg-blue-600 active:text-white px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1 shadow-sm">
-                                  {statusConfig.actionLabel} <Icon name="chevron-right" size={10} />
-                                </button>
-                              )}
+                            <div className="bg-slate-50 px-3 py-2 border-t border-slate-100 flex justify-between items-center">
+                              <div className="text-xs font-medium text-slate-600">
+                                {order.quantity}件 × ${order.product.price} = <span className="font-black text-slate-800 text-sm">${order.product.price * order.quantity}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => editOrder(order, order.product)} className="w-8 h-8 rounded-full text-slate-500 bg-white border border-slate-200 flex items-center justify-center shadow-sm active:text-blue-600"><Icon name="pen" size={12} /></button>
+                                <button onClick={() => deleteOrder(order.id)} className="w-8 h-8 rounded-full text-slate-400 bg-white border border-slate-200 flex items-center justify-center shadow-sm active:text-red-500"><Icon name="trash-can" size={12} /></button>
+                                {statusConfig.next && (
+                                  <button onClick={() => advanceOrderStatus(order.id, order.status)} className="bg-blue-100 text-blue-700 active:bg-blue-600 active:text-white px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1 shadow-sm">
+                                    {statusConfig.actionLabel} <Icon name="chevron-right" size={10} />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })
+                        );
+                      })
+                    )
                   )}
                 </div>
               </div>
