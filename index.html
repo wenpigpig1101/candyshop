@@ -322,6 +322,19 @@
         });
       }, [allEnrichedOrders, orderFilterStatus, orderSearch]);
 
+      // --- 新增：動態計算目前「過濾/搜尋結果」的總額 ---
+      const currentFilteredStats = useMemo(() => {
+        let totalCost = 0;
+        let totalPrice = 0;
+        let totalItems = 0;
+        enrichedOrders.forEach(order => {
+          totalCost += (order.product.cost * order.quantity);
+          totalPrice += (order.product.price * order.quantity);
+          totalItems += order.quantity;
+        });
+        return { totalCost, totalPrice, totalItems };
+      }, [enrichedOrders]);
+
       const customerSummaries = useMemo(() => {
         const grouped = {};
         enrichedOrders.forEach(order => {
@@ -362,10 +375,7 @@
             };
           }
           grouped[key].totalQuantity += order.quantity;
-          
-          // 計算單一規格要準備多少錢叫貨
           grouped[key].itemSubtotal = grouped[key].totalQuantity * product.cost;
-          
           grouped[key].customers.push({ name: order.customer, qty: order.quantity });
         });
         
@@ -377,7 +387,7 @@
       const stats = useMemo(() => {
         let expectedProfit = 0;
         let totalUnpaid = 0;
-        let pendingCost = 0; // 這批叫貨總成本
+        let pendingCost = 0; 
         
         orders.forEach(order => {
           const product = products.find(p => p.id === order.productId);
@@ -762,7 +772,7 @@
                 {purchasingList.length === 0 ? (
                   <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
                     <Icon name="circle-check" size={48} className="text-emerald-400 mb-3" />
-                    <p className="text-slate-500 font-medium">目前沒有需要叫貨的商品</p>
+                    <p className="text-slate-500 font-medium">太棒了！沒有需要叫貨的商品</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -799,7 +809,6 @@
                             {item.size && <span className="text-[11px] sm:text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">碼: {item.size}</span>}
                           </div>
                           
-                          {/* 單款商品的批價總額 */}
                           <div className="text-[11px] font-bold text-slate-500 mt-1 mb-1">
                             批價: ${item.cost} × {item.totalQuantity} = <span className="text-slate-800">${item.itemSubtotal.toLocaleString()}</span>
                           </div>
@@ -844,7 +853,7 @@
                   <p className="text-xs text-slate-500">追蹤進度，或統整單一客人的未收款</p>
                 </div>
 
-                <div className="flex bg-slate-200 p-1 rounded-xl mb-4">
+                <div className="flex bg-slate-200 p-1 rounded-xl mb-3">
                   <button 
                     onClick={() => setOrderViewMode('time')} 
                     className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'time' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
@@ -876,6 +885,25 @@
                     </div>
                   )}
                 </div>
+
+                {/* --- 🌟 新增：動態過濾結果統計小看板 🌟 --- */}
+                {orderViewMode === 'time' && enrichedOrders.length > 0 && (
+                  <div className="mb-4 bg-slate-100 border border-slate-200 rounded-xl p-3 flex justify-between items-center shadow-sm text-slate-700">
+                    <div className="text-xs font-bold">
+                      合計 <span className="text-blue-700 text-sm">{currentFilteredStats.totalItems}</span> 件
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="text-right">
+                        <div className="text-[10px] text-slate-500">此頁批貨總額</div>
+                        <div className="font-bold text-sm text-slate-800">${currentFilteredStats.totalCost.toLocaleString()}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] text-slate-500">此頁應收總額</div>
+                        <div className="font-black text-sm text-blue-700">${currentFilteredStats.totalPrice.toLocaleString()}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   {orderViewMode === 'customer' && (
