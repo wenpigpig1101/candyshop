@@ -21,7 +21,6 @@
     .animate-fade-in-bg { animation: fadeInBg 0.2s ease-out; }
     .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
     body { -webkit-tap-highlight-color: transparent; }
-    /* 隱藏預設的 datalist 箭頭 (針對某些瀏覽器優化) */
     input::-webkit-calendar-picker-indicator { display: none !important; }
   </style>
 </head>
@@ -79,7 +78,6 @@
       const [products, setProducts] = useLocalStorage('daigou_products_v1', []);
       const [orders, setOrders] = useLocalStorage('daigou_orders_v1', []);
 
-      // UI 狀態
       const [showAddProduct, setShowAddProduct] = useState(false);
       const [editingProductId, setEditingProductId] = useState(null); 
       
@@ -92,7 +90,7 @@
       
       const [orderSearch, setOrderSearch] = useState('');
       const [orderFilterStatus, setOrderFilterStatus] = useState('all');
-      const [orderViewMode, setOrderViewMode] = useState('time'); // 'time' 依時間(明細) | 'customer' 依顧客統整
+      const [orderViewMode, setOrderViewMode] = useState('time'); 
 
       const [viewCustomer, setViewCustomer] = useState(null);
       const [viewProductInfo, setViewProductInfo] = useState(null);
@@ -100,13 +98,11 @@
       const fileInputRef = useRef(null);
       const importInputRef = useRef(null);
 
-      // --- 取得所有歷史客人的名字 (防呆選單用) ---
       const uniqueCustomers = useMemo(() => {
         const names = orders.map(o => o.customer);
         return [...new Set(names)].filter(Boolean).sort();
       }, [orders]);
 
-      // --- 圖片壓縮 ---
       const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -135,7 +131,6 @@
         };
       };
 
-      // --- 備份與還原 ---
       const downloadBackup = () => {
         const backupData = {
           version: '1.0',
@@ -180,7 +175,6 @@
         reader.readAsText(file);
       };
 
-      // --- 商品操作 ---
       const closeProductModal = () => {
         setShowAddProduct(false);
         setEditingProductId(null);
@@ -228,7 +222,6 @@
         }
       };
 
-      // --- 訂單操作 ---
       const closeOrderModal = () => {
         setShowAddOrder(false);
         setEditingOrderId(null);
@@ -307,7 +300,6 @@
         }));
       };
 
-      // --- 衍生資料運算與排序 ---
       const sortedProducts = useMemo(() => {
         return [...products].sort((a, b) => {
           return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
@@ -329,7 +321,6 @@
         });
       }, [allEnrichedOrders, orderFilterStatus, orderSearch]);
 
-      // 顧客總表 (以客人為單位群組化) - 這是為了新功能加的！
       const customerSummaries = useMemo(() => {
         const grouped = {};
         enrichedOrders.forEach(order => {
@@ -352,7 +343,6 @@
           }
         });
         
-        // 依照未收款金額排序 (欠錢多的排前面)，如果結清了就排後面
         return Object.values(grouped).sort((a, b) => b.unpaidTotal - a.unpaidTotal);
       }, [enrichedOrders]);
 
@@ -392,7 +382,6 @@
         return { expectedProfit, totalUnpaid, pendingCount: purchasingList.length };
       }, [orders, products, purchasingList]);
 
-      // --- 渲染共用彈窗 ---
       const renderCustomerModal = () => {
         if (!viewCustomer) return null;
         const customerOrders = allEnrichedOrders.filter(o => o.customer === viewCustomer);
@@ -432,9 +421,18 @@
                             {order.size && <span>碼: {order.size}</span>}
                           </div>
                         </div>
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-xs font-bold text-slate-700">{order.quantity}件 × ${order.product.price}</span>
-                          <div className="flex items-center gap-2">
+                        
+                        {/* 顧客單一清單也加上批發/售價雙行顯示 */}
+                        <div className="flex justify-between items-end mt-2">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="text-[10px] text-slate-400">
+                              批: ${order.product.cost} × {order.quantity} = <span className="font-bold">${order.product.cost * order.quantity}</span>
+                            </div>
+                            <div className="text-xs font-bold text-slate-700">
+                              售: ${order.product.price} × {order.quantity} = <span className="font-black text-slate-800">${order.product.price * order.quantity}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 mb-0.5">
                             {statusConfig.next && (
                               <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-md active:bg-slate-700">
                                 {statusConfig.actionLabel}
@@ -673,7 +671,6 @@
                     </div>
 
                     <form onSubmit={handleSaveOrder} className="space-y-4">
-                      {/* 加入 datalist 讓名字可以自動完成防呆 */}
                       <datalist id="customer-names">
                         {uniqueCustomers.map(c => <option key={c} value={c} />)}
                       </datalist>
@@ -804,7 +801,7 @@
               </div>
             )}
 
-            {/* ==================== 分頁 3: 訂單追蹤 (新增顧客總表) ==================== */}
+            {/* ==================== 分頁 3: 訂單追蹤 (包含批發與售價雙行明細) ==================== */}
             {activeTab === 'orders' && (
               <div className="animate-fade-in">
                 <div className="mb-4">
@@ -814,7 +811,6 @@
                   <p className="text-xs text-slate-500">追蹤進度，或統整單一客人的未收款</p>
                 </div>
 
-                {/* 雙模式切換按鈕 */}
                 <div className="flex bg-slate-200 p-1 rounded-xl mb-4">
                   <button 
                     onClick={() => setOrderViewMode('time')} 
@@ -836,7 +832,6 @@
                     <input type="text" placeholder="搜尋客人或商品..." className="w-full bg-transparent outline-none text-sm p-1.5" value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} />
                   </div>
                   
-                  {/* 只有在明細模式才顯示狀態過濾 */}
                   {orderViewMode === 'time' && (
                     <div className="flex overflow-x-auto hide-scrollbar bg-white p-1">
                       <button onClick={() => setOrderFilterStatus('all')} className={`whitespace-nowrap px-4 py-2 text-sm font-bold rounded-lg transition-colors ${orderFilterStatus === 'all' ? 'bg-slate-800 text-white' : 'text-slate-500'}`}>全部</button>
@@ -850,7 +845,6 @@
                 </div>
 
                 <div className="space-y-3">
-                  {/* 模式 A：依顧客統整 */}
                   {orderViewMode === 'customer' && (
                     customerSummaries.length === 0 ? (
                       <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-400">目前沒有顧客資料</div>
@@ -881,7 +875,6 @@
                     )
                   )}
 
-                  {/* 模式 B：依訂單明細 (原來的列表) */}
                   {orderViewMode === 'time' && (
                     enrichedOrders.length === 0 ? (
                       <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-400">沒有符合的訂單紀錄</div>
@@ -931,11 +924,17 @@
                               </div>
                             </div>
 
-                            <div className="bg-slate-50 px-3 py-2 border-t border-slate-100 flex justify-between items-center">
-                              <div className="text-xs font-medium text-slate-600">
-                                {order.quantity}件 × ${order.product.price} = <span className="font-black text-slate-800 text-sm">${order.product.price * order.quantity}</span>
+                            {/* 在這裡加入「批價」與「售價」雙行顯示 */}
+                            <div className="bg-slate-50 px-3 py-2 border-t border-slate-100 flex justify-between items-end">
+                              <div className="flex flex-col gap-1">
+                                <div className="text-[11px] text-slate-500">
+                                  批價: ${order.product.cost} × {order.quantity} = <span className="font-bold text-slate-600">${order.product.cost * order.quantity}</span>
+                                </div>
+                                <div className="text-xs font-medium text-slate-700">
+                                  售價: ${order.product.price} × {order.quantity} = <span className="font-black text-slate-800 text-[13px]">${order.product.price * order.quantity}</span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 mb-0.5">
                                 <button onClick={() => editOrder(order, order.product)} className="w-8 h-8 rounded-full text-slate-500 bg-white border border-slate-200 flex items-center justify-center shadow-sm active:text-blue-600"><Icon name="pen" size={12} /></button>
                                 <button onClick={() => deleteOrder(order.id)} className="w-8 h-8 rounded-full text-slate-400 bg-white border border-slate-200 flex items-center justify-center shadow-sm active:text-red-500"><Icon name="trash-can" size={12} /></button>
                                 {statusConfig.next && (
