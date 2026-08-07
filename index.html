@@ -300,6 +300,7 @@
         }));
       };
 
+      // --- 衍生資料運算與排序 ---
       const sortedProducts = useMemo(() => {
         return [...products].sort((a, b) => {
           return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
@@ -351,16 +352,18 @@
         const grouped = {};
         
         pending.forEach(order => {
-          const product = products.find(p => p.id === order.productId) || { name: '已刪除商品', image: null };
+          const product = products.find(p => p.id === order.productId) || { name: '已刪除商品', image: null, cost: 0 };
           const key = `${order.productId}_${order.style}_${order.size}`;
           
           if (!grouped[key]) {
             grouped[key] = {
-              productId: order.productId, productName: product.name, image: product.image,
+              productId: order.productId, productName: product.name, image: product.image, cost: product.cost,
               style: order.style, size: order.size, totalQuantity: 0, customers: []
             };
           }
           grouped[key].totalQuantity += order.quantity;
+          // 新增：計算單款商品的批價總額
+          grouped[key].itemSubtotal = grouped[key].totalQuantity * product.cost;
           grouped[key].customers.push({ name: order.customer, qty: order.quantity });
         });
         
@@ -372,16 +375,20 @@
       const stats = useMemo(() => {
         let expectedProfit = 0;
         let totalUnpaid = 0;
+        let pendingCost = 0; // 新增：這批待叫貨的總成本 (需準備給廠商的錢)
+        
         orders.forEach(order => {
           const product = products.find(p => p.id === order.productId);
           if (product) {
             if (order.status !== 'completed') totalUnpaid += (product.price * order.quantity);
+            if (order.status === 'pending_buy') pendingCost += (product.cost * order.quantity);
             expectedProfit += ((product.price - product.cost) * order.quantity);
           }
         });
-        return { expectedProfit, totalUnpaid, pendingCount: purchasingList.length };
+        return { expectedProfit, totalUnpaid, pendingCost, pendingCount: purchasingList.length };
       }, [orders, products, purchasingList]);
 
+      // --- 渲染共用彈窗 ---
       const renderCustomerModal = () => {
         if (!viewCustomer) return null;
         const customerOrders = allEnrichedOrders.filter(o => o.customer === viewCustomer);
@@ -393,7 +400,7 @@
               <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-blue-50/50 sticky top-0 z-10">
                 <div>
                   <h3 className="font-extrabold text-xl flex items-center gap-2">
-                    <Icon name="user" className="text-blue-600"/> {viewCustomer} <span className="text-sm font-normal text-slate-500">的專屬清單</span>
+                    <Icon name="user" className="text-blue-600"/> {viewCustomer} <span className="text-sm font-normal text-slate-500">的清單</span>
                   </h3>
                   <div className="text-xs font-bold text-red-500 mt-1">未結清總額: ${unpaidTotal.toLocaleString()}</div>
                 </div>
@@ -422,7 +429,6 @@
                           </div>
                         </div>
                         
-                        {/* 顧客單一清單也加上批發/售價雙行顯示 */}
                         <div className="flex justify-between items-end mt-2">
                           <div className="flex flex-col gap-0.5">
                             <div className="text-[10px] text-slate-400">
@@ -505,7 +511,7 @@
                 代購旗艦系統
               </h1>
               {activeTab !== 'settings' && (
-                <div className="text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                <div className="text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
                   <Icon name="chart-line" /> 利潤 ${stats.expectedProfit.toLocaleString()}
                 </div>
               )}
@@ -724,18 +730,37 @@
               </div>
             )}
 
-            {/* ==================== 分頁 2: 叫貨總表 ==================== */}
+            {/* ==================== 分頁 2: 叫貨總表 (新增總成本統計) ==================== */}
             {activeTab === 'purchasing' && (
               <div className="animate-fade-in">
-                <div className="mb-4">
-                  <h2 className="text-lg font-bold text-slate-800">叫貨總表 (待叫貨)</h2>
-                  <p className="text-xs text-slate-500">點擊人名可看出貨單，點擊商品名可看分配表</p>
+                
+                {/* 顯眼的：這批叫貨總成本看板 */}
+                <div className="mb-4 bg-blue-50 border border-blue-100 p-4 rounded-2xl flex justify-between items-center shadow-sm relative overflow-hidden">
+                  <div className="absolute right-0 top-0 opacity-10 text-blue-500 transform translate-x-4 -translate-y-4">
+                    <Icon name="wallet" size={80} />
+                  </div>
+                  <div className="relative z-10 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md">
+                      <Icon name="file-invoice-dollar" size={18} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-blue-800 mb-0.5">這批需準備給廠商</div>
+                      <div className="text-2xl font-black text-blue-700 tracking-tight">
+                        <span className="text-sm font-bold mr-1">$</span>
+                        {stats.pendingCost.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-3 flex justify-between items-center">
+                  <h2 className="text-sm font-bold text-slate-600">待叫貨明細表</h2>
                 </div>
 
                 {purchasingList.length === 0 ? (
                   <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
                     <Icon name="circle-check" size={48} className="text-emerald-400 mb-3" />
-                    <p className="text-slate-500 font-medium">目前沒有需要叫貨的商品</p>
+                    <p className="text-slate-500 font-medium">太棒了！沒有需要叫貨的商品</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -771,6 +796,12 @@
                             {item.style && <span className="text-[11px] sm:text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">款: {item.style}</span>}
                             {item.size && <span className="text-[11px] sm:text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">碼: {item.size}</span>}
                           </div>
+                          
+                          {/* 新增：單款商品的批價總額計算 */}
+                          <div className="text-[11px] font-bold text-slate-500 mt-1 mb-1">
+                            批價: ${item.cost} × {item.totalQuantity} = <span className="text-slate-800">${item.itemSubtotal.toLocaleString()}</span>
+                          </div>
+
                           <div className="flex flex-wrap gap-1 mt-1.5 items-center">
                             <span className="text-[10px] text-slate-400 mr-0.5">訂購人:</span>
                             {item.customers.map((c, i) => (
@@ -790,8 +821,8 @@
                             <div className="text-[10px] text-slate-500 font-bold">需叫貨</div>
                             <div className="text-2xl font-black text-red-600 leading-none">{item.totalQuantity}<span className="text-xs font-normal ml-0.5">件</span></div>
                           </div>
-                          <button onClick={() => batchMarkAsOrdered(item.productId, item.style, item.size)} className="bg-slate-800 text-white text-[11px] px-2.5 py-1.5 rounded-lg active:bg-slate-700 font-bold whitespace-nowrap shadow-sm">
-                            已叫貨
+                          <button onClick={() => batchMarkAsOrdered(item.productId, item.style, item.size)} className="bg-slate-800 text-white text-[11px] px-3 py-2 rounded-lg active:bg-slate-700 font-bold whitespace-nowrap shadow-sm">
+                            <Icon name="check" size={10} className="mr-0.5" />已叫貨
                           </button>
                         </div>
                       </div>
@@ -801,7 +832,7 @@
               </div>
             )}
 
-            {/* ==================== 分頁 3: 訂單追蹤 (包含批發與售價雙行明細) ==================== */}
+            {/* ==================== 分頁 3: 訂單追蹤 ==================== */}
             {activeTab === 'orders' && (
               <div className="animate-fade-in">
                 <div className="mb-4">
@@ -924,7 +955,6 @@
                               </div>
                             </div>
 
-                            {/* 在這裡加入「批價」與「售價」雙行顯示 */}
                             <div className="bg-slate-50 px-3 py-2 border-t border-slate-100 flex justify-between items-end">
                               <div className="flex flex-col gap-1">
                                 <div className="text-[11px] text-slate-500">
