@@ -68,10 +68,8 @@
     }
 
     function App() {
-      // 預設頁面改為商品庫，新增了 'settings' 頁面
       const [activeTab, setActiveTab] = useState('products');
       
-      // 連接本地記憶
       const [products, setProducts] = useLocalStorage('daigou_products_v1', []);
       const [orders, setOrders] = useLocalStorage('daigou_orders_v1', []);
 
@@ -91,7 +89,7 @@
       const fileInputRef = useRef(null);
       const importInputRef = useRef(null);
 
-      // --- 圖片壓縮 (極致節省空間) ---
+      // --- 圖片壓縮 ---
       const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -121,7 +119,7 @@
         };
       };
 
-      // --- 新增：備份與還原功能 ---
+      // --- 備份與還原 ---
       const downloadBackup = () => {
         const backupData = {
           version: '1.0',
@@ -133,7 +131,6 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        // 檔名加上今天日期
         const today = new Date().toISOString().split('T')[0];
         a.download = `代購系統備份_${today}.json`;
         document.body.appendChild(a);
@@ -163,7 +160,6 @@
           } catch (error) {
             alert('讀取檔案失敗。');
           }
-          // 清空 input，允許重複上傳同一個檔案
           if(importInputRef.current) importInputRef.current.value = '';
         };
         reader.readAsText(file);
@@ -172,13 +168,17 @@
       // --- 資料操作 ---
       const handleAddProduct = (e) => {
         e.preventDefault();
+        
+        // 【優化】支援 / 或 , 或 、 當作分隔符號
+        const splitRegex = /[\/／,，、\s]+/; 
+        
         const product = {
           id: `p${Date.now()}`,
           name: newProduct.name,
           cost: Number(newProduct.cost),
           price: Number(newProduct.price),
-          styles: newProduct.styles ? newProduct.styles.split(',').map(s => s.trim()).filter(Boolean) : [],
-          sizes: newProduct.sizes ? newProduct.sizes.split(',').map(s => s.trim()).filter(Boolean) : [],
+          styles: newProduct.styles ? newProduct.styles.split(splitRegex).map(s => s.trim()).filter(Boolean) : [],
+          sizes: newProduct.sizes ? newProduct.sizes.split(splitRegex).map(s => s.trim()).filter(Boolean) : [],
           image: newProduct.image
         };
         setProducts([product, ...products]);
@@ -415,7 +415,7 @@
                   <div className="bg-white p-5 rounded-2xl shadow-lg border border-slate-200 mb-6 relative z-10">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="font-bold text-lg">新增商品檔案</h3>
-                      <button onClick={() => setShowAddProduct(false)} className="p-2 bg-slate-100 rounded-full text-slate-500"><Icon name="xmark" /></button>
+                      <button onClick={() => setShowAddProduct(false)} className="p-2 bg-slate-100 rounded-full text-slate-500 flex items-center justify-center"><Icon name="xmark" /></button>
                     </div>
                     <form onSubmit={handleAddProduct} className="space-y-4">
                       <div className="flex flex-col gap-4">
@@ -450,13 +450,14 @@
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-3">
+                            {/* 更新：改為斜線分隔，並支援多種符號容錯 */}
                             <div>
-                              <label className="block text-xs font-bold text-slate-700 mb-1">款式 (用逗號分隔)</label>
-                              <input type="text" value={newProduct.styles} onChange={e=>setNewProduct({...newProduct, styles: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" placeholder="紅,藍,白" />
+                              <label className="block text-xs font-bold text-slate-700 mb-1">款式 (用 / 分隔)</label>
+                              <input type="text" value={newProduct.styles} onChange={e=>setNewProduct({...newProduct, styles: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="紅/藍/白" />
                             </div>
                             <div>
-                              <label className="block text-xs font-bold text-slate-700 mb-1">尺碼 (用逗號分隔)</label>
-                              <input type="text" value={newProduct.sizes} onChange={e=>setNewProduct({...newProduct, sizes: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" placeholder="S,M,L" />
+                              <label className="block text-xs font-bold text-slate-700 mb-1">尺碼 (用 / 分隔)</label>
+                              <input type="text" value={newProduct.sizes} onChange={e=>setNewProduct({...newProduct, sizes: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="S/M/L" />
                             </div>
                           </div>
                         </div>
@@ -591,7 +592,7 @@
                 ) : (
                   <div className="space-y-3">
                     {purchasingList.map((item, index) => (
-                      <div key={index} className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex gap-3 items-center relative overflow-hidden">
+                      <div key={index} className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 flex gap-4 items-center relative overflow-hidden">
                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-400"></div>
                         
                         <div 
@@ -745,7 +746,7 @@
               </div>
             )}
 
-            {/* ==================== 分頁 4: 設定與備份 (全新功能) ==================== */}
+            {/* ==================== 分頁 4: 設定與備份 ==================== */}
             {activeTab === 'settings' && (
               <div className="animate-fade-in">
                 <div className="mb-4">
@@ -798,7 +799,6 @@
 
           </main>
 
-          {/* 底部導覽列 */}
           <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40 pb-safe">
             <div className="max-w-md mx-auto flex justify-between px-4 py-2">
               <button onClick={() => setActiveTab('products')} className={`flex flex-col items-center p-2 min-w-[64px] transition-colors ${activeTab === 'products' ? 'text-blue-600' : 'text-slate-400'}`}>
