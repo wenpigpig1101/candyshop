@@ -362,8 +362,10 @@
             };
           }
           grouped[key].totalQuantity += order.quantity;
-          // 新增：計算單款商品的批價總額
+          
+          // 計算單一規格要準備多少錢叫貨
           grouped[key].itemSubtotal = grouped[key].totalQuantity * product.cost;
+          
           grouped[key].customers.push({ name: order.customer, qty: order.quantity });
         });
         
@@ -375,7 +377,7 @@
       const stats = useMemo(() => {
         let expectedProfit = 0;
         let totalUnpaid = 0;
-        let pendingCost = 0; // 新增：這批待叫貨的總成本 (需準備給廠商的錢)
+        let pendingCost = 0; // 這批叫貨總成本
         
         orders.forEach(order => {
           const product = products.find(p => p.id === order.productId);
@@ -730,7 +732,7 @@
               </div>
             )}
 
-            {/* ==================== 分頁 2: 叫貨總表 (新增總成本統計) ==================== */}
+            {/* ==================== 分頁 2: 叫貨總表 ==================== */}
             {activeTab === 'purchasing' && (
               <div className="animate-fade-in">
                 
@@ -760,7 +762,7 @@
                 {purchasingList.length === 0 ? (
                   <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
                     <Icon name="circle-check" size={48} className="text-emerald-400 mb-3" />
-                    <p className="text-slate-500 font-medium">太棒了！沒有需要叫貨的商品</p>
+                    <p className="text-slate-500 font-medium">目前沒有需要叫貨的商品</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -797,7 +799,7 @@
                             {item.size && <span className="text-[11px] sm:text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">碼: {item.size}</span>}
                           </div>
                           
-                          {/* 新增：單款商品的批價總額計算 */}
+                          {/* 單款商品的批價總額 */}
                           <div className="text-[11px] font-bold text-slate-500 mt-1 mb-1">
                             批價: ${item.cost} × {item.totalQuantity} = <span className="text-slate-800">${item.itemSubtotal.toLocaleString()}</span>
                           </div>
