@@ -42,21 +42,38 @@
       COMPLETED: { id: 'completed', label: '已完成', color: 'bg-green-100 text-green-700', next: null, actionLabel: '' }
     };
 
+    // 自動存取手機 LocalStorage 的機制
+    function useLocalStorage(key, initialValue) {
+      const [storedValue, setStoredValue] = useState(() => {
+        try {
+          const item = window.localStorage.getItem(key);
+          return item ? JSON.parse(item) : initialValue;
+        } catch (error) {
+          console.error(error);
+          return initialValue;
+        }
+      });
+
+      useEffect(() => {
+        try {
+          window.localStorage.setItem(key, JSON.stringify(storedValue));
+        } catch (error) {
+          if(error.name === 'QuotaExceededError') {
+            alert('手機瀏覽器儲存空間已滿！建議進行「備份」，然後刪除一些舊歷史訂單。');
+          }
+        }
+      }, [key, storedValue]);
+
+      return [storedValue, setStoredValue];
+    }
+
     function App() {
+      // 預設頁面改為商品庫，新增了 'settings' 頁面
       const [activeTab, setActiveTab] = useState('products');
       
-      const [products, setProducts] = useState([
-        { id: 'p1', name: '33208', cost: 250, price: 490, styles: ['黑', '藍'], sizes: ['小', '中'], image: 'https://images.unsplash.com/photo-1515347619253-07b5fbe12185?w=200&q=80' },
-        { id: 'p2', name: '韓國進口帆布鞋', cost: 350, price: 650, styles: ['奶油白', '經典黑'], sizes: ['23.5', '24.0', '24.5'], image: 'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=200&q=80' },
-      ]);
-
-      const [orders, setOrders] = useState([
-        { id: 'o1', productId: 'p1', customer: '其', style: '藍', size: '中', quantity: 1, status: 'pending_buy', date: '2026-08-07' },
-        { id: 'o2', productId: 'p1', customer: '其', style: '黑', size: '中', quantity: 1, status: 'pending_buy', date: '2026-08-07' },
-        { id: 'o3', productId: 'p1', customer: '其', style: '藍', size: '小', quantity: 1, status: 'pending_buy', date: '2026-08-07' },
-        { id: 'o4', productId: 'p1', customer: '其', style: '黑', size: '小', quantity: 1, status: 'pending_buy', date: '2026-08-07' },
-        { id: 'o5', productId: 'p2', customer: '陳小姐', style: '奶油白', size: '23.5', quantity: 1, status: 'ordered', date: '2026-08-06' },
-      ]);
+      // 連接本地記憶
+      const [products, setProducts] = useLocalStorage('daigou_products_v1', []);
+      const [orders, setOrders] = useLocalStorage('daigou_orders_v1', []);
 
       // UI 狀態控制
       const [showAddProduct, setShowAddProduct] = useState(false);
@@ -68,23 +85,91 @@
       const [orderSearch, setOrderSearch] = useState('');
       const [orderFilterStatus, setOrderFilterStatus] = useState('all');
 
-      // 新增：用於彈出視窗的狀態
       const [viewCustomer, setViewCustomer] = useState(null);
       const [viewProductInfo, setViewProductInfo] = useState(null);
 
       const fileInputRef = useRef(null);
+      const importInputRef = useRef(null);
 
+      // --- 圖片壓縮 (極致節省空間) ---
       const handleImageChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            setNewProduct({ ...newProduct, image: reader.result });
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 400; // 壓縮尺寸
+            let scaleSize = 1;
+            if (img.width > MAX_WIDTH) {
+              scaleSize = MAX_WIDTH / img.width;
+            }
+            canvas.width = img.width * scaleSize;
+            canvas.height = img.height * scaleSize;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // 轉成 JPG 以減少容量
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            setNewProduct({ ...newProduct, image: compressedDataUrl });
           };
-          reader.readAsDataURL(file);
-        }
+        };
       };
 
+      // --- 新增：備份與還原功能 ---
+      const downloadBackup = () => {
+        const backupData = {
+          version: '1.0',
+          date: new Date().toISOString(),
+          products: products,
+          orders: orders
+        };
+        const blob = new Blob([JSON.stringify(backupData)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        // 檔名加上今天日期
+        const today = new Date().toISOString().split('T')[0];
+        a.download = `代購系統備份_${today}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert('備份檔下載成功！\n請選擇儲存到您的「檔案」或「Google 雲端硬碟」中。');
+      };
+
+      const handleImportBackup = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            if (data.products && Array.isArray(data.products) && data.orders && Array.isArray(data.orders)) {
+              if(window.confirm('確定要還原備份嗎？這會覆蓋掉目前所有的資料喔！')) {
+                setProducts(data.products);
+                setOrders(data.orders);
+                alert('資料還原成功！');
+              }
+            } else {
+              alert('檔案格式錯誤，這不是有效的備份檔。');
+            }
+          } catch (error) {
+            alert('讀取檔案失敗。');
+          }
+          // 清空 input，允許重複上傳同一個檔案
+          if(importInputRef.current) importInputRef.current.value = '';
+        };
+        reader.readAsText(file);
+      };
+
+      // --- 資料操作 ---
       const handleAddProduct = (e) => {
         e.preventDefault();
         const product = {
@@ -110,7 +195,7 @@
       const handleAddOrder = (e) => {
         e.preventDefault();
         const order = {
-          id: `o${Date.now()}`, productId: selectedProductForOrder.id, customer: newOrder.customer,
+          id: `o${Date.now()}`, productId: selectedProductForOrder.id, customer: newOrder.customer.trim(),
           style: newOrder.style, size: newOrder.size, quantity: Number(newOrder.quantity), status: 'pending_buy', date: new Date().toISOString().split('T')[0]
         };
         setOrders([order, ...orders]);
@@ -141,7 +226,7 @@
         }));
       };
 
-      // 基礎過濾資料 (包含商品資訊，不受搜尋條件影響，給彈出視窗用)
+      // --- 衍生資料運算 ---
       const allEnrichedOrders = useMemo(() => {
         return orders.map(order => {
           const product = products.find(p => p.id === order.productId) || { name: '已刪除商品', image: null, cost: 0, price: 0 };
@@ -149,7 +234,6 @@
         }).sort((a, b) => b.id.localeCompare(a.id));
       }, [orders, products]);
 
-      // 訂單追蹤頁面的過濾資料
       const enrichedOrders = useMemo(() => {
         return allEnrichedOrders.filter(order => {
           const matchTab = orderFilterStatus === 'all' || order.status === orderFilterStatus;
@@ -169,8 +253,7 @@
           if (!grouped[key]) {
             grouped[key] = {
               productId: order.productId, productName: product.name, image: product.image,
-              style: order.style, size: order.size, totalQuantity: 0,
-              customers: [] // 改為儲存物件以便獨立點擊
+              style: order.style, size: order.size, totalQuantity: 0, customers: []
             };
           }
           grouped[key].totalQuantity += order.quantity;
@@ -193,27 +276,26 @@
         return { expectedProfit, totalUnpaid, pendingCount: purchasingList.length };
       }, [orders, products, purchasingList]);
 
-
-      // --- 渲染顧客理貨視窗 (出貨視角) ---
+      // --- 渲染共用彈窗 ---
       const renderCustomerModal = () => {
         if (!viewCustomer) return null;
         const customerOrders = allEnrichedOrders.filter(o => o.customer === viewCustomer);
         const unpaidTotal = customerOrders.reduce((sum, o) => o.status !== 'completed' ? sum + (o.product.price * o.quantity) : sum, 0);
 
         return (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center animate-fade-in-bg">
-            <div className="bg-white w-full sm:w-auto sm:min-w-[400px] sm:rounded-2xl rounded-t-2xl shadow-xl overflow-hidden max-h-[85vh] flex flex-col animate-fade-in">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center animate-fade-in-bg">
+            <div className="bg-white w-full rounded-t-2xl shadow-xl overflow-hidden max-h-[85vh] flex flex-col animate-fade-in">
               <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-blue-50/50 sticky top-0 z-10">
                 <div>
                   <h3 className="font-extrabold text-xl flex items-center gap-2">
-                    <Icon name="user" className="text-blue-600"/> {viewCustomer} <span className="text-sm font-normal text-slate-500">的專屬清單</span>
+                    <Icon name="user" className="text-blue-600"/> {viewCustomer} <span className="text-sm font-normal text-slate-500">的清單</span>
                   </h3>
                   <div className="text-xs font-bold text-red-500 mt-1">未結清總額: ${unpaidTotal.toLocaleString()}</div>
                 </div>
                 <button onClick={() => setViewCustomer(null)} className="w-8 h-8 bg-slate-200 rounded-full text-slate-600 flex items-center justify-center hover:bg-slate-300"><Icon name="xmark" /></button>
               </div>
-              
-              <div className="overflow-y-auto p-4 space-y-3 bg-slate-50">
+              <div className="overflow-y-auto p-4 space-y-3 bg-slate-50 pb-10">
+                {customerOrders.length === 0 && <div className="text-center text-slate-400 py-4">無資料</div>}
                 {customerOrders.map(order => {
                   const statusConfig = STATUSES[order.status.toUpperCase()];
                   return (
@@ -237,7 +319,7 @@
                         <div className="flex justify-between items-center mt-2">
                           <span className="text-xs font-bold text-slate-700">{order.quantity}件 × ${order.product.price}</span>
                           {statusConfig.next && (
-                            <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-md hover:bg-slate-700">
+                            <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-md">
                               {statusConfig.actionLabel}
                             </button>
                           )}
@@ -252,15 +334,14 @@
         );
       };
 
-      // --- 渲染商品分配視窗 (分貨視角) ---
       const renderProductModal = () => {
         if (!viewProductInfo) return null;
         const productOrders = allEnrichedOrders.filter(o => o.productId === viewProductInfo.id);
         const totalOrdered = productOrders.reduce((sum, o) => sum + o.quantity, 0);
 
         return (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center animate-fade-in-bg">
-            <div className="bg-white w-full sm:w-auto sm:min-w-[400px] sm:rounded-2xl rounded-t-2xl shadow-xl overflow-hidden max-h-[85vh] flex flex-col animate-fade-in">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center animate-fade-in-bg">
+            <div className="bg-white w-full rounded-t-2xl shadow-xl overflow-hidden max-h-[85vh] flex flex-col animate-fade-in">
               <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
                 <div className="flex items-center gap-3">
                   {viewProductInfo.image && <img src={viewProductInfo.image} className="w-10 h-10 rounded object-cover" />}
@@ -269,16 +350,16 @@
                     <div className="text-xs font-bold text-slate-500">總接單數: {totalOrdered} 件</div>
                   </div>
                 </div>
-                <button onClick={() => setViewProductInfo(null)} className="w-8 h-8 bg-slate-200 rounded-full text-slate-600 flex items-center justify-center hover:bg-slate-300 shrink-0"><Icon name="xmark" /></button>
+                <button onClick={() => setViewProductInfo(null)} className="w-8 h-8 bg-slate-200 rounded-full text-slate-600 flex items-center justify-center shrink-0"><Icon name="xmark" /></button>
               </div>
-              
-              <div className="overflow-y-auto p-4 space-y-3 bg-slate-50">
+              <div className="overflow-y-auto p-4 space-y-3 bg-slate-50 pb-10">
+                {productOrders.length === 0 && <div className="text-center text-slate-400 py-4">尚無人訂購</div>}
                 {productOrders.map(order => {
                   const statusConfig = STATUSES[order.status.toUpperCase()];
                   return (
                     <div key={order.id} className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center gap-2">
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold text-blue-700 text-sm mb-0.5 cursor-pointer hover:underline" onClick={() => { setViewProductInfo(null); setViewCustomer(order.customer); }}>
+                        <div className="font-bold text-blue-700 text-sm mb-0.5 cursor-pointer" onClick={() => { setViewProductInfo(null); setViewCustomer(order.customer); }}>
                           {order.customer}
                         </div>
                         <div className="text-[11px] text-slate-500 flex flex-wrap gap-1">
@@ -299,10 +380,8 @@
         );
       };
 
-      // 主畫面渲染
       return (
-        <div className="min-h-screen pb-24 md:pb-10 relative">
-          
+        <div className="min-h-screen pb-24 relative">
           {/* Header */}
           <header className="bg-white shadow-sm sticky top-0 z-30 border-b border-slate-200">
             <div className="max-w-5xl mx-auto px-4 h-16 flex justify-between items-center">
@@ -310,131 +389,136 @@
                 <Icon name="store" className="text-blue-600" />
                 代購旗艦系統
               </h1>
-              <div className="text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                <Icon name="chart-line" /> 利潤 ${stats.expectedProfit.toLocaleString()}
-              </div>
+              {activeTab !== 'settings' && (
+                <div className="text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                  <Icon name="chart-line" /> 利潤 ${stats.expectedProfit.toLocaleString()}
+                </div>
+              )}
             </div>
           </header>
 
           <main className="max-w-5xl mx-auto p-4">
-            
             {/* ==================== 分頁 1: 商品庫 ==================== */}
             {activeTab === 'products' && (
               <div className="animate-fade-in">
                 <div className="flex justify-between items-end mb-4">
                   <div>
                     <h2 className="text-lg font-bold text-slate-800">商品庫</h2>
-                    <p className="text-xs text-slate-500">點擊圖片可以查看有誰訂購</p>
+                    <p className="text-xs text-emerald-600 font-bold"><Icon name="check" /> 已自動記憶資料</p>
                   </div>
-                  <button onClick={() => setShowAddProduct(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm flex items-center gap-1 hover:bg-blue-700">
-                    <Icon name="plus" /> 新增商品
+                  <button onClick={() => setShowAddProduct(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm flex items-center gap-1 active:scale-95 transition-transform">
+                    <Icon name="plus" /> 新增
                   </button>
                 </div>
 
-                {/* 新增商品表單 */}
                 {showAddProduct && (
                   <div className="bg-white p-5 rounded-2xl shadow-lg border border-slate-200 mb-6 relative z-10">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="font-bold text-lg">新增商品檔案</h3>
-                      <button onClick={() => setShowAddProduct(false)} className="p-2 bg-slate-100 rounded-full text-slate-500 flex items-center justify-center"><Icon name="xmark" /></button>
+                      <button onClick={() => setShowAddProduct(false)} className="p-2 bg-slate-100 rounded-full text-slate-500"><Icon name="xmark" /></button>
                     </div>
                     <form onSubmit={handleAddProduct} className="space-y-4">
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="sm:w-1/3">
+                      <div className="flex flex-col gap-4">
+                        <div className="w-full">
                           {!newProduct.image ? (
-                            <div onClick={() => fileInputRef.current?.click()} className="w-full aspect-square border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-500 hover:bg-slate-50 cursor-pointer">
-                              <Icon name="camera" size={32} className="mb-2" />
-                              <span className="text-sm font-medium">上傳商品圖</span>
+                            <div onClick={() => fileInputRef.current?.click()} className="w-full aspect-video border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-500 bg-slate-50">
+                              <Icon name="camera" size={32} className="mb-2 text-slate-400" />
+                              <span className="text-sm font-medium">拍攝或上傳商品圖</span>
                             </div>
                           ) : (
-                            <div className="relative w-full aspect-square rounded-xl overflow-hidden">
-                              <img src={newProduct.image} className="w-full h-full object-cover" alt="preview" />
-                              <button type="button" onClick={() => setNewProduct({...newProduct, image: null})} className="absolute top-2 right-2 bg-white/90 text-red-500 p-2 rounded-full flex items-center justify-center"><Icon name="trash-can" size={14}/></button>
+                            <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center">
+                              <img src={newProduct.image} className="w-full h-full object-contain" alt="preview" />
+                              <button type="button" onClick={() => setNewProduct({...newProduct, image: null})} className="absolute top-2 right-2 bg-white/90 text-red-500 p-2 rounded-full"><Icon name="trash-can" size={14}/></button>
                             </div>
                           )}
                           <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageChange} />
                         </div>
                         
-                        <div className="sm:w-2/3 space-y-3">
+                        <div className="space-y-3">
                           <div>
                             <label className="block text-xs font-bold text-slate-700 mb-1">商品名稱 <span className="text-red-500">*</span></label>
-                            <input required type="text" value={newProduct.name} onChange={e=>setNewProduct({...newProduct, name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：日系連身裙" />
+                            <input required type="text" value={newProduct.name} onChange={e=>setNewProduct({...newProduct, name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="例如：日系連身裙" />
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-bold text-slate-700 mb-1">成本價 <span className="text-red-500">*</span></label>
-                              <input required type="number" min="0" value={newProduct.cost} onChange={e=>setNewProduct({...newProduct, cost: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="$0" />
+                              <input required type="number" min="0" value={newProduct.cost} onChange={e=>setNewProduct({...newProduct, cost: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" placeholder="$0" />
                             </div>
                             <div>
                               <label className="block text-xs font-bold text-slate-700 mb-1">售價 <span className="text-red-500">*</span></label>
-                              <input required type="number" min="0" value={newProduct.price} onChange={e=>setNewProduct({...newProduct, price: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="$0" />
+                              <input required type="number" min="0" value={newProduct.price} onChange={e=>setNewProduct({...newProduct, price: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" placeholder="$0" />
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-bold text-slate-700 mb-1">款式 (用逗號分隔)</label>
-                              <input type="text" value={newProduct.styles} onChange={e=>setNewProduct({...newProduct, styles: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="紅,藍,白" />
+                              <input type="text" value={newProduct.styles} onChange={e=>setNewProduct({...newProduct, styles: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" placeholder="紅,藍,白" />
                             </div>
                             <div>
                               <label className="block text-xs font-bold text-slate-700 mb-1">尺碼 (用逗號分隔)</label>
-                              <input type="text" value={newProduct.sizes} onChange={e=>setNewProduct({...newProduct, sizes: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="S,M,L" />
+                              <input type="text" value={newProduct.sizes} onChange={e=>setNewProduct({...newProduct, sizes: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" placeholder="S,M,L" />
                             </div>
                           </div>
                         </div>
                       </div>
-                      <button type="submit" className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold mt-2">儲存商品</button>
+                      <button type="submit" className="w-full bg-slate-800 text-white py-3.5 rounded-xl font-bold mt-2 active:bg-slate-700 transition">儲存商品建檔</button>
                     </form>
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {products.map(product => (
-                    <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col relative group">
-                      <div 
-                        className="aspect-square bg-slate-50 relative cursor-pointer"
-                        onClick={() => setViewProductInfo(product)}
-                      >
-                        {product.image ? (
-                          <img src={product.image} className="w-full h-full object-cover" alt={product.name} />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-300"><Icon name="box" size={40}/></div>
-                        )}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition flex items-center justify-center">
-                          <span className="opacity-0 group-hover:opacity-100 bg-white/90 text-slate-800 text-xs font-bold px-2 py-1 rounded-full shadow-sm">查看明細</span>
-                        </div>
-                      </div>
-                      <button onClick={(e)=> { e.stopPropagation(); deleteProduct(product.id); }} className="absolute top-2 right-2 bg-white/90 p-2 rounded-full text-slate-400 hover:text-red-500 flex items-center justify-center shadow-sm z-10"><Icon name="trash-can" size={12}/></button>
-                      
-                      <div className="p-3 flex-1 flex flex-col">
-                        <h3 
-                          className="font-bold text-slate-800 text-sm mb-1 line-clamp-1 cursor-pointer hover:text-blue-600"
+                {products.length === 0 ? (
+                   <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
+                    <Icon name="box-open" size={48} className="text-slate-300 mb-3" />
+                    <p className="text-slate-500 font-medium">還沒有商品，點擊右上方開始建檔！</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    {products.map(product => (
+                      <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col relative">
+                        <div 
+                          className="aspect-square bg-slate-50 relative active:opacity-80 transition"
                           onClick={() => setViewProductInfo(product)}
                         >
-                          {product.name}
-                        </h3>
-                        <div className="flex justify-between text-xs text-slate-500 mb-3">
-                          <span>本:${product.cost}</span>
-                          <span className="font-bold text-slate-800">賣:${product.price}</span>
+                          {product.image ? (
+                            <img src={product.image} className="w-full h-full object-cover" alt={product.name} />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-300"><Icon name="box" size={40}/></div>
+                          )}
+                          <div className="absolute inset-0 bg-black/0 hover:bg-black/5 transition flex items-center justify-center"></div>
                         </div>
-                        <div className="mt-auto">
-                          <button onClick={() => openOrderForm(product)} className="w-full bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white py-2 rounded-lg text-sm font-bold flex justify-center items-center gap-1 transition-colors">
-                            <Icon name="plus" size={12}/> 接單
-                          </button>
+                        <button onClick={(e)=> { e.stopPropagation(); deleteProduct(product.id); }} className="absolute top-2 right-2 bg-white/90 w-8 h-8 rounded-full text-slate-400 active:text-red-500 flex items-center justify-center shadow-sm z-10"><Icon name="trash-can" size={12}/></button>
+                        
+                        <div className="p-3 flex-1 flex flex-col">
+                          <h3 
+                            className="font-bold text-slate-800 text-sm mb-1 line-clamp-1 active:text-blue-600 transition"
+                            onClick={() => setViewProductInfo(product)}
+                          >
+                            {product.name}
+                          </h3>
+                          <div className="flex justify-between text-[11px] text-slate-500 mb-2.5">
+                            <span>本:${product.cost}</span>
+                            <span className="font-bold text-slate-800">賣:${product.price}</span>
+                          </div>
+                          <div className="mt-auto">
+                            <button onClick={() => openOrderForm(product)} className="w-full bg-blue-50 text-blue-700 active:bg-blue-600 active:text-white py-2 rounded-lg text-sm font-bold flex justify-center items-center gap-1 transition-colors">
+                              <Icon name="plus" size={12}/> 接單
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* 接單 Modal */}
             {showAddOrder && selectedProductForOrder && (
-              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-                  <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center animate-fade-in">
+                <div className="bg-white rounded-t-2xl shadow-xl w-full overflow-hidden max-h-[90vh] overflow-y-auto pb-safe">
+                  <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
                     <h3 className="font-bold text-lg flex items-center gap-2"><Icon name="clipboard-list" className="text-blue-600"/> 新增客訂紀錄</h3>
-                    <button onClick={() => setShowAddOrder(false)} className="p-2 bg-slate-200 rounded-full text-slate-600 flex items-center justify-center"><Icon name="xmark" size={14}/></button>
+                    <button onClick={() => setShowAddOrder(false)} className="w-8 h-8 bg-slate-200 rounded-full text-slate-600 flex items-center justify-center"><Icon name="xmark" size={14}/></button>
                   </div>
                   
                   <div className="p-5">
@@ -454,7 +538,7 @@
                         <label className="block text-sm font-bold text-slate-700 mb-1">客人姓名/暱稱 <span className="text-red-500">*</span></label>
                         <div className="relative">
                           <div className="absolute left-3 top-3 text-slate-400"><Icon name="user" size={14} /></div>
-                          <input required type="text" value={newOrder.customer} onChange={e=>setNewOrder({...newOrder, customer: e.target.value})} className="w-full p-2.5 pl-9 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：其、陳小姐" />
+                          <input required type="text" value={newOrder.customer} onChange={e=>setNewOrder({...newOrder, customer: e.target.value})} className="w-full p-3 pl-9 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="例如：其、陳小姐" />
                         </div>
                       </div>
                       
@@ -462,7 +546,7 @@
                         {selectedProductForOrder.styles.length > 0 && (
                           <div>
                             <label className="block text-sm font-bold text-slate-700 mb-1">選擇款式</label>
-                            <select value={newOrder.style} onChange={e=>setNewOrder({...newOrder, style: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            <select value={newOrder.style} onChange={e=>setNewOrder({...newOrder, style: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none">
                               {selectedProductForOrder.styles.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                           </div>
@@ -470,7 +554,7 @@
                         {selectedProductForOrder.sizes.length > 0 && (
                           <div>
                             <label className="block text-sm font-bold text-slate-700 mb-1">選擇尺碼</label>
-                            <select value={newOrder.size} onChange={e=>setNewOrder({...newOrder, size: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            <select value={newOrder.size} onChange={e=>setNewOrder({...newOrder, size: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none">
                               {selectedProductForOrder.sizes.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                           </div>
@@ -479,10 +563,10 @@
 
                       <div>
                         <label className="block text-sm font-bold text-slate-700 mb-1">訂購數量 <span className="text-red-500">*</span></label>
-                        <input required type="number" min="1" value={newOrder.quantity} onChange={e=>setNewOrder({...newOrder, quantity: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                        <input required type="number" min="1" value={newOrder.quantity} onChange={e=>setNewOrder({...newOrder, quantity: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none" />
                       </div>
 
-                      <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mt-2 hover:bg-blue-700 shadow-md">
+                      <button type="submit" className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold mt-4 active:bg-blue-700 shadow-md transition">
                         確認接單
                       </button>
                     </form>
@@ -507,27 +591,26 @@
                 ) : (
                   <div className="space-y-3">
                     {purchasingList.map((item, index) => (
-                      <div key={index} className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 flex gap-4 items-center relative overflow-hidden">
+                      <div key={index} className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex gap-3 items-center relative overflow-hidden">
                         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-400"></div>
                         
                         <div 
-                          className="shrink-0 cursor-pointer relative group"
+                          className="shrink-0 active:opacity-70 transition"
                           onClick={() => {
                             const prod = products.find(p => p.id === item.productId);
                             if(prod) setViewProductInfo(prod);
                           }}
                         >
                           {item.image ? (
-                            <img src={item.image} className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-slate-100" alt="img" />
+                            <img src={item.image} className="w-16 h-16 rounded-xl object-cover border border-slate-100" alt="img" />
                           ) : (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-300"><Icon name="box" size={24}/></div>
+                            <div className="w-16 h-16 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-300"><Icon name="box" size={24}/></div>
                           )}
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-xl transition"></div>
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <h3 
-                            className="font-bold text-slate-800 sm:text-lg truncate cursor-pointer hover:text-blue-600 inline-block"
+                            className="font-bold text-slate-800 text-base truncate active:text-blue-600 inline-block transition"
                             onClick={() => {
                               const prod = products.find(p => p.id === item.productId);
                               if(prod) setViewProductInfo(prod);
@@ -536,17 +619,16 @@
                             {item.productName}
                           </h3>
                           <div className="flex flex-wrap gap-1.5 my-1">
-                            {item.style && <span className="text-[11px] sm:text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">款: {item.style}</span>}
-                            {item.size && <span className="text-[11px] sm:text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">碼: {item.size}</span>}
+                            {item.style && <span className="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">款: {item.style}</span>}
+                            {item.size && <span className="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">碼: {item.size}</span>}
                           </div>
                           <div className="flex flex-wrap gap-1 mt-1.5 items-center">
-                            <span className="text-[10px] sm:text-xs text-slate-400 mr-1">訂購人:</span>
-                            {/* 客人名字做成標籤，點擊直接看該客人明細 */}
+                            <span className="text-[10px] text-slate-400 mr-0.5">訂購人:</span>
                             {item.customers.map((c, i) => (
                               <button 
                                 key={i}
                                 onClick={() => setViewCustomer(c.name)}
-                                className="text-[10px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded shadow-sm border border-blue-100 hover:bg-blue-100 transition"
+                                className="text-[10px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded shadow-sm border border-blue-100 active:bg-blue-100 transition"
                               >
                                 {c.name}({c.qty})
                               </button>
@@ -554,13 +636,13 @@
                           </div>
                         </div>
 
-                        <div className="flex flex-col items-end gap-2 shrink-0 pr-2">
+                        <div className="flex flex-col items-end gap-2 shrink-0 pr-1">
                           <div className="text-center">
                             <div className="text-[10px] text-slate-500 font-bold">需叫貨</div>
-                            <div className="text-2xl sm:text-3xl font-black text-red-600 leading-none">{item.totalQuantity}<span className="text-sm font-normal ml-1">件</span></div>
+                            <div className="text-2xl font-black text-red-600 leading-none">{item.totalQuantity}<span className="text-xs font-normal ml-0.5">件</span></div>
                           </div>
-                          <button onClick={() => batchMarkAsOrdered(item.productId, item.style, item.size)} className="bg-slate-800 text-white text-[10px] sm:text-xs px-3 py-1.5 rounded-lg hover:bg-slate-700 font-bold whitespace-nowrap">
-                            標記為已叫貨
+                          <button onClick={() => batchMarkAsOrdered(item.productId, item.style, item.size)} className="bg-slate-800 text-white text-[11px] px-2.5 py-1.5 rounded-lg active:bg-slate-700 font-bold whitespace-nowrap shadow-sm">
+                            已叫貨
                           </button>
                         </div>
                       </div>
@@ -581,7 +663,7 @@
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-4 sticky top-16 z-20">
                   <div className="p-2 border-b border-slate-100 flex items-center bg-slate-50">
                     <Icon name="magnifying-glass" size={14} className="text-slate-400 ml-2 mr-2" />
-                    <input type="text" placeholder="搜尋客人或商品..." className="w-full bg-transparent outline-none text-sm p-1" value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} />
+                    <input type="text" placeholder="搜尋客人或商品..." className="w-full bg-transparent outline-none text-sm p-1.5" value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} />
                   </div>
                   <div className="flex overflow-x-auto hide-scrollbar bg-white p-1">
                     <button onClick={() => setOrderFilterStatus('all')} className={`whitespace-nowrap px-4 py-2 text-sm font-bold rounded-lg transition-colors ${orderFilterStatus === 'all' ? 'bg-slate-800 text-white' : 'text-slate-500'}`}>全部</button>
@@ -601,9 +683,9 @@
                       const statusConfig = STATUSES[order.status.toUpperCase()];
                       return (
                         <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                          <div className="p-3 sm:p-4 flex gap-3">
+                          <div className="p-3 flex gap-3">
                             <div 
-                              className="shrink-0 cursor-pointer relative group"
+                              className="shrink-0 active:opacity-70 transition"
                               onClick={() => {
                                 const prod = products.find(p => p.id === order.productId);
                                 if(prod) setViewProductInfo(prod);
@@ -617,19 +699,17 @@
                             </div>
                             
                             <div className="flex-1 min-w-0">
-                              <div className="flex justify-between items-start mb-1">
-                                {/* 點擊客人名字 */}
+                              <div className="flex justify-between items-start mb-0.5">
                                 <span 
-                                  className="font-black text-blue-700 underline decoration-blue-200 decoration-2 underline-offset-2 cursor-pointer hover:text-blue-800 transition"
+                                  className="font-black text-blue-700 underline decoration-blue-200 decoration-2 underline-offset-2 active:text-blue-800 transition"
                                   onClick={() => setViewCustomer(order.customer)}
                                 >
                                   {order.customer}
                                 </span>
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusConfig.color}`}>{statusConfig.label}</span>
                               </div>
-                              {/* 點擊商品名字 */}
                               <div 
-                                className="text-sm font-bold text-slate-700 truncate cursor-pointer hover:text-blue-600 inline-block"
+                                className="text-sm font-bold text-slate-700 truncate active:text-blue-600 inline-block"
                                 onClick={() => {
                                   const prod = products.find(p => p.id === order.productId);
                                   if(prod) setViewProductInfo(prod);
@@ -637,21 +717,21 @@
                               >
                                 {order.product.name}
                               </div>
-                              <div className="text-[11px] text-slate-500 mt-0.5">
+                              <div className="text-[11px] text-slate-500 mt-1">
                                 {order.style && <span className="mr-2">款:{order.style}</span>}
                                 {order.size && <span>碼:{order.size}</span>}
                               </div>
                             </div>
                           </div>
 
-                          <div className="bg-slate-50 px-4 py-2.5 border-t border-slate-100 flex justify-between items-center">
+                          <div className="bg-slate-50 px-3 py-2 border-t border-slate-100 flex justify-between items-center">
                             <div className="text-xs font-medium text-slate-600">
                               {order.quantity}件 × ${order.product.price} = <span className="font-black text-slate-800 text-sm">${order.product.price * order.quantity}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <button onClick={() => deleteOrder(order.id)} className="p-2 text-slate-400 hover:text-red-500"><Icon name="trash-can" size={14} /></button>
+                              <button onClick={() => deleteOrder(order.id)} className="w-8 h-8 rounded-full text-slate-400 bg-white border border-slate-200 flex items-center justify-center shadow-sm"><Icon name="trash-can" size={12} /></button>
                               {statusConfig.next && (
-                                <button onClick={() => advanceOrderStatus(order.id, order.status)} className="bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1">
+                                <button onClick={() => advanceOrderStatus(order.id, order.status)} className="bg-blue-100 text-blue-700 active:bg-blue-600 active:text-white px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1 shadow-sm">
                                   {statusConfig.actionLabel} <Icon name="chevron-right" size={10} />
                                 </button>
                               )}
@@ -664,8 +744,55 @@
                 </div>
               </div>
             )}
+
+            {/* ==================== 分頁 4: 設定與備份 (全新功能) ==================== */}
+            {activeTab === 'settings' && (
+              <div className="animate-fade-in">
+                <div className="mb-4">
+                  <h2 className="text-lg font-bold text-slate-800">系統設定與雲端備份</h2>
+                  <p className="text-xs text-slate-500">將資料下載儲存至 Google 雲端，不再怕手機壞掉或換機</p>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-4">
+                  <div className="flex items-center gap-3 mb-4 text-slate-700">
+                    <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center"><Icon name="database" size={18}/></div>
+                    <div>
+                      <h3 className="font-bold">資料庫狀態</h3>
+                      <p className="text-xs text-slate-500">目前共 {products.length} 件商品，{orders.length} 筆訂單</p>
+                    </div>
+                  </div>
+
+                  <hr className="border-slate-100 my-4" />
+
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-bold text-slate-800 text-sm mb-2"><Icon name="cloud-arrow-up" className="mr-1 text-emerald-500"/> 步驟一：備份資料</h4>
+                      <p className="text-xs text-slate-500 mb-3">將目前的系統資料下載為檔案。下載後，請透過手機將該檔案儲存到您的 <b>Google 雲端硬碟</b> 或 <b>手機檔案</b> 中。</p>
+                      <button onClick={downloadBackup} className="w-full bg-emerald-500 text-white py-3 rounded-xl font-bold shadow-sm active:bg-emerald-600 flex justify-center items-center gap-2">
+                        <Icon name="download" /> 下載系統備份檔
+                      </button>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <h4 className="font-bold text-slate-800 text-sm mb-2"><Icon name="cloud-arrow-down" className="mr-1 text-blue-500"/> 步驟二：還原資料 (換手機時使用)</h4>
+                      <p className="text-xs text-slate-500 mb-3">若不小心清除網頁紀錄或換新手機，點擊下方選擇您之前存到 Google 雲端的「備份檔」，即可恢復全部資料。</p>
+                      
+                      <input 
+                        type="file" 
+                        accept=".json" 
+                        className="hidden" 
+                        ref={importInputRef}
+                        onChange={handleImportBackup} 
+                      />
+                      <button onClick={() => importInputRef.current?.click()} className="w-full bg-white border-2 border-blue-500 text-blue-600 py-3 rounded-xl font-bold shadow-sm active:bg-blue-50 flex justify-center items-center gap-2">
+                        <Icon name="upload" /> 選擇備份檔並還原
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             
-            {/* 彈出視窗 */}
             {renderCustomerModal()}
             {renderProductModal()}
 
@@ -673,25 +800,30 @@
 
           {/* 底部導覽列 */}
           <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40 pb-safe">
-            <div className="max-w-md mx-auto flex justify-between px-6 py-2">
-              <button onClick={() => setActiveTab('products')} className={`flex flex-col items-center p-2 min-w-[64px] transition-colors ${activeTab === 'products' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                <Icon name="store" size={24} className="mb-1" />
+            <div className="max-w-md mx-auto flex justify-between px-4 py-2">
+              <button onClick={() => setActiveTab('products')} className={`flex flex-col items-center p-2 min-w-[64px] transition-colors ${activeTab === 'products' ? 'text-blue-600' : 'text-slate-400'}`}>
+                <Icon name="store" size={22} className="mb-1" />
                 <span className="text-[10px] font-bold">商品庫</span>
               </button>
               
-              <button onClick={() => setActiveTab('purchasing')} className={`flex flex-col items-center p-2 min-w-[64px] relative transition-colors ${activeTab === 'purchasing' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+              <button onClick={() => setActiveTab('purchasing')} className={`flex flex-col items-center p-2 min-w-[64px] relative transition-colors ${activeTab === 'purchasing' ? 'text-blue-600' : 'text-slate-400'}`}>
                 <div className="relative">
-                  <Icon name="clipboard-list" size={24} className="mb-1" />
+                  <Icon name="clipboard-list" size={22} className="mb-1" />
                   {stats.pendingCount > 0 && (
-                    <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">{stats.pendingCount}</span>
+                    <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center border-2 border-white">{stats.pendingCount}</span>
                   )}
                 </div>
                 <span className="text-[10px] font-bold">叫貨表</span>
               </button>
               
-              <button onClick={() => setActiveTab('orders')} className={`flex flex-col items-center p-2 min-w-[64px] transition-colors ${activeTab === 'orders' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                <Icon name="list-ol" size={24} className="mb-1" />
+              <button onClick={() => setActiveTab('orders')} className={`flex flex-col items-center p-2 min-w-[64px] transition-colors ${activeTab === 'orders' ? 'text-blue-600' : 'text-slate-400'}`}>
+                <Icon name="list-ol" size={22} className="mb-1" />
                 <span className="text-[10px] font-bold">訂單追蹤</span>
+              </button>
+
+              <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center p-2 min-w-[64px] transition-colors ${activeTab === 'settings' ? 'text-blue-600' : 'text-slate-400'}`}>
+                <Icon name="gear" size={22} className="mb-1" />
+                <span className="text-[10px] font-bold">設定</span>
               </button>
             </div>
           </nav>
