@@ -322,7 +322,6 @@
         });
       }, [allEnrichedOrders, orderFilterStatus, orderSearch]);
 
-      // --- 新增：動態計算目前「過濾/搜尋結果」的總額 ---
       const currentFilteredStats = useMemo(() => {
         let totalCost = 0;
         let totalPrice = 0;
@@ -400,7 +399,7 @@
         return { expectedProfit, totalUnpaid, pendingCost, pendingCount: purchasingList.length };
       }, [orders, products, purchasingList]);
 
-      // --- 渲染共用彈窗 ---
+      // --- 🌟 客人專屬帳單 (已隱藏批價) 🌟 ---
       const renderCustomerModal = () => {
         if (!viewCustomer) return null;
         const customerOrders = allEnrichedOrders.filter(o => o.customer === viewCustomer);
@@ -441,18 +440,14 @@
                           </div>
                         </div>
                         
+                        {/* 這裡已經徹底拿掉批價了，只顯示乾淨的結算總額 */}
                         <div className="flex justify-between items-end mt-2">
-                          <div className="flex flex-col gap-0.5">
-                            <div className="text-[10px] text-slate-400">
-                              批: ${order.product.cost} × {order.quantity} = <span className="font-bold">${order.product.cost * order.quantity}</span>
-                            </div>
-                            <div className="text-xs font-bold text-slate-700">
-                              售: ${order.product.price} × {order.quantity} = <span className="font-black text-slate-800">${order.product.price * order.quantity}</span>
-                            </div>
+                          <div className="text-sm font-medium text-slate-600">
+                            ${order.product.price} × {order.quantity} 件 = <span className="font-black text-slate-800 text-base">${order.product.price * order.quantity}</span>
                           </div>
                           <div className="flex items-center gap-2 mb-0.5">
                             {statusConfig.next && (
-                              <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-md active:bg-slate-700">
+                              <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-md active:bg-slate-700 shadow-sm">
                                 {statusConfig.actionLabel}
                               </button>
                             )}
@@ -746,7 +741,6 @@
             {activeTab === 'purchasing' && (
               <div className="animate-fade-in">
                 
-                {/* 顯眼的：這批叫貨總成本看板 */}
                 <div className="mb-4 bg-blue-50 border border-blue-100 p-4 rounded-2xl flex justify-between items-center shadow-sm relative overflow-hidden">
                   <div className="absolute right-0 top-0 opacity-10 text-blue-500 transform translate-x-4 -translate-y-4">
                     <Icon name="wallet" size={80} />
@@ -772,7 +766,7 @@
                 {purchasingList.length === 0 ? (
                   <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
                     <Icon name="circle-check" size={48} className="text-emerald-400 mb-3" />
-                    <p className="text-slate-500 font-medium">太棒了！沒有需要叫貨的商品</p>
+                    <p className="text-slate-500 font-medium">目前沒有需要叫貨的商品</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -886,7 +880,6 @@
                   )}
                 </div>
 
-                {/* --- 🌟 新增：動態過濾結果統計小看板 🌟 --- */}
                 {orderViewMode === 'time' && enrichedOrders.length > 0 && (
                   <div className="mb-4 bg-slate-100 border border-slate-200 rounded-xl p-3 flex justify-between items-center shadow-sm text-slate-700">
                     <div className="text-xs font-bold">
