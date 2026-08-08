@@ -1,1766 +1,1173 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>200%森衣好</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google 字體與 Material 圖示 -->
-    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0" rel="stylesheet" />
-    
-    <!-- React & Babel -->
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.3/babel.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>代購旗艦系統</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <style>
-        body { background-color: #fdfaf7; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-        .custom-scrollbar::-webkit-scrollbar { display: none; }
-        .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .font-wawa { font-family: 'HanziPen TC', 'Hannotate TC', 'DFWawaTC-W5', '華康娃娃體', 'M PLUS Rounded 1c', sans-serif !important; }
-        input::placeholder { font-family: 'HanziPen TC', 'Hannotate TC', 'M PLUS Rounded 1c', sans-serif; }
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
-        .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
-        .animate-expand { animation: expandDown 0.2s ease-out forwards; transform-origin: top; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes expandDown { from { opacity: 0; transform: scaleY(0.9); } to { opacity: 1; transform: scaleY(1); } }
-    </style>
+  <style>
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInBg { from { opacity: 0; } to { opacity: 1; } }
+    .animate-fade-in { animation: fadeIn 0.2s ease-out; }
+    .animate-fade-in-bg { animation: fadeInBg 0.2s ease-out; }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+    body { -webkit-tap-highlight-color: transparent; }
+    input::-webkit-calendar-picker-indicator { display: none !important; }
+  </style>
 </head>
-<body class="font-wawa text-[#5c4d43]">
-    <div id="root">
-        <div style="height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #bc9f8b; font-weight: bold; font-size: 1.2rem;">
-            <div style="width: 40px; height: 40px; border: 4px solid #f2e7df; border-top-color: #bc9f8b; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
-            載入企業會計系統中...💰
-            <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
-        </div>
-    </div>
+<body class="bg-slate-50 text-slate-800 font-sans">
+  
+  <div id="root"></div>
 
-    <script>
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            var errorHtml = '<div style="padding: 30px; text-align: center; color: #e57373;">' +
-                            '<h3 style="font-size:24px; margin-bottom:10px;">🛡️ 系統啟動保護</h3>' +
-                            '<p style="font-size:14px; margin-bottom:10px;">我們偵測到您的網頁正在讀取異常的舊快取。</p>' +
-                            '<p style="font-size:14px; margin-bottom:20px; color:#7a6453;">請您<strong>「清除瀏覽紀錄」</strong>或使用<strong>「無痕模式」</strong>重新開啟網頁。</p>' +
-                            '<pre style="font-size:10px; text-align:left; background:#fff; padding:10px; border-radius:8px; overflow-x:auto;">' + msg + '</pre>' +
-                            '</div>';
-            document.getElementById('root').innerHTML = errorHtml;
-            return false;
-        };
-    </script>
+  <script type="text/babel">
+    const { useState, useMemo, useRef, useEffect } = React;
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo, Component } = React;
-        const safeStr = (str) => String(str || '');
+    const Icon = ({ name, size = 16, className = '' }) => (
+      <i className={`fa-solid fa-${name} ${className}`} style={{ fontSize: `${size}px` }}></i>
+    );
 
-        const safeTime = (d) => {
-            if (!d) return 0;
-            const t = new Date(d).getTime();
-            return isNaN(t) ? 0 : t;
-        };
+    const STATUSES = {
+      PENDING_BUY: { id: 'pending_buy', label: '待叫貨', color: 'bg-red-100 text-red-700', next: 'ordered', actionLabel: '標記已叫貨' },
+      ORDERED: { id: 'ordered', label: '已叫貨', color: 'bg-yellow-100 text-yellow-700', next: 'received', actionLabel: '標記已到貨' },
+      RECEIVED: { id: 'received', label: '已到貨', color: 'bg-blue-100 text-blue-700', next: 'shipped', actionLabel: '標記已出貨' },
+      SHIPPED: { id: 'shipped', label: '已出貨', color: 'bg-purple-100 text-purple-700', next: 'completed', actionLabel: '確認已收款' },
+      COMPLETED: { id: 'completed', label: '已完成', color: 'bg-green-100 text-green-700', next: null, actionLabel: '' }
+    };
 
-        const getSafeArr = (arr) => {
-            if (!Array.isArray(arr)) return [];
-            return arr.filter(i => i !== null && typeof i === 'object' && !Array.isArray(i));
-        };
-
-        class ErrorBoundary extends Component {
-            constructor(props) {
-                super(props);
-                this.state = { hasError: false, errorStr: '' };
-            }
-            static getDerivedStateFromError(error) {
-                return { hasError: true, errorStr: error.toString() };
-            }
-            componentDidCatch(error, errorInfo) {
-                console.error("渲染錯誤：", error, errorInfo);
-            }
-            repairAndReload() {
-                const cleanArray = (key) => {
-                    try {
-                        const raw = JSON.parse(localStorage.getItem(key));
-                        if (Array.isArray(raw)) {
-                            const today = new Date().toISOString().split('T')[0];
-                            const clean = raw
-                                .filter(i => i && typeof i === 'object' && !Array.isArray(i))
-                                .map(i => {
-                                    const t = new Date(i.date).getTime();
-                                    if (!i.date || isNaN(t)) {
-                                        return { ...i, date: today };
-                                    }
-                                    return i;
-                                });
-                            localStorage.setItem(key, JSON.stringify(clean));
-                        } else {
-                            localStorage.setItem(key, '[]');
-                        }
-                    } catch(e) {
-                        localStorage.setItem(key, '[]');
-                    }
-                };
-                
-                cleanArray('xq_deliveries');
-                cleanArray('xq_marketSales');
-                cleanArray('xq_expenses');
-                cleanArray('xq_reservations');
-                cleanArray('xq_preorders');
-
-                try {
-                    const stats = JSON.parse(localStorage.getItem('xq_market_sold'));
-                    if (!stats || typeof stats !== 'object' || Array.isArray(stats)) {
-                        localStorage.setItem('xq_market_sold', '{}');
-                    }
-                } catch(e) {}
-
-                window.location.reload();
-            }
-            render() {
-                if (this.state.hasError) {
-                    return (
-                        <div className="flex flex-col h-screen p-8 text-center text-[#e57373] bg-[#fdfaf7] justify-center">
-                            <div className="text-5xl mb-4">🛡️</div>
-                            <h2 className="text-xl font-bold mb-2">資料結構修復中</h2>
-                            <p className="text-sm text-[#a89689] mb-4 leading-relaxed">偵測到部分舊資料格式衝突。<br/>請點擊下方按鈕，系統將為您自動修復。</p>
-                            <textarea className="w-full h-16 p-2 text-[9px] bg-white border border-[#f2e7df] rounded-xl mb-6 custom-scrollbar opacity-60" readOnly value={this.state.errorStr}></textarea>
-                            <button onClick={() => this.repairAndReload()} className="w-full py-4 bg-[#bc9f8b] text-white font-bold rounded-xl shadow-md">
-                                一鍵修復並重新整理
-                            </button>
-                        </div>
-                    );
-                }
-                return this.props.children; 
-            }
+    function useLocalStorage(key, initialValue) {
+      const [storedValue, setStoredValue] = useState(() => {
+        try {
+          const item = window.localStorage.getItem(key);
+          return item ? JSON.parse(item) : initialValue;
+        } catch (error) {
+          console.error(error);
+          return initialValue;
         }
+      });
 
-        const useLocalStorage = (key, initialValue) => {
-            const [value, setValue] = useState(() => {
-                try {
-                    const item = window.localStorage.getItem(key);
-                    if (item) {
-                        const parsed = JSON.parse(item);
-                        return parsed !== null ? parsed : initialValue;
-                    }
-                    return initialValue;
-                } catch (error) { 
-                    return initialValue; 
-                }
-            });
+      useEffect(() => {
+        try {
+          window.localStorage.setItem(key, JSON.stringify(storedValue));
+        } catch (error) {
+          if(error.name === 'QuotaExceededError') {
+            alert('手機瀏覽器儲存空間已滿！建議進行「備份」，然後刪除一些舊歷史訂單。');
+          }
+        }
+      }, [key, storedValue]);
 
-            useEffect(() => {
-                try { 
-                    window.localStorage.setItem(key, JSON.stringify(value)); 
-                } catch (error) { 
-                    console.warn("寫入失敗", error); 
-                }
-            }, [key, value]);
+      return [storedValue, setStoredValue];
+    }
 
-            return [value, setValue];
+    const splitOptions = (str) => {
+      if (!str) return [];
+      return str.split(/[\/／,，、\s]+/).map(s => s.trim()).filter(Boolean);
+    };
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('products');
+      
+      const [products, setProducts] = useLocalStorage('daigou_products_v1', []);
+      const [orders, setOrders] = useLocalStorage('daigou_orders_v1', []);
+
+      const [showAddProduct, setShowAddProduct] = useState(false);
+      const [editingProductId, setEditingProductId] = useState(null); 
+      
+      const [showAddOrder, setShowAddOrder] = useState(false);
+      const [editingOrderId, setEditingOrderId] = useState(null); 
+      const [selectedProductForOrder, setSelectedProductForOrder] = useState(null);
+      
+      const [newProduct, setNewProduct] = useState({ name: '', cost: '', price: '', styles: '', sizes: '', image: null });
+      const [newOrder, setNewOrder] = useState({ customer: '', style: '', size: '', quantity: 1 });
+      
+      const [orderSearch, setOrderSearch] = useState('');
+      const [orderFilterStatus, setOrderFilterStatus] = useState('all');
+      
+      // 新增：三個模式 ('time' 明細, 'customer' 顧客, 'product' 熱賣商品)
+      const [orderViewMode, setOrderViewMode] = useState('time'); 
+
+      const [viewCustomer, setViewCustomer] = useState(null);
+      const [viewProductInfo, setViewProductInfo] = useState(null);
+
+      const fileInputRef = useRef(null);
+      const importInputRef = useRef(null);
+
+      const uniqueCustomers = useMemo(() => {
+        const names = orders.map(o => o.customer);
+        return [...new Set(names)].filter(Boolean).sort();
+      }, [orders]);
+
+      const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 400; 
+            let scaleSize = 1;
+            if (img.width > MAX_WIDTH) {
+              scaleSize = MAX_WIDTH / img.width;
+            }
+            canvas.width = img.width * scaleSize;
+            canvas.height = img.height * scaleSize;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            setNewProduct({ ...newProduct, image: compressedDataUrl });
+          };
         };
+      };
 
-        const scrollToTop = () => {
-            const main = document.getElementById('main-content');
-            if(main) main.scrollTo({ top: 0, behavior: 'smooth' });
+      const downloadBackup = () => {
+        const backupData = {
+          version: '1.0',
+          date: new Date().toISOString(),
+          products: products,
+          orders: orders
         };
+        const blob = new Blob([JSON.stringify(backupData)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const today = new Date().toISOString().split('T')[0];
+        a.download = `代購系統備份_${today}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        alert('備份檔下載成功！\n請選擇儲存到您的「檔案」或「Google 雲端硬碟」中。');
+      };
 
-        const Icon = ({ name, className = "" }) => <span className={`material-symbols-outlined ${className}`}>{name}</span>;
-        const Card = ({ children, className = "" }) => <div className={`bg-white rounded-2xl p-4 shadow-sm border border-[#f2e7df] mb-4 ${className}`}>{children}</div>;
+      const handleImportBackup = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            if (data.products && Array.isArray(data.products) && data.orders && Array.isArray(data.orders)) {
+              if(window.confirm('確定要還原備份嗎？這會覆蓋掉目前所有的資料喔！')) {
+                setProducts(data.products);
+                setOrders(data.orders);
+                alert('資料還原成功！');
+              }
+            } else {
+              alert('檔案格式錯誤，這不是有效的備份檔。');
+            }
+          } catch (error) {
+            alert('讀取檔案失敗。');
+          }
+          if(importInputRef.current) importInputRef.current.value = '';
+        };
+        reader.readAsText(file);
+      };
+
+      const closeProductModal = () => {
+        setShowAddProduct(false);
+        setEditingProductId(null);
+        setNewProduct({ name: '', cost: '', price: '', styles: '', sizes: '', image: null });
+      };
+
+      const editProduct = (product) => {
+        setNewProduct({
+          name: product.name,
+          cost: product.cost,
+          price: product.price,
+          styles: product.styles ? product.styles.join('/') : '',
+          sizes: product.sizes ? product.sizes.join('/') : '',
+          image: product.image
+        });
+        setEditingProductId(product.id);
+        setShowAddProduct(true);
+      };
+
+      const handleSaveProduct = (e) => {
+        e.preventDefault();
         
-        const Input = ({ label, value, onChange, type = "text", placeholder, disabled }) => (
-            <div className="mb-3 w-full">
-                <div className={`flex items-center bg-[#fdfdfd] border border-[#f0e6e0] rounded-xl px-3 h-[48px] focus-within:border-[#bc9f8b] transition-colors ${disabled ? 'opacity-60 bg-[#f9f9f9]' : ''}`}>
-                    <input type={type} value={value} onChange={onChange} placeholder={placeholder || label} disabled={disabled}
-                        className="bg-transparent w-full h-full outline-none text-[#5c4d43] placeholder-[#c4b5aa] text-[15px] font-wawa" />
-                </div>
-            </div>
-        );
-
-        const Button = ({ children, onClick, className = "" }) => (
-            <button onClick={onClick} className={`w-full h-[48px] rounded-xl font-bold transition-colors text-[15px] text-center flex justify-center items-center font-wawa tracking-wide shadow-sm ${className}`}>
-                {children}
-            </button>
-        );
-
-        const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
-            if (!isOpen) return null;
-            return (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fade-in px-4">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-xs shadow-xl">
-                        <div className="text-center text-[#5c4d43] font-bold mb-6 text-lg">{message}</div>
-                        <div className="flex gap-3">
-                            <button onClick={onCancel} className="flex-1 py-3 rounded-xl bg-[#f2e7df] text-[#7a6453] font-bold">取消</button>
-                            <button onClick={onConfirm} className="flex-1 py-3 rounded-xl bg-[#e57373] text-white font-bold">確定刪除</button>
-                        </div>
-                    </div>
-                </div>
-            );
+        const productData = {
+          name: newProduct.name.trim(),
+          cost: Number(newProduct.cost),
+          price: Number(newProduct.price),
+          styles: splitOptions(newProduct.styles),
+          sizes: splitOptions(newProduct.sizes),
+          image: newProduct.image
         };
 
-        const formatRevenueStr = (num) => {
-            const validNum = Number(num) || 0;
-            if (validNum >= 10000) return Number.isInteger(validNum / 10000) ? `${validNum / 10000}萬` : `${(validNum / 10000).toFixed(1)}萬`;
-            if (validNum >= 1000) return Number.isInteger(validNum / 1000) ? `${validNum / 1000}千` : `${(validNum / 1000).toFixed(1)}千`;
-            return validNum.toString();
-        };
-
-        // --- 分頁 1：超商 & 留貨 (完美整合版) ---
-        const StoreTab = ({ deliveries, setDeliveries, reservations, setReservations, setConfirmDialog }) => {
-            const [formMode, setFormMode] = useState('delivery'); // 'delivery' 或 'reserve'
-            const [editingId, setEditingId] = useState(null);
-            
-            // 寄件表單 State
-            const [dDate, setDDate] = useState(new Date().toISOString().split('T')[0]);
-            const [dCustomerName, setDCustomerName] = useState('');
-            const [dRevenue, setDRevenue] = useState('');
-            const [dSoldQty, setDSoldQty] = useState(''); 
-            const [dShippingExpense, setDShippingExpense] = useState('');
-            const [dShippingIncome, setDShippingIncome] = useState('');
-            const [dHasGift, setDHasGift] = useState(false);
-            const [dGiftCount, setDGiftCount] = useState('');
-
-            // 留貨表單 State
-            const [rDate, setRDate] = useState(new Date().toISOString().split('T')[0]);
-            const [rCustomerName, setRCustomerName] = useState('');
-            const [rItemsCount, setRItemsCount] = useState('');
-            const [rNote, setRNote] = useState('');
-
-            // 轉單 Modal State
-            const [transferRecord, setTransferRecord] = useState(null);
-            const [tDate, setTDate] = useState('');
-            const [tRevenue, setTRevenue] = useState('');
-            const [tSoldQty, setTSoldQty] = useState(''); 
-            const [tShippingExpense, setTShippingExpense] = useState('');
-            const [tShippingIncome, setTShippingIncome] = useState('');
-            const [tHasGift, setTHasGift] = useState(false);
-            const [tGiftCount, setTGiftCount] = useState('');
-
-            const resetDeliveryForm = () => {
-                setEditingId(null); setDDate(new Date().toISOString().split('T')[0]);
-                setDCustomerName(''); setDRevenue(''); setDSoldQty(''); setDShippingExpense(''); setDShippingIncome(''); setDGiftCount(''); setDHasGift(false);
-            };
-
-            const resetReserveForm = () => {
-                setEditingId(null); setRDate(new Date().toISOString().split('T')[0]);
-                setRCustomerName(''); setRItemsCount(''); setRNote('');
-            };
-
-            const handleAddDelivery = () => {
-                if (!dCustomerName) return;
-                const recordData = {
-                    date: dDate, customerName: dCustomerName, 
-                    revenue: Number(dRevenue) || 0, soldQty: Number(dSoldQty) || 1, 
-                    shippingExpense: Number(dShippingExpense) || 0, shippingIncome: Number(dShippingIncome) || 0,
-                    hasGift: dHasGift, giftCount: dHasGift ? (Number(dGiftCount) || 0) : 0, status: 'pending'
-                };
-
-                if (editingId && formMode === 'delivery') {
-                    setDeliveries(prev => prev.map(d => d.id === editingId ? { ...d, ...recordData } : d).sort((a,b)=> safeTime(b.date) - safeTime(a.date)));
-                } else {
-                    const newRecord = { id: Date.now().toString(), ...recordData };
-                    setDeliveries(prev => [newRecord, ...prev].sort((a,b)=> safeTime(b.date) - safeTime(a.date)));
-                }
-                resetDeliveryForm();
-            };
-
-            const handleAddReserve = () => {
-                if (!rCustomerName) return;
-                const recordData = { date: rDate, customerName: rCustomerName, itemsCount: Number(rItemsCount) || 1, note: rNote };
-                
-                if (editingId && formMode === 'reserve') {
-                    setReservations(prev => prev.map(r => r.id === editingId ? { ...r, ...recordData } : r).sort((a,b)=> safeTime(b.date) - safeTime(a.date)));
-                } else {
-                    const newRecord = { id: Date.now().toString(), ...recordData };
-                    setReservations(prev => [newRecord, ...prev].sort((a,b)=> safeTime(b.date) - safeTime(a.date)));
-                }
-                resetReserveForm();
-            };
-
-            const handleEditDelivery = (record) => {
-                setFormMode('delivery'); setEditingId(record.id);
-                setDDate(record.date); setDCustomerName(record.customerName); 
-                setDRevenue(record.revenue || ''); setDSoldQty(record.soldQty || '');
-                setDShippingExpense(record.shippingExpense || ''); setDShippingIncome(record.shippingIncome || '');
-                setDHasGift(record.hasGift || false); setDGiftCount(record.giftCount || '');
-                scrollToTop();
-            };
-
-            const handleEditReserve = (record) => {
-                setFormMode('reserve'); setEditingId(record.id);
-                setRDate(record.date); setRCustomerName(record.customerName);
-                setRItemsCount(record.itemsCount); setRNote(record.note || '');
-                scrollToTop();
-            };
-
-            const toggleDeliveryStatus = (id, currentStatus) => {
-                const newStatus = currentStatus === 'pending' ? 'shipped' : 'pending';
-                setDeliveries(prev => prev.map(d => d.id === id ? { ...d, status: newStatus } : d));
-            };
-
-            const openTransferModal = (record) => {
-                setTransferRecord(record); setTDate(new Date().toISOString().split('T')[0]);
-                setTRevenue(''); setTSoldQty(record.itemsCount); 
-                setTShippingExpense(''); setTShippingIncome(''); setTHasGift(false); setTGiftCount('');
-            };
-
-            const handleTransferSubmit = () => {
-                if (!transferRecord) return;
-                const newDelivery = {
-                    id: Date.now().toString(), date: tDate, customerName: transferRecord.customerName,
-                    revenue: Number(tRevenue) || 0, soldQty: Number(tSoldQty) || 1,
-                    shippingExpense: Number(tShippingExpense) || 0, shippingIncome: Number(tShippingIncome) || 0,
-                    hasGift: tHasGift, giftCount: tHasGift ? (Number(tGiftCount) || 0) : 0, status: 'pending' 
-                };
-                setDeliveries(prev => [newDelivery, ...prev].sort((a,b)=> safeTime(b.date) - safeTime(a.date)));
-                setReservations(prev => prev.filter(r => r.id !== transferRecord.id));
-                setTransferRecord(null);
-            };
-
-            const pending = deliveries.filter(d => d.status === 'pending');
-            const shipped = deliveries.filter(d => d.status === 'shipped');
-
-            return (
-                <div className="animate-fade-in pb-20">
-                    
-                    {/* 表單切換器 (只有在新增模式下顯示) */}
-                    {!editingId && (
-                        <div className="flex bg-[#fdfaf7] rounded-xl p-1.5 mb-4 border border-[#f2e7df] shadow-inner">
-                            <button className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${formMode === 'delivery' ? 'bg-white shadow text-[#bc9f8b]' : 'text-[#c4b5aa]'}`} 
-                                    onClick={() => { setFormMode('delivery'); resetDeliveryForm(); }}>📦 新增超商寄件</button>
-                            <button className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${formMode === 'reserve' ? 'bg-[#e3f2fd] shadow-sm text-[#1976d2]' : 'text-[#c4b5aa]'}`} 
-                                    onClick={() => { setFormMode('reserve'); resetReserveForm(); }}>💎 新增現貨保留</button>
-                        </div>
-                    )}
-
-                    {/* 編輯模式標題 */}
-                    {editingId && (
-                        <div className={`flex items-center mb-4 font-bold text-lg ${formMode === 'reserve' ? 'text-[#1976d2]' : 'text-[#bc9f8b]'}`}>
-                            <Icon name="edit" className="mr-2" />
-                            {formMode === 'reserve' ? '編輯現貨保留資料' : '編輯超商寄件資料'}
-                        </div>
-                    )}
-
-                    <Card className={editingId ? (formMode === 'reserve' ? 'border-2 border-[#64b5f6]' : 'border-2 border-[#bc9f8b]') : ''}>
-                        {formMode === 'delivery' ? (
-                            <React.Fragment>
-                                <Input type="date" value={dDate} onChange={e => setDDate(e.target.value)} />
-                                <Input placeholder="顧客姓名" value={dCustomerName} onChange={e => setDCustomerName(e.target.value)} />
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Input type="number" placeholder="商品售價(總額)" value={dRevenue} onChange={e => setDRevenue(e.target.value)} />
-                                    <Input type="number" placeholder="售出服飾件數" value={dSoldQty} onChange={e => setDSoldQty(e.target.value)} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Input type="number" placeholder="賣家付運費(成本)" value={dShippingExpense} onChange={e => setDShippingExpense(e.target.value)} />
-                                    <Input type="number" placeholder="買家付運費(代收)" value={dShippingIncome} onChange={e => setDShippingIncome(e.target.value)} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3 mb-4">
-                                    <button className={`w-full h-[48px] rounded-xl border text-[15px] transition-colors font-wawa font-bold flex items-center justify-center ${dHasGift ? 'border-[#bc9f8b] bg-[#fdfaf7] text-[#bc9f8b]' : 'border-[#f0e6e0] bg-[#fdfdfd] text-[#a89689]'}`} onClick={(e) => { e.preventDefault(); setDHasGift(!dHasGift); }}>🎁 {dHasGift ? '有贈品' : '無贈品'}</button>
-                                    <div className={`flex items-center bg-[#fdfdfd] border border-[#f0e6e0] rounded-xl px-3 h-[48px] focus-within:border-[#bc9f8b] transition-colors ${!dHasGift ? 'opacity-60 bg-[#f9f9f9]' : ''}`}>
-                                        <input type="number" placeholder="贈品數量" value={dGiftCount} onChange={e => setDGiftCount(e.target.value)} disabled={!dHasGift} className="bg-transparent w-full h-full outline-none text-[#5c4d43] placeholder-[#c4b5aa] text-[15px] font-wawa" />
-                                    </div>
-                                </div>
-                                <div className="flex gap-3">
-                                    {editingId && <Button onClick={resetDeliveryForm} className="flex-1 bg-[#f2e7df] !text-[#7a6453]">取消</Button>}
-                                    <Button onClick={handleAddDelivery} className={editingId ? 'flex-[2] bg-[#bc9f8b] text-white' : 'w-full bg-[#bc9f8b] text-white'}>{editingId ? '儲存修改' : '建立超商寄件'}</Button>
-                                </div>
-                            </React.Fragment>
-                        ) : (
-                            <React.Fragment>
-                                <Input type="date" value={rDate} onChange={e => setRDate(e.target.value)} />
-                                <Input placeholder="訂購人姓名" value={rCustomerName} onChange={e => setRCustomerName(e.target.value)} />
-                                <div className="grid grid-cols-2 gap-3 mb-4">
-                                    <Input type="number" placeholder="件數" value={rItemsCount} onChange={e => setRItemsCount(e.target.value)} />
-                                    <Input placeholder="保留備註(選填)" value={rNote} onChange={e => setRNote(e.target.value)} />
-                                </div>
-                                <div className="flex gap-3">
-                                    {editingId && <Button onClick={resetReserveForm} className="flex-1 bg-[#e3f2fd] !text-[#1976d2]">取消</Button>}
-                                    <Button onClick={handleAddReserve} className={editingId ? 'flex-[2] bg-[#64b5f6] text-white' : 'w-full bg-[#64b5f6] text-white'}>{editingId ? '儲存修改' : '加入現貨保留清單'}</Button>
-                                </div>
-                            </React.Fragment>
-                        )}
-                    </Card>
-
-                    {/* 清單 1：現貨保留區 (留貨) 永遠顯示標題 */}
-                    <div className="mb-6 animate-fade-in">
-                        <div className="flex items-center text-[#1976d2] font-bold px-2 text-lg mb-2">
-                            <Icon name="diamond" className="mr-1 text-[20px]" /> 現貨保留區 <span className="ml-2 bg-[#bbdefb] text-[#1565c0] text-xs px-2 py-0.5 rounded-full">{reservations.length}</span>
-                        </div>
-                        {reservations.length === 0 ? (
-                            <div className="text-center text-[#90caf9] text-sm py-6 bg-white rounded-xl border border-dashed border-[#e3f2fd] mx-1">
-                                目前沒有保留清單喔！
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                            {reservations.map(r => (
-                                <div key={r.id} className="bg-white rounded-xl p-3 shadow-sm border-l-4 border-[#64b5f6] relative mx-1 px-4">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div>
-                                            <div className="font-bold text-[#5c4d43] text-base">{r.customerName} <span className="text-xs font-normal text-[#1976d2] ml-1 bg-[#e3f2fd] px-1.5 py-0.5 rounded">{r.itemsCount}件</span></div>
-                                            <div className="text-[11px] text-[#a89689] mt-0.5">{r.date}保留 {r.note && <span className="ml-1 text-[#7a6453]">({r.note})</span>}</div>
-                                        </div>
-                                        <div className="flex gap-1 shrink-0">
-                                            <button onClick={() => handleEditReserve(r)} className="p-1.5 text-[#64b5f6] bg-[#f5f9ff] rounded-lg shadow-sm"><Icon name="edit" className="text-[18px]" /></button>
-                                            <button onClick={() => setConfirmDialog({isOpen: true, id: r.id, collection: 'reservations'})} className="p-1.5 text-[#e57373] bg-[#fdf2f2] rounded-lg shadow-sm"><Icon name="delete" className="text-[18px]" /></button>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => openTransferModal(r)} className="w-full py-2 bg-[#e8f5e9] text-[#2e7d32] rounded-lg font-bold flex justify-center items-center text-sm shadow-sm transition-colors active:bg-[#c8e6c9]">
-                                        <Icon name="check_circle" className="mr-1 text-[16px]" /> 客人已結單，轉入準備寄件
-                                    </button>
-                                </div>
-                            ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 清單 2：未寄出 */}
-                    <div className="mt-6 mb-2 flex items-center text-[#9b4949] font-bold px-2 text-lg"><Icon name="push_pin" className="mr-1 text-[20px]" /> 未寄出 <span className="ml-2 bg-[#d6aba3] text-white text-xs px-2 py-0.5 rounded-full">{pending.length}</span></div>
-                    {pending.length === 0 ? <div className="text-center text-[#c4b5aa] text-sm py-4">太棒了，目前沒有未寄出清單！</div> : pending.map(d => (
-                        <div key={d.id} className="bg-white rounded-xl p-3 mb-2 shadow-sm border border-[#f2e7df] flex justify-between items-center px-4 mx-1">
-                            <div>
-                                <div className="font-bold text-[#5c4d43] text-base">{d.customerName}</div>
-                                <div className="text-xs text-[#a89689] mt-0.5">{d.date} | 售:${d.revenue} <span className="ml-1 bg-orange-50 text-[#bc9f8b] px-1 rounded">{d.soldQty || 1}件</span></div>
-                            </div>
-                            <div className="flex gap-2">
-                                <button onClick={() => toggleDeliveryStatus(d.id, d.status)} className="p-2 bg-[#f0f9f0] text-[#4caf50] rounded-lg shadow-sm flex items-center"><Icon name="local_shipping" className="mr-1 text-[16px]"/> 寄出</button>
-                                <button onClick={() => handleEditDelivery(d)} className="p-2 bg-[#fdfaf7] text-[#bc9f8b] rounded-lg shadow-sm"><Icon name="edit" className="text-[20px]" /></button>
-                                <button onClick={() => setConfirmDialog({isOpen: true, id: d.id, collection: 'deliveries'})} className="p-2 bg-[#fdf2f2] text-[#e57373] rounded-lg shadow-sm"><Icon name="delete" className="text-[20px]" /></button>
-                            </div>
-                        </div>
-                    ))}
-
-                    {/* 清單 3：已寄出 */}
-                    <div className="mt-6 mb-2 flex items-center text-[#4caf50] font-bold px-2 text-lg"><Icon name="check_box" className="mr-1 text-[20px]" /> 已寄出 <span className="ml-2 bg-[#a5d6a7] text-white text-xs px-2 py-0.5 rounded-full">{shipped.length}</span></div>
-                    {shipped.length === 0 ? <div className="text-center text-[#c4b5aa] text-sm py-4">尚無紀錄</div> : shipped.slice(0,10).map(d => (
-                        <div key={d.id} className="bg-[#fafafa] rounded-xl p-3 mb-2 border border-[#f0f0f0] flex justify-between items-center px-4 mx-1 opacity-70">
-                            <div><div className="font-bold text-[#7a6453] line-through text-base">{d.customerName}</div><div className="text-xs text-[#a89689] mt-0.5">{d.date} <span className="ml-1 bg-[#f0f0f0] text-[#a89689] px-1 rounded">{d.soldQty || 1}件</span></div></div>
-                            <div className="flex gap-2">
-                                <button onClick={() => toggleDeliveryStatus(d.id, d.status)} className="p-2 text-[#a89689]"><Icon name="undo" /></button>
-                                <button onClick={() => handleEditDelivery(d)} className="p-2 text-[#bc9f8b]"><Icon name="edit" className="text-[18px]" /></button>
-                                <button onClick={() => setConfirmDialog({isOpen: true, id: d.id, collection: 'deliveries'})} className="p-2 text-[#e57373]"><Icon name="delete" className="text-[18px]" /></button>
-                            </div>
-                        </div>
-                    ))}
-
-                    {/* 轉單專用 Modal */}
-                    {transferRecord && (
-                        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fade-in px-4">
-                            <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-                                <div className="text-center text-[#5c4d43] font-bold mb-4 text-lg border-b border-[#f2e7df] pb-3">
-                                    <Icon name="local_shipping" className="align-middle mr-1 text-[#4caf50]"/> 留貨確認轉寄件：{transferRecord.customerName}
-                                </div>
-                                <Input type="date" value={tDate} onChange={e => setTDate(e.target.value)} />
-                                <div className="grid grid-cols-2 gap-3 mb-3">
-                                    <div className="flex items-center bg-[#fdfdfd] border border-[#f0e6e0] rounded-xl px-3 h-[48px] focus-within:border-[#bc9f8b] transition-colors">
-                                        <input type="number" value={tRevenue} onChange={e => setTRevenue(e.target.value)} placeholder="商品總額" className="bg-transparent w-full h-full outline-none text-[#5c4d43] placeholder-[#c4b5aa] text-[15px] font-wawa" />
-                                    </div>
-                                    <div className="flex items-center bg-[#fdfdfd] border border-[#f0e6e0] rounded-xl px-3 h-[48px] focus-within:border-[#bc9f8b] transition-colors">
-                                        <input type="number" value={tSoldQty} onChange={e => setTSoldQty(e.target.value)} placeholder="售出服飾件數" className="bg-transparent w-full h-full outline-none text-[#5c4d43] placeholder-[#c4b5aa] text-[15px] font-wawa" />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Input type="number" placeholder="賣家付運費" value={tShippingExpense} onChange={e => setTShippingExpense(e.target.value)} />
-                                    <Input type="number" placeholder="買家付運費" value={tShippingIncome} onChange={e => setTShippingIncome(e.target.value)} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3 mb-2">
-                                    <button className={`w-full h-[48px] rounded-xl border text-[15px] transition-colors font-wawa font-bold flex items-center justify-center ${tHasGift ? 'border-[#bc9f8b] bg-[#fdfaf7] text-[#bc9f8b]' : 'border-[#f0e6e0] bg-[#fdfdfd] text-[#a89689]'}`} onClick={(e) => { e.preventDefault(); setTHasGift(!tHasGift); }}>🎁 {tHasGift ? '有贈品' : '無贈品'}</button>
-                                    <div className={`flex items-center bg-[#fdfdfd] border border-[#f0e6e0] rounded-xl px-3 h-[48px] focus-within:border-[#bc9f8b] transition-colors ${!tHasGift ? 'opacity-60 bg-[#f9f9f9]' : ''}`}>
-                                        <input type="number" placeholder="贈品數量" value={tGiftCount} onChange={e => setTGiftCount(e.target.value)} disabled={!tHasGift} className="bg-transparent w-full h-full outline-none text-[#5c4d43] placeholder-[#c4b5aa] text-[15px] font-wawa" />
-                                    </div>
-                                </div>
-                                <div className="flex gap-3 mt-5">
-                                    <button onClick={() => setTransferRecord(null)} className="flex-1 py-3.5 rounded-xl bg-[#f2e7df] text-[#7a6453] font-bold font-wawa">取消</button>
-                                    <button onClick={handleTransferSubmit} className="flex-[2] py-3.5 rounded-xl bg-[#4caf50] text-white font-bold font-wawa shadow-sm">確定轉入超商寄出</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
-        // --- 分頁 2：市場 ---
-        const MarketTab = ({ marketSales, setMarketSales, setConfirmDialog }) => {
-            const currentDate = new Date().toISOString().split('T')[0];
-            const [editingId, setEditingId] = useState(null);
-            
-            const [date, setDate] = useState(currentDate);
-            const [location, setLocation] = useState('');
-            const [revenue, setRevenue] = useState('');
-            const [soldQty, setSoldQty] = useState(''); 
-            const [rent, setRent] = useState('');
-            const [note, setNote] = useState('');
-            const [electricity, setElectricity] = useState('');
-            const [cleaning, setCleaning] = useState('');
-            const [gas, setGas] = useState(''); // 這個欄位在 UI 隱藏，但保留 state 以防萬一
-            const [toll, setToll] = useState('');
-            const [parking, setParking] = useState('');
-            const [hasGift, setHasGift] = useState(false);
-            const [giftCount, setGiftCount] = useState('');
-            const [acc, setAcc] = useState({ necklace: '', hat: '', bag: '', other: '' });
-
-            const [viewMonthStr, setViewMonthStr] = useState(currentDate.substring(0, 7));
-            const [selectedDay, setSelectedDay] = useState(currentDate);
-            
-            const [searchTerm, setSearchTerm] = useState('');
-
-            const dailyStats = useMemo(() => {
-                const stats = {};
-                marketSales.forEach(m => {
-                    const mDate = safeStr(m.date);
-                    if (mDate.startsWith(viewMonthStr)) {
-                        if (!stats[mDate]) stats[mDate] = { revenue: 0, locations: [] };
-                        stats[mDate].revenue += (Number(m.revenue) || 0);
-                        if (m.location && !stats[mDate].locations.includes(m.location)) {
-                            stats[mDate].locations.push(m.location);
-                        }
-                    }
-                });
-                return stats;
-            }, [marketSales, viewMonthStr]);
-
-            const resetForm = () => {
-                setEditingId(null); setDate(currentDate); setLocation(''); setRevenue(''); setSoldQty(''); setRent(''); setNote(''); 
-                setElectricity(''); setCleaning(''); setToll(''); setParking(''); setHasGift(false); setGiftCount(''); 
-                setAcc({ necklace: '', hat: '', bag: '', other: '' });
-                setSearchTerm('');
-            };
-
-            const handleRevenueChange = (e) => {
-                const val = e.target.value;
-                setRevenue(val);
-                if (val !== '') {
-                    setSoldQty(Math.round(Number(val) / 200).toString());
-                } else {
-                    setSoldQty('');
-                }
-            };
-
-            const handleAddMarket = () => {
-                if (!location) return;
-                const recordData = {
-                    date, location, revenue: Number(revenue) || 0, soldQty: Number(soldQty) || 0,
-                    rent: Number(rent) || 0, note,
-                    electricity: Number(electricity) || 0, cleaning: Number(cleaning) || 0,
-                    toll: Number(toll) || 0, parking: Number(parking) || 0,
-                    gas: 0, // 確保未來新增的紀錄 gas 都是 0
-                    hasGift, giftCount: hasGift ? (Number(giftCount) || 0) : 0,
-                    accessories: { necklace: Number(acc.necklace) || 0, hat: Number(acc.hat) || 0, bag: Number(acc.bag) || 0, other: Number(acc.other) || 0 }
-                };
-                
-                if (editingId) {
-                    setMarketSales(prev => prev.map(m => m.id === editingId ? { ...m, ...recordData } : m).sort((a,b)=> safeTime(b.date) - safeTime(a.date)));
-                } else {
-                    const newRecord = { id: Date.now().toString(), ...recordData };
-                    setMarketSales(prev => [newRecord, ...prev].sort((a,b)=> safeTime(b.date) - safeTime(a.date)));
-                }
-                resetForm();
-            };
-
-            const handleEditClick = (record) => {
-                setEditingId(record.id);
-                setDate(record.date); setLocation(record.location); setRevenue(record.revenue || ''); setSoldQty(record.soldQty || '');
-                setRent(record.rent || ''); setNote(record.note || ''); setElectricity(record.electricity || '');
-                setCleaning(record.cleaning || ''); setToll(record.toll || ''); setParking(record.parking || '');
-                setHasGift(record.hasGift || false); setGiftCount(record.giftCount || '');
-                const rac = record.accessories || {};
-                setAcc({
-                    necklace: rac.necklace || '', hat: rac.hat || '',
-                    bag: rac.bag || '', other: rac.other || ''
-                });
-                setSearchTerm('');
-                scrollToTop();
-            };
-
-            const changeMonth = (offset) => {
-                const parts = safeStr(viewMonthStr).split('-');
-                if (parts.length >= 2 && !isNaN(parseInt(parts[0], 10))) {
-                    const newDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1 + offset, 1);
-                    setViewMonthStr(`${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}`);
-                }
-            };
-
-            const renderCalendarDays = () => {
-                const parts = safeStr(viewMonthStr).split('-');
-                if (parts.length < 2 || isNaN(parseInt(parts[0], 10))) return [];
-                const y = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1;
-                const daysInMonth = new Date(y, m + 1, 0).getDate();
-                const startDayOfWeek = new Date(y, m, 1).getDay();
-                const days = [];
-                for (let i = 0; i < startDayOfWeek; i++) days.push(<div key={`empty-${i}`} className="h-[4.5rem]"></div>);
-                for (let i = 1; i <= daysInMonth; i++) {
-                    const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                    const isSelected = dateStr === selectedDay;
-                    const stat = dailyStats[dateStr];
-                    const hasData = !!stat;
-                    const rev = hasData ? stat.revenue : 0;
-                    const locStr = hasData ? stat.locations.join(', ') : '';
-
-                    days.push(
-                        <div key={dateStr} onClick={() => {setSelectedDay(dateStr); setDate(dateStr);}} 
-                             className={`h-[4.5rem] py-1 flex flex-col items-center justify-start rounded-xl cursor-pointer transition-all overflow-hidden ${isSelected ? 'bg-[#bc9f8b] text-white shadow-md' : hasData ? 'border border-[#bc9f8b] bg-[#fdfaf7] text-[#5c4d43]' : 'text-[#7a6453] hover:bg-[#f2e7df]'}`}>
-                            <span className={`text-sm font-bold ${isSelected ? 'text-white' : ''} leading-tight mb-0.5`}>{i}</span>
-                            {hasData && (
-                                <div className="flex flex-col items-center w-full px-0.5">
-                                    {locStr && <span className={`text-[9px] w-full truncate text-center mb-0.5 ${isSelected ? 'text-[#f0e6e0]' : 'text-[#a89689]'}`}>{locStr}</span>}
-                                    <span className={`text-[11px] font-black leading-none ${isSelected ? 'text-white' : 'text-[#4caf50]'}`}>{formatRevenueStr(rev)}</span>
-                                </div>
-                            )}
-                        </div>
-                    );
-                }
-                return days;
-            };
-
-            const searchedSales = searchTerm
-                ? marketSales.filter(m => safeStr(m.location).includes(searchTerm)).sort((a, b) => safeTime(b.date) - safeTime(a.date))
-                : [];
-
-            const renderSearchResults = () => {
-                if (!searchTerm) return null;
-                if (searchedSales.length === 0) return <div className="text-center text-[#c4b5aa] py-8 mx-2 mt-4 bg-white rounded-2xl border border-dashed border-[#e0d6ce]">找不到「{searchTerm}」的歷史紀錄 🥺</div>;
-
-                const times = searchedSales.length;
-                const totalRev = searchedSales.reduce((sum, m) => sum + (Number(m.revenue) || 0), 0);
-                const totalProfit = searchedSales.reduce((sum, m) => {
-                    const dailyMisc = (Number(m.electricity) || 0) + (Number(m.cleaning) || 0) + (Number(m.toll) || 0) + (Number(m.parking) || 0);
-                    return sum + (Number(m.revenue) || 0) - (Number(m.rent) || 0) - dailyMisc;
-                }, 0);
-
-                return (
-                    <div className="animate-fade-in mt-6">
-                        <Card className="bg-gradient-to-r from-[#fffde7] to-[#fff8e1] border-[#fff59d] mb-4">
-                            <div className="flex items-center text-[#f57f17] font-bold text-lg mb-3 pb-2 border-b border-[#fff59d]">
-                                <Icon name="analytics" className="mr-2" /> 「{searchTerm}」績效評估報告
-                            </div>
-                            <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm text-[#7a6453]">
-                                <div className="flex flex-col"><span className="text-[10px] text-[#a89689] font-bold">出攤次數</span><span className="font-black text-lg text-[#5c4d43]">{times} 次</span></div>
-                                <div className="flex flex-col"><span className="text-[10px] text-[#a89689] font-bold">累積總業績</span><span className="font-black text-lg text-[#5c4d43]">${totalRev.toLocaleString()}</span></div>
-                                <div className="flex flex-col"><span className="text-[10px] text-[#a89689] font-bold">平均單次業績</span><span className="font-black text-xl text-[#4caf50]">${Math.round(totalRev / times).toLocaleString()}</span></div>
-                                <div className="flex flex-col"><span className="text-[10px] text-[#a89689] font-bold">單次淨利(扣攤租雜支)</span><span className="font-black text-xl text-[#e57373]">${Math.round(totalProfit / times).toLocaleString()}</span></div>
-                            </div>
-                        </Card>
-                        
-                        <div className="text-[#9b4949] font-bold px-2 text-lg mb-2"><Icon name="history" className="align-middle text-[20px] mr-1" /> 歷史足跡明細</div>
-                        {searchedSales.map(m => {
-                            const dailyMisc = (Number(m.electricity) || 0) + (Number(m.cleaning) || 0) + (Number(m.toll) || 0) + (Number(m.parking) || 0);
-                            const operatingProfit = (Number(m.revenue)||0) - (Number(m.rent)||0) - dailyMisc; 
-                            return (
-                                <div key={m.id} className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-[#f2e7df] relative mx-1">
-                                    <div className="absolute top-4 right-4 flex gap-1">
-                                        <button onClick={() => handleEditClick(m)} className="p-1.5 bg-[#fdfaf7] text-[#bc9f8b] rounded-lg shadow-sm"><Icon name="edit" className="text-[18px]" /></button>
-                                        <button onClick={() => setConfirmDialog({isOpen: true, id: m.id, collection: 'market_sales'})} className="p-1.5 bg-[#fdf2f2] text-[#e57373] rounded-lg shadow-sm"><Icon name="delete" className="text-[18px]" /></button>
-                                    </div>
-                                    <div className="font-bold text-[#5c4d43] mb-1 text-base flex items-center"><span className="bg-[#bc9f8b] w-2 h-2 rounded-full mr-2"></span>{m.location} <span className="ml-2 text-xs font-normal text-[#a89689] bg-[#fdfaf7] px-1 rounded">{m.date}</span></div>
-                                    {m.note && <div className="text-xs text-[#a89689] mb-2 pl-4">備註: {m.note}</div>}
-                                    <div className="text-sm text-[#7a6453] grid grid-cols-2 gap-y-1.5 mt-3 pt-3 border-t border-[#fdfaf7] pl-4">
-                                        <div>營業額: <span className="font-bold text-[#5c4d43]">${m.revenue}</span> <span className="ml-1 bg-orange-50 text-[#bc9f8b] text-[10px] px-1 rounded">{m.soldQty||0}件</span></div>
-                                        <div>攤租雜支: <span className="font-medium">-${(Number(m.rent)||0) + dailyMisc}</span></div>
-                                        <div className="font-bold text-[#bc9f8b] col-span-2">單日淨收入 (未扣進貨): ${operatingProfit}</div>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-                );
-            };
-
-            const filteredSales = marketSales.filter(m => m.date === selectedDay);
-            const viewParts = safeStr(viewMonthStr).split('-');
-
-            return (
-                <div className="animate-fade-in pb-20">
-                    <Card className={editingId ? 'border-2 border-[#bc9f8b]' : ''}>
-                        <div className="flex items-center mb-4 text-[#7a6453] font-bold text-lg">
-                            <Icon name={editingId ? 'edit' : 'storefront'} className="mr-2 text-[#bc9f8b]" /> 
-                            {editingId ? '編輯市場營業' : '新增市場營業'}
-                        </div>
-                        <Input type="date" value={date} onChange={e => { setDate(e.target.value); setSelectedDay(e.target.value); setViewMonthStr(safeStr(e.target.value).substring(0,7)); }} />
-                        <div className="grid grid-cols-2 gap-3">
-                            <Input placeholder="地點" value={location} onChange={e => setLocation(e.target.value)} />
-                            <div className="mb-3 w-full">
-                                <div className="flex items-center bg-[#fdfdfd] border border-[#f0e6e0] rounded-xl px-3 h-[48px] focus-within:border-[#bc9f8b] transition-colors">
-                                    <input type="number" placeholder="當日業績" value={revenue} onChange={handleRevenueChange} className="bg-transparent w-full h-full outline-none text-[#5c4d43] placeholder-[#c4b5aa] text-[15px] font-wawa" />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="mb-3 w-full">
-                                <div className="flex items-center bg-[#fdfdfd] border border-[#f0e6e0] rounded-xl px-3 h-[48px] focus-within:border-[#bc9f8b] transition-colors">
-                                    <input type="number" placeholder="售出件數 (自動推算)" value={soldQty} onChange={e => setSoldQty(e.target.value)} className="bg-transparent w-full h-full outline-none text-[#5c4d43] placeholder-[#c4b5aa] text-[15px] font-wawa" />
-                                </div>
-                            </div>
-                            <Input placeholder="備註 (選填)" value={note} onChange={e => setNote(e.target.value)} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <Input type="number" placeholder="位租" value={rent} onChange={e => setRent(e.target.value)} />
-                            <Input type="number" placeholder="電費 (選填)" value={electricity} onChange={e => setElectricity(e.target.value)} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <Input type="number" placeholder="清潔費 (選填)" value={cleaning} onChange={e => setCleaning(e.target.value)} />
-                            <Input type="number" placeholder="過路費 (選填)" value={toll} onChange={e => setToll(e.target.value)} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <Input type="number" placeholder="停車費 (選填)" value={parking} onChange={e => setParking(e.target.value)} />
-                            <div className="flex items-center justify-center text-[11px] text-[#a89689] bg-[#fdfaf7] rounded-xl border border-[#f2e7df] border-dashed">
-                                ※交通油資請至「支出」紀錄
-                            </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-3 mb-4 mt-1">
-                            <button 
-                                className={`w-full h-[48px] rounded-xl border text-[15px] transition-colors font-wawa font-bold flex items-center justify-center ${hasGift ? 'border-[#bc9f8b] bg-[#fdfaf7] text-[#bc9f8b]' : 'border-[#f0e6e0] bg-[#fdfdfd] text-[#a89689]'}`} 
-                                onClick={(e) => { e.preventDefault(); setHasGift(!hasGift); }}>
-                                🎁 {hasGift ? '有贈品' : '無贈品'}
-                            </button>
-                            <div className={`flex items-center bg-[#fdfdfd] border border-[#f0e6e0] rounded-xl px-3 h-[48px] focus-within:border-[#bc9f8b] transition-colors ${!hasGift ? 'opacity-60 bg-[#f9f9f9]' : ''}`}>
-                                <input type="number" placeholder="贈品數量" value={giftCount} onChange={e => setGiftCount(e.target.value)} disabled={!hasGift} className="bg-transparent w-full h-full outline-none text-[#5c4d43] placeholder-[#c4b5aa] text-[15px] font-wawa" />
-                            </div>
-                        </div>
-
-                        <div className="border-t border-[#f2e7df] pt-4 mb-4">
-                            <div className="flex items-center text-sm font-bold text-[#5c4d43] mb-3"><Icon name="diamond" className="mr-1 text-[#64b5f6] text-[18px]" /> 配飾販售數量 (不計入業績)</div>
-                            <div className="grid grid-cols-4 gap-2 text-center text-xs text-[#a89689]">
-                                {['項鍊', '帽子', '包包', '其他'].map((label, idx) => {
-                                    const keys = ['necklace', 'hat', 'bag', 'other'];
-                                    return (
-                                        <div key={label}>
-                                            <label className="block mb-1">{label}</label>
-                                            <input type="number" value={acc[keys[idx]]} onChange={e=>setAcc({...acc, [keys[idx]]: e.target.value})} className="w-full h-[40px] bg-[#fdfdfd] border border-[#f0e6e0] rounded-lg px-2 text-center outline-none focus:border-[#bc9f8b] font-wawa" />
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                        
-                        <div className="flex gap-3">
-                            {editingId && (
-                                <Button onClick={resetForm} className="flex-1 bg-[#f2e7df] !text-[#7a6453]">取消</Button>
-                            )}
-                            <Button onClick={handleAddMarket} className={editingId ? 'flex-[2] bg-[#bc9f8b] text-white' : 'w-full bg-[#bc9f8b] text-white'}>
-                                {editingId ? '儲存修改' : '儲存紀錄'}
-                            </Button>
-                        </div>
-                    </Card>
-
-                    {/* 地點績效搜尋器 */}
-                    <div className="mb-4 px-1">
-                        <div className={`flex items-center bg-white border ${searchTerm ? 'border-[#bc9f8b] shadow-sm' : 'border-[#e0d6ce]'} rounded-xl px-3 h-[48px] transition-colors`}>
-                            <Icon name="search" className={`mr-2 text-[20px] ${searchTerm ? 'text-[#bc9f8b]' : 'text-[#c4b5aa]'}`} />
-                            <input type="text" placeholder="🔍 搜尋地點 (例如: 果菜) 評估歷史績效" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="bg-transparent w-full h-full outline-none text-[#5c4d43] placeholder-[#c4b5aa] text-[15px] font-wawa" />
-                            {searchTerm && <button onClick={() => setSearchTerm('')}><Icon name="close" className="text-[#c4b5aa] text-[18px]" /></button>}
-                        </div>
-                    </div>
-
-                    {!searchTerm ? (
-                        <React.Fragment>
-                            <Card className="px-2 pt-2 pb-4">
-                                <div className="flex justify-between items-center px-2 mb-4 mt-2">
-                                    <button onClick={() => changeMonth(-1)} className="p-1.5 text-[#a89689] bg-[#fdfaf7] rounded-full hover:bg-[#f2e7df]"><Icon name="chevron_left" /></button>
-                                    <div className="font-bold text-[#7a6453] text-lg tracking-wider">{viewParts[0]||''}年 {parseInt(viewParts[1]||1, 10)}月</div>
-                                    <button onClick={() => changeMonth(1)} className="p-1.5 text-[#a89689] bg-[#fdfaf7] rounded-full hover:bg-[#f2e7df]"><Icon name="chevron_right" /></button>
-                                </div>
-                                <div className="grid grid-cols-7 text-center text-xs font-bold text-[#a89689] mb-3">
-                                    <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
-                                </div>
-                                <div className="grid grid-cols-7 gap-y-2 gap-x-1">{renderCalendarDays()}</div>
-                            </Card>
-
-                            <div className="mt-6 mb-2 flex items-center text-[#9b4949] font-bold px-2 text-lg">
-                                <Icon name="location_on" className="mr-1 text-[20px]" /> {parseInt(safeStr(selectedDay).split('-')[1]||0, 10)}/{parseInt(safeStr(selectedDay).split('-')[2]||0, 10)} 營業紀錄 
-                                <span className="ml-2 bg-[#f2e7df] text-[#7a6453] text-xs px-2.5 py-1 rounded-full font-bold">{filteredSales.length} 筆</span>
-                            </div>
-                            {filteredSales.length === 0 ? (
-                                <div className="bg-white rounded-2xl border border-dashed border-[#e0d6ce] text-center text-[#c4b5aa] text-sm py-8 mx-2 mt-4">這天沒有擺攤，是休息日喔 ☕</div>
-                            ) : filteredSales.map(m => {
-                                const dailyMisc = (Number(m.electricity) || 0) + (Number(m.cleaning) || 0) + (Number(m.toll) || 0) + (Number(m.parking) || 0);
-                                const operatingProfit = (Number(m.revenue)||0) - (Number(m.rent)||0) - dailyMisc; 
-                                return (
-                                    <div key={m.id} className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-[#f2e7df] relative mx-1">
-                                        <div className="absolute top-4 right-4 flex gap-1">
-                                            <button onClick={() => handleEditClick(m)} className="p-1.5 bg-[#fdfaf7] text-[#bc9f8b] rounded-lg shadow-sm"><Icon name="edit" className="text-[18px]" /></button>
-                                            <button onClick={() => setConfirmDialog({isOpen: true, id: m.id, collection: 'market_sales'})} className="p-1.5 bg-[#fdf2f2] text-[#e57373] rounded-lg shadow-sm"><Icon name="delete" className="text-[18px]" /></button>
-                                        </div>
-                                        <div className="font-bold text-[#5c4d43] mb-1 text-base flex items-center"><span className="bg-[#bc9f8b] w-2 h-2 rounded-full mr-2"></span>{m.location}</div>
-                                        {m.note && <div className="text-xs text-[#a89689] mb-2 pl-4">備註: {m.note}</div>}
-                                        <div className="text-sm text-[#7a6453] grid grid-cols-2 gap-y-1.5 mt-3 pt-3 border-t border-[#fdfaf7] pl-4">
-                                            <div>營業額: <span className="font-bold text-[#5c4d43]">${m.revenue}</span> <span className="ml-1 bg-orange-50 text-[#bc9f8b] text-[10px] px-1 rounded">{m.soldQty||0}件</span></div>
-                                            <div>攤租雜支: <span className="font-medium">-${(Number(m.rent)||0) + dailyMisc}</span></div>
-                                            <div className="font-bold text-[#bc9f8b] col-span-2">單日淨收入 (未扣進貨): ${operatingProfit}</div>
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                        </React.Fragment>
-                    ) : (
-                        renderSearchResults()
-                    )}
-                </div>
-            );
-        };
-
-        // --- 分頁 3：支出紀錄 ---
-        const ExpenseTab = ({ expenses, setExpenses, setConfirmDialog }) => {
-            const [editingId, setEditingId] = useState(null);
-            const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-            const [type, setType] = useState('wholesale'); 
-            const [name, setName] = useState('');
-            const [amount, setAmount] = useState('');
-            const [qty, setQty] = useState(''); 
-            const [isArrived, setIsArrived] = useState(true);
-            const [flowType, setFlowType] = useState('in'); // 針對資金借還：'in' (借入) 或 'out' (償還)
-
-            const resetForm = () => {
-                setEditingId(null); setDate(new Date().toISOString().split('T')[0]);
-                setType('wholesale'); setName(''); setAmount(''); setQty(''); setIsArrived(true); setFlowType('in');
-            };
-
-            const handleAddExpense = () => {
-                if (!name || !amount) return;
-                const recordData = { 
-                    date, type, name, 
-                    amount: Number(amount),
-                    qty: type === 'wholesale' ? (Number(qty) || 0) : 0,
-                    isArrived: type === 'wholesale' ? isArrived : true,
-                    flowType: type === 'financing' ? flowType : 'out'
-                };
-
-                if (editingId) {
-                    setExpenses(prev => prev.map(e => e.id === editingId ? { ...e, ...recordData } : e).sort((a,b)=> safeTime(b.date) - safeTime(a.date)));
-                } else {
-                    const newRecord = { id: Date.now().toString(), ...recordData };
-                    setExpenses(prev => [newRecord, ...prev].sort((a,b)=> safeTime(b.date) - safeTime(a.date)));
-                }
-                resetForm();
-            };
-
-            const handleEditClick = (record) => {
-                setEditingId(record.id);
-                setDate(record.date); setType(record.type); setName(record.name); setAmount(record.amount); setQty(record.qty || '');
-                setIsArrived(record.isArrived !== false); 
-                setFlowType(record.flowType || 'in');
-                scrollToTop();
-            };
-
-            const toggleArriveStatus = (id) => {
-                setExpenses(prev => prev.map(e => e.id === id ? { ...e, isArrived: true } : e));
-            };
-
-            const wholesaleTotal = expenses.filter(e => e.type === 'wholesale').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const inTransitTotal = expenses.filter(e => e.type === 'wholesale' && e.isArrived === false).reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            
-            const supplyTotal = expenses.filter(e => e.type === 'supply').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const fixedTotal = expenses.filter(e => e.type === 'fixed').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const trafficTotal = expenses.filter(e => e.type === 'traffic').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const salaryTotal = expenses.filter(e => e.type === 'salary').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            
-            const financingIn = expenses.filter(e => e.type === 'financing' && e.flowType === 'in').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const financingOut = expenses.filter(e => e.type === 'financing' && e.flowType !== 'in').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-
-            // 當月累積計算
-            const currentMonth = safeStr(date).substring(0, 7);
-            const currentMonthExpenses = expenses.filter(e => safeStr(e.date).startsWith(currentMonth));
-            
-            const wholesaleMonthTotal = currentMonthExpenses.filter(e => e.type === 'wholesale').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const supplyMonthTotal = currentMonthExpenses.filter(e => e.type === 'supply').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const fixedMonthTotal = currentMonthExpenses.filter(e => e.type === 'fixed').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const trafficMonthTotal = currentMonthExpenses.filter(e => e.type === 'traffic').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const salaryMonthTotal = currentMonthExpenses.filter(e => e.type === 'salary').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            
-            const typeConfig = {
-                wholesale: { label: '現貨進貨', color: 'bg-[#e57373]', text: 'text-[#e57373]', bgLight: 'bg-[#ffebee]', placeholder: '現貨品名 / 廠商' },
-                supply: { label: '生財包材', color: 'bg-[#64b5f6]', text: 'text-[#64b5f6]', bgLight: 'bg-[#e0f7fa]', placeholder: '如: 品牌袋、衣架、文具' },
-                fixed: { label: '倉租水電', color: 'bg-[#81c784]', text: 'text-[#81c784]', bgLight: 'bg-[#e8f5e9]', placeholder: '如: 倉庫租金、水電網費' },
-                traffic: { label: '交通油資', color: 'bg-[#ba68c8]', text: 'text-[#ab47bc]', bgLight: 'bg-[#f3e5f5]', placeholder: '如: 加油、高鐵、客運' },
-                salary: { label: '老闆支薪', color: 'bg-[#ffd54f]', text: 'text-[#fbc02d]', bgLight: 'bg-[#fffde7]', placeholder: '如: 8月老闆薪水' },
-                financing: { label: '資金借還', color: 'bg-[#9e9e9e]', text: 'text-[#757575]', bgLight: 'bg-[#f5f5f5]', placeholder: '如: 借入週轉金 / 償還欠款' }
-            };
-
-            return (
-                <div className="animate-fade-in pb-20">
-                    <Card className={editingId && typeConfig[type] ? `border-2 border-${typeConfig[type].color.split('-')[1]}` : ''}>
-                        <div className="flex items-center mb-4 text-[#7a6453] font-bold text-lg">
-                            <Icon name={editingId ? 'edit' : 'account_balance_wallet'} className="mr-2 text-[#7a6453]" /> 
-                            {editingId ? '編輯支出紀錄' : '公司營運支出'}
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-2 mb-4">
-                            {Object.keys(typeConfig).map(tKey => {
-                                const tConf = typeConfig[tKey];
-                                return (
-                                    <button 
-                                        key={tKey}
-                                        onClick={() => { setType(tKey); setQty(''); setIsArrived(true); }} 
-                                        className={`py-2 rounded-xl text-[12px] font-bold transition-all border ${type === tKey ? `${tConf.color} text-white border-transparent shadow-md` : 'bg-white border-[#f0e6e0] text-[#a89689]'}`}>
-                                        {tConf.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
-                        
-                        {type === 'financing' && (
-                            <div className="flex items-center gap-3 mb-4">
-                                <button
-                                    className={`flex-1 h-[48px] rounded-xl border text-[13px] transition-colors font-wawa font-bold flex items-center justify-center shadow-sm ${flowType === 'in' ? 'border-[#4caf50] bg-[#f0f9f0] text-[#4caf50]' : 'border-[#e0e0e0] bg-[#fdfdfd] text-[#9e9e9e]'}`}
-                                    onClick={(e) => { e.preventDefault(); setFlowType('in'); }}
-                                >
-                                    📥 借入週轉金 (現金+)
-                                </button>
-                                <button
-                                    className={`flex-1 h-[48px] rounded-xl border text-[13px] transition-colors font-wawa font-bold flex items-center justify-center shadow-sm ${flowType === 'out' ? 'border-[#e57373] bg-[#fff2f2] text-[#e57373]' : 'border-[#e0e0e0] bg-[#fdfdfd] text-[#9e9e9e]'}`}
-                                    onClick={(e) => { e.preventDefault(); setFlowType('out'); }}
-                                >
-                                    📤 償還本金 (現金-)
-                                </button>
-                            </div>
-                        )}
-
-                        <Input placeholder={typeConfig[type] ? typeConfig[type].placeholder : '名稱'} value={name} onChange={e => setName(e.target.value)} />
-                        
-                        {type === 'wholesale' ? (
-                            <React.Fragment>
-                                <div className="grid grid-cols-2 gap-3 mb-3">
-                                    <Input type="number" placeholder="現貨支出總額" value={amount} onChange={e => setAmount(e.target.value)} />
-                                    <Input type="number" placeholder="進貨總件數" value={qty} onChange={e => setQty(e.target.value)} />
-                                </div>
-                                <div className="flex items-center gap-3 mb-4">
-                                    <button
-                                        className={`flex-1 h-[48px] rounded-xl border text-[14px] transition-colors font-wawa font-bold flex items-center justify-center shadow-sm ${isArrived ? 'border-[#4caf50] bg-[#f0f9f0] text-[#4caf50]' : 'border-[#ffb300] bg-[#fffde7] text-[#f57f17]'}`}
-                                        onClick={(e) => { e.preventDefault(); setIsArrived(!isArrived); }}
-                                    >
-                                        {isArrived ? '📦 已到貨 (算入現貨庫存)' : '🚚 貨在途 (暫不入庫)'}
-                                    </button>
-                                </div>
-                            </React.Fragment>
-                        ) : (
-                            <Input type="number" placeholder={type === 'financing' ? (flowType === 'in' ? '借入金額' : '償還金額') : "支出總金額"} value={amount} onChange={e => setAmount(e.target.value)} />
-                        )}
-
-                        {type === 'wholesale' && amount && qty && (
-                            <div className="text-right text-xs text-[#e57373] font-bold mb-3 px-1">
-                                單筆平均進價：${(Number(amount) / Number(qty)).toFixed(1)} /件
-                            </div>
-                        )}
-                        
-                        <div className="flex gap-3">
-                            {editingId && (
-                                <Button onClick={resetForm} className="flex-1 bg-[#f2e7df] !text-[#7a6453]">取消</Button>
-                            )}
-                            <Button onClick={handleAddExpense} className={`${typeConfig[type] ? typeConfig[type].color : 'bg-gray-400'} hover:opacity-90 text-white ${editingId ? 'flex-[2]' : 'w-full'}`}>
-                                {editingId ? '儲存修改' : (type === 'financing' ? '儲存借還紀錄' : '儲存支出')}
-                            </Button>
-                        </div>
-                    </Card>
-
-                    <div className="grid grid-cols-2 gap-3 mb-6">
-                        <div className="bg-white rounded-xl p-3 shadow-sm border border-[#f2e7df] text-center flex flex-col justify-between">
-                            <div>
-                                <div className="text-[11px] text-[#a89689] font-bold mb-1">歷史總批貨支出</div>
-                                <div className="text-lg font-black text-[#e57373]">${wholesaleTotal.toLocaleString()}</div>
-                                {inTransitTotal > 0 && <div className="text-[9px] text-[#f57f17] font-bold mt-0.5">含在途未入庫 ${inTransitTotal.toLocaleString()}</div>}
-                            </div>
-                            <div className="text-[10px] text-[#7a6453] font-bold mt-1.5 pt-1.5 border-t border-[#fdfaf7] bg-[#fdfaf7] rounded -mx-1 -mb-1 pb-1">
-                                本月 ({parseInt(currentMonth.substring(5,7))}月): <span className="text-[#e57373]">${wholesaleMonthTotal.toLocaleString()}</span>
-                            </div>
-                        </div>
-                        <div className="bg-white rounded-xl p-3 shadow-sm border border-[#f2e7df] text-center flex flex-col justify-between">
-                            <div>
-                                <div className="text-[11px] text-[#a89689] font-bold mb-1">歷史總生財/包材</div>
-                                <div className="text-lg font-black text-[#64b5f6]">${supplyTotal.toLocaleString()}</div>
-                            </div>
-                            <div className="text-[10px] text-[#7a6453] font-bold mt-1.5 pt-1.5 border-t border-[#fdfaf7] bg-[#fdfaf7] rounded -mx-1 -mb-1 pb-1">
-                                本月 ({parseInt(currentMonth.substring(5,7))}月): <span className="text-[#64b5f6]">${supplyMonthTotal.toLocaleString()}</span>
-                            </div>
-                        </div>
-                        <div className="bg-white rounded-xl p-3 shadow-sm border border-[#f2e7df] text-center flex flex-col justify-between">
-                            <div>
-                                <div className="text-[11px] text-[#a89689] font-bold mb-1">歷史總倉租/水電</div>
-                                <div className="text-lg font-black text-[#81c784]">${fixedTotal.toLocaleString()}</div>
-                            </div>
-                            <div className="text-[10px] text-[#7a6453] font-bold mt-1.5 pt-1.5 border-t border-[#fdfaf7] bg-[#fdfaf7] rounded -mx-1 -mb-1 pb-1">
-                                本月 ({parseInt(currentMonth.substring(5,7))}月): <span className="text-[#81c784]">${fixedMonthTotal.toLocaleString()}</span>
-                            </div>
-                        </div>
-                        <div className="bg-white rounded-xl p-3 shadow-sm border border-[#f2e7df] text-center flex flex-col justify-between">
-                            <div>
-                                <div className="text-[11px] text-[#a89689] font-bold mb-1">歷史總交通/油資</div>
-                                <div className="text-lg font-black text-[#ab47bc]">${trafficTotal.toLocaleString()}</div>
-                            </div>
-                            <div className="text-[10px] text-[#7a6453] font-bold mt-1.5 pt-1.5 border-t border-[#fdfaf7] bg-[#fdfaf7] rounded -mx-1 -mb-1 pb-1">
-                                本月 ({parseInt(currentMonth.substring(5,7))}月): <span className="text-[#ab47bc]">${trafficMonthTotal.toLocaleString()}</span>
-                            </div>
-                        </div>
-                        <div className="bg-white rounded-xl p-3 shadow-sm border border-[#f2e7df] text-center flex flex-col justify-between">
-                            <div>
-                                <div className="text-[11px] text-[#a89689] font-bold mb-1">歷史總老闆支薪</div>
-                                <div className="text-lg font-black text-[#fbc02d]">${salaryTotal.toLocaleString()}</div>
-                            </div>
-                            <div className="text-[10px] text-[#7a6453] font-bold mt-1.5 pt-1.5 border-t border-[#fdfaf7] bg-[#fdfaf7] rounded -mx-1 -mb-1 pb-1">
-                                本月 ({parseInt(currentMonth.substring(5,7))}月): <span className="text-[#fbc02d]">${salaryMonthTotal.toLocaleString()}</span>
-                            </div>
-                        </div>
-                        <div className="bg-white rounded-xl p-3 shadow-sm border border-[#f2e7df] text-center flex flex-col justify-between bg-gray-50 border-gray-200">
-                            <div>
-                                <div className="text-[11px] text-[#a89689] font-bold mb-1">歷史淨借入週轉金</div>
-                                <div className={`text-lg font-black ${(financingIn - financingOut) >= 0 ? 'text-[#4caf50]' : 'text-[#e57373]'}`}>
-                                    ${(financingIn - financingOut).toLocaleString()}
-                                </div>
-                            </div>
-                            <div className="text-[10px] text-[#7a6453] font-bold mt-1.5 pt-1.5 border-t border-[#fdfaf7] bg-[#fdfaf7] rounded -mx-1 -mb-1 pb-1">
-                                (不計入損益計算)
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mb-2 flex items-center text-[#7a6453] font-bold px-2 text-lg">
-                        <Icon name="history" className="mr-1 text-[20px]" /> 近期支出明細
-                    </div>
-                    {expenses.length === 0 ? <div className="text-center text-[#c4b5aa] text-sm py-8 bg-white rounded-2xl border border-dashed border-[#e0d6ce] mt-4 mx-2">目前尚無支出紀錄</div> : (
-                        <div className="mt-4 space-y-3 mx-1">
-                        {expenses.map(e => {
-                            const conf = typeConfig[e.type] || typeConfig['wholesale'];
-                            const isBorrow = e.type === 'financing' && e.flowType === 'in';
-                            return (
-                                <div key={e.id} className="bg-white rounded-xl p-4 shadow-sm border border-[#f2e7df] flex justify-between items-center">
-                                    <div className="flex flex-col flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${conf.bgLight} ${conf.text} shrink-0`}>
-                                                {conf.label.split('/')[0]}
-                                            </span>
-                                            <span className="font-bold text-[#5c4d43] text-base truncate max-w-[120px]">{e.name}</span>
-                                            {e.type === 'wholesale' && e.isArrived === false && (
-                                                <button onClick={() => toggleArriveStatus(e.id)} className="shrink-0 text-[10px] bg-[#fffde7] text-[#f57f17] border border-[#ffe082] px-2 py-0.5 rounded shadow-sm hover:bg-[#fff9c4] transition-colors">
-                                                    點擊入庫
-                                                </button>
-                                            )}
-                                            {e.type === 'wholesale' && e.isArrived !== false && (
-                                                <span className="shrink-0 text-[10px] bg-[#f0f9f0] text-[#4caf50] px-1.5 py-0.5 rounded">已入庫</span>
-                                            )}
-                                            {e.type === 'financing' && (
-                                                <span className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded ${isBorrow ? 'bg-[#f0f9f0] text-[#4caf50]' : 'bg-[#fff2f2] text-[#e57373]'}`}>
-                                                    {isBorrow ? '借入' : '償還'}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="text-xs text-[#a89689]">
-                                            {e.date} {e.type === 'wholesale' && e.qty > 0 && <span className="ml-1 text-[#e57373]">({e.qty}件)</span>}
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 shrink-0 pl-2">
-                                        <div className={`font-black text-lg mr-1 ${isBorrow ? 'text-[#4caf50]' : conf.text}`}>
-                                            {isBorrow ? '+' : '-'}${e.amount}
-                                        </div>
-                                        <button onClick={() => handleEditClick(e)} className="p-1.5 bg-[#fdfaf7] text-[#bc9f8b] rounded-lg shadow-sm"><Icon name="edit" className="text-[18px]" /></button>
-                                        <button onClick={() => setConfirmDialog({isOpen: true, id: e.id, collection: 'expenses'})} className="p-1.5 bg-[#fdf2f2] text-[#e57373] rounded-lg shadow-sm"><Icon name="delete" className="text-[18px]" /></button>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        </div>
-                    )}
-                </div>
-            );
+        if (editingProductId) {
+          setProducts(products.map(p => p.id === editingProductId ? { ...p, ...productData } : p));
+        } else {
+          productData.id = `p${Date.now()}`;
+          setProducts([productData, ...products]);
         }
+        
+        closeProductModal();
+      };
 
-        // --- 分頁 4：報表 ---
-        const ReportTab = ({ deliveries, marketSales, expenses, preorders, settings, setSettings, marketSoldStats, setMarketSoldStats }) => {
-            const [reportMonth, setReportMonth] = useState(() => {
-                const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            });
-            const [isCheckingInventory, setIsCheckingInventory] = useState(false);
-            const [actualInv, setActualInv] = useState('');
+      const deleteProduct = (id) => {
+        if(window.confirm('確定刪除此商品？(已接單的紀錄不會受影響)')) {
+          setProducts(products.filter(p => p.id !== id));
+        }
+      };
 
-            const [expAllRev, setExpAllRev] = useState(false);
-            const [expAllWhole, setExpAllWhole] = useState(false);
-            const [expAllOther, setExpAllOther] = useState(false);
-            const [expAllMarket, setExpAllMarket] = useState(false);
-            const [expAllFin, setExpAllFin] = useState(false);
-            const [expAllPreorder, setExpAllPreorder] = useState(false);
-            
-            const [expMoRev, setExpMoRev] = useState(false);
-            const [expMoMarket, setExpMoMarket] = useState(false);
-            const [expMoOther, setExpMoOther] = useState(false);
+      const closeOrderModal = () => {
+        setShowAddOrder(false);
+        setEditingOrderId(null);
+        setSelectedProductForOrder(null);
+        setNewOrder({ customer: '', style: '', size: '', quantity: 1 });
+      };
 
-            const changeMonth = (offset) => {
-                const parts = safeStr(reportMonth).split('-');
-                if(parts.length >= 2) {
-                    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1 + offset, 1);
-                    setReportMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-                }
-                setIsCheckingInventory(false);
-                setActualInv('');
-                setExpMoRev(false); setExpMoMarket(false); setExpMoOther(false);
+      const openOrderForm = (product) => {
+        setSelectedProductForOrder(product);
+        setNewOrder({ 
+          customer: '', 
+          style: product.styles && product.styles.length > 0 ? product.styles[0] : '', 
+          size: product.sizes && product.sizes.length > 0 ? product.sizes[0] : '', 
+          quantity: 1 
+        });
+        setEditingOrderId(null);
+        setShowAddOrder(true);
+      };
+
+      const editOrder = (order, product) => {
+        setSelectedProductForOrder(product);
+        setNewOrder({
+          customer: order.customer,
+          style: order.style || '',
+          size: order.size || '',
+          quantity: order.quantity
+        });
+        setEditingOrderId(order.id);
+        setShowAddOrder(true);
+      };
+
+      const handleSaveOrder = (e) => {
+        e.preventDefault();
+        
+        if (editingOrderId) {
+          setOrders(orders.map(o => o.id === editingOrderId ? {
+            ...o,
+            customer: newOrder.customer.trim(),
+            style: newOrder.style,
+            size: newOrder.size,
+            quantity: Number(newOrder.quantity)
+          } : o));
+        } else {
+          const order = {
+            id: `o${Date.now()}`, 
+            productId: selectedProductForOrder.id, 
+            customer: newOrder.customer.trim(),
+            style: newOrder.style, 
+            size: newOrder.size, 
+            quantity: Number(newOrder.quantity), 
+            status: 'pending_buy', 
+            date: new Date().toISOString().split('T')[0]
+          };
+          setOrders([order, ...orders]);
+        }
+        closeOrderModal();
+      };
+
+      const deleteOrder = (id) => {
+        if(window.confirm('確定刪除此客訂紀錄？')) setOrders(orders.filter(o => o.id !== id));
+      };
+
+      const advanceOrderStatus = (id, currentStatus) => {
+        const nextStatus = STATUSES[currentStatus.toUpperCase()].next;
+        if (nextStatus) {
+          setOrders(orders.map(o => o.id === id ? { ...o, status: nextStatus } : o));
+        }
+      };
+
+      const batchMarkAsOrdered = (productId, style, size) => {
+        setOrders(orders.map(o => {
+          if (o.status === 'pending_buy' && o.productId === productId && o.style === style && o.size === size) {
+            return { ...o, status: 'ordered' };
+          }
+          return o;
+        }));
+      };
+
+      // --- 衍生資料運算與排序 ---
+      const sortedProducts = useMemo(() => {
+        return [...products].sort((a, b) => {
+          return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+        });
+      }, [products]);
+
+      const allEnrichedOrders = useMemo(() => {
+        return orders.map(order => {
+          const product = products.find(p => p.id === order.productId) || { name: '已刪除商品', image: null, cost: 0, price: 0, styles: [], sizes: [] };
+          return { ...order, product };
+        }).sort((a, b) => b.id.localeCompare(a.id));
+      }, [orders, products]);
+
+      const enrichedOrders = useMemo(() => {
+        return allEnrichedOrders.filter(order => {
+          const matchTab = orderFilterStatus === 'all' || order.status === orderFilterStatus;
+          const matchSearch = order.customer.includes(orderSearch) || order.product.name.includes(orderSearch);
+          return matchTab && matchSearch;
+        });
+      }, [allEnrichedOrders, orderFilterStatus, orderSearch]);
+
+      const currentFilteredStats = useMemo(() => {
+        let totalCost = 0;
+        let totalPrice = 0;
+        let totalItems = 0;
+        enrichedOrders.forEach(order => {
+          totalCost += (order.product.cost * order.quantity);
+          totalPrice += (order.product.price * order.quantity);
+          totalItems += order.quantity;
+        });
+        return { totalCost, totalPrice, totalItems };
+      }, [enrichedOrders]);
+
+      const customerSummaries = useMemo(() => {
+        const grouped = {};
+        enrichedOrders.forEach(order => {
+          if (!grouped[order.customer]) {
+            grouped[order.customer] = {
+              customer: order.customer,
+              totalItems: 0,
+              unpaidTotal: 0,
+              completedItems: 0,
+              orders: []
             };
+          }
+          grouped[order.customer].orders.push(order);
+          grouped[order.customer].totalItems += order.quantity;
+          
+          if (order.status !== 'completed') {
+            grouped[order.customer].unpaidTotal += (order.product.price * order.quantity);
+          } else {
+            grouped[order.customer].completedItems += order.quantity;
+          }
+        });
+        return Object.values(grouped).sort((a, b) => b.unpaidTotal - a.unpaidTotal);
+      }, [enrichedOrders]);
 
-            const currentStartupCap = settings && settings.startupCapital !== undefined ? settings.startupCapital : 36284;
-
-            const handleCapitalChange = () => {
-                const newCapital = window.prompt("請輸入您的「初期創業本金」(系統會自動幫您推算口袋現金！)：", currentStartupCap);
-                if (newCapital && !isNaN(newCapital)) setSettings({ ...(settings || {}), startupCapital: Number(newCapital) });
+      // --- 🌟 新增：熱賣商品總表 (依商品群組化，算出單款銷售量) 🌟 ---
+      const productSummaries = useMemo(() => {
+        const grouped = {};
+        enrichedOrders.forEach(order => {
+          if (!grouped[order.productId]) {
+            grouped[order.productId] = {
+              product: order.product,
+              totalItems: 0,
+              totalRevenue: 0,
+              totalProfit: 0
             };
+          }
+          grouped[order.productId].totalItems += order.quantity;
+          grouped[order.productId].totalRevenue += (order.product.price * order.quantity);
+          grouped[order.productId].totalProfit += ((order.product.price - order.product.cost) * order.quantity);
+        });
+        
+        // 依照銷售總數排序 (越熱賣排越上面)
+        return Object.values(grouped).sort((a, b) => b.totalItems - a.totalItems);
+      }, [enrichedOrders]);
 
-            // ---- 1. 全期存摺加減法 ----
-            const allTimeMarketRev = marketSales.reduce((sum, m) => sum + (Number(m.revenue)||0), 0);
-            const allTimeStoreRev = deliveries.reduce((sum, d) => sum + (Number(d.revenue)||0), 0);
-            const allTimeStoreShipIn = deliveries.reduce((sum, d) => sum + (Number(d.shippingIncome)||0), 0);
-            const allTimeRev = allTimeMarketRev + allTimeStoreRev + allTimeStoreShipIn; // 現貨總收
-            
-            const allTimeMarketRent = marketSales.reduce((sum, m) => sum + (Number(m.rent)||0), 0);
-            const allTimeMarketMisc = marketSales.reduce((sum, m) => sum + (Number(m.electricity)||0) + (Number(m.cleaning)||0) + (Number(m.toll)||0) + (Number(m.parking)||0), 0);
-            const allTimeStoreShipOut = deliveries.reduce((sum, d) => sum + (Number(d.shippingExpense)||0), 0);
-            const allTimeMarketExp = allTimeMarketRent + allTimeMarketMisc + allTimeStoreShipOut;
-            
-            const allTimeWholeArrived = expenses.filter(e => e.type === 'wholesale' && e.isArrived !== false).reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const allTimeWholeTransit = expenses.filter(e => e.type === 'wholesale' && e.isArrived === false).reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const allTimeWholesale = allTimeWholeArrived + allTimeWholeTransit;
 
-            const allTimeSupply = expenses.filter(e => e.type === 'supply').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const allTimeFixed = expenses.filter(e => e.type === 'fixed').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const allTimeTraffic = expenses.filter(e => e.type === 'traffic').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const allTimeSalary = expenses.filter(e => e.type === 'salary').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const allTimeOtherExp = allTimeSupply + allTimeFixed + allTimeTraffic + allTimeSalary;
-
-            const allTimeFinancingIn = expenses.filter(e => e.type === 'financing' && e.flowType === 'in').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const allTimeFinancingOut = expenses.filter(e => e.type === 'financing' && e.flowType !== 'in').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-
-            // 代購金流計算
-            const allTimePreorderCost = preorders.filter(p => p.status !== 'pending').reduce((sum, p) => sum + (Number(p.wholesaleCost)||0), 0);
-            const allTimePreorderRev = preorders.filter(p => p.status === 'completed').reduce((sum, p) => sum + (Number(p.revenue)||0), 0);
-
-            const pocketCash = currentStartupCap 
-                + allTimeRev - allTimeMarketExp - allTimeWholesale - allTimeOtherExp 
-                + allTimeFinancingIn - allTimeFinancingOut
-                - allTimePreorderCost + allTimePreorderRev;
-
-            // ---- 2. 計算本月瀑布流損益 ----
-            const currentDeliveries = deliveries.filter(d => safeStr(d.date).startsWith(reportMonth) && d.status === 'shipped');
-            const currentMarket = marketSales.filter(m => safeStr(m.date).startsWith(reportMonth));
-            const currentExpenses = expenses.filter(e => safeStr(e.date).startsWith(reportMonth));
-            const currentCompletedPreorders = preorders.filter(p => safeStr(p.date).startsWith(reportMonth) && p.status === 'completed');
-
-            // 代購當月損益
-            const monthlyPreorderRev = currentCompletedPreorders.reduce((sum, p) => sum + (Number(p.revenue)||0), 0);
-            const monthlyPreorderCost = currentCompletedPreorders.reduce((sum, p) => sum + (Number(p.wholesaleCost)||0), 0);
-            const monthlyPreorderProfit = monthlyPreorderRev - monthlyPreorderCost;
-
-            const storeRevenue = currentDeliveries.reduce((sum, d) => sum + (Number(d.revenue) || 0), 0);
-            const marketRevenue = currentMarket.reduce((sum, m) => sum + (Number(m.revenue) || 0), 0);
-            const monthlyTotalRev = storeRevenue + marketRevenue;
-
-            const marketRent = currentMarket.reduce((sum, m) => sum + (Number(m.rent)||0), 0);
-            const marketElec = currentMarket.reduce((sum, m) => sum + (Number(m.electricity)||0), 0);
-            const marketClean = currentMarket.reduce((sum, m) => sum + (Number(m.cleaning)||0), 0);
-            const marketToll = currentMarket.reduce((sum, m) => sum + (Number(m.toll)||0), 0);
-            const marketParking = currentMarket.reduce((sum, m) => sum + (Number(m.parking)||0), 0);
-            const marketMiscOnly = marketElec + marketClean + marketToll + marketParking;
-            const marketMiscAndRent = marketRent + marketMiscOnly; 
-
-            const storeShippingNetExp = currentDeliveries.reduce((sum, d) => sum + (Number(d.shippingExpense)||0) - (Number(d.shippingIncome)||0), 0);
-            const monthlyMarketExp = marketMiscAndRent + (storeShippingNetExp > 0 ? storeShippingNetExp : 0);
-            const monthlyShippingProfit = storeShippingNetExp < 0 ? Math.abs(storeShippingNetExp) : 0; 
-            
-            const frontlineNetIncome = monthlyTotalRev - monthlyMarketExp + monthlyShippingProfit;
-
-            // ---- 3. 庫存與進貨成本 (僅現貨) ----
-            const wholesaleToMonth = expenses.filter(e => e.type === 'wholesale' && safeStr(e.date).substring(0, 7) <= reportMonth && e.isArrived !== false);
-            const accumulatedWholesaleCost = wholesaleToMonth.reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const accumulatedWholesaleQty = wholesaleToMonth.reduce((sum, e) => sum + (Number(e.qty)||0), 0);
-            const avgUnitCost = accumulatedWholesaleQty > 0 ? (accumulatedWholesaleCost / accumulatedWholesaleQty) : 0;
-
-            const storeSoldToMonth = deliveries.filter(d => d.status === 'shipped' && safeStr(d.date).substring(0, 7) <= reportMonth);
-            const accumulatedStoreSoldQty = storeSoldToMonth.reduce((sum, d) => sum + (Number(d.soldQty) || 1), 0);
-            
-            const marketSoldToMonth = marketSales.filter(m => safeStr(m.date).substring(0, 7) <= reportMonth);
-            const accumulatedMarketDailySoldQty = marketSoldToMonth.reduce((sum, m) => sum + (Number(m.soldQty) || 0), 0);
-
-            let pastAdjustments = 0;
-            Object.keys(marketSoldStats || {}).forEach(key => {
-                if (key < reportMonth) pastAdjustments += (Number(marketSoldStats[key])||0);
-            });
-            const currentMonthAdj = Number((marketSoldStats || {})[reportMonth]) || 0;
-
-            const accumulatedTotalSold = accumulatedStoreSoldQty + accumulatedMarketDailySoldQty + pastAdjustments + currentMonthAdj;
-            const currentInventoryQty = accumulatedWholesaleQty - accumulatedTotalSold;
-            const theoreticalInventory = accumulatedWholesaleQty - accumulatedStoreSoldQty - accumulatedMarketDailySoldQty - pastAdjustments;
-
-            const saveInventoryCheck = () => {
-                const actual = Number(actualInv) || 0;
-                const diff = theoreticalInventory - actual; 
-                setMarketSoldStats({ ...(marketSoldStats || {}), [reportMonth]: diff });
-                setIsCheckingInventory(false);
-                setActualInv('');
+      const purchasingList = useMemo(() => {
+        const pending = orders.filter(o => o.status === 'pending_buy');
+        const grouped = {};
+        
+        pending.forEach(order => {
+          const product = products.find(p => p.id === order.productId) || { name: '已刪除商品', image: null, cost: 0 };
+          const key = `${order.productId}_${order.style}_${order.size}`;
+          
+          if (!grouped[key]) {
+            grouped[key] = {
+              productId: order.productId, productName: product.name, image: product.image, cost: product.cost,
+              style: order.style, size: order.size, totalQuantity: 0, customers: []
             };
+          }
+          grouped[key].totalQuantity += order.quantity;
+          grouped[key].itemSubtotal = grouped[key].totalQuantity * product.cost;
+          grouped[key].customers.push({ name: order.customer, qty: order.quantity });
+        });
+        
+        return Object.values(grouped).sort((a, b) => {
+          return a.productName.localeCompare(b.productName, undefined, { numeric: true, sensitivity: 'base' });
+        });
+      }, [orders, products]);
 
-            const currentMonthStoreSold = currentDeliveries.reduce((sum, d) => sum + (Number(d.soldQty) || 1), 0);
-            const currentMonthMarketDailySold = currentMarket.reduce((sum, m) => sum + (Number(m.soldQty) || 0), 0);
-            const currentMonthTotalSoldQty = currentMonthStoreSold + currentMonthMarketDailySold + currentMonthAdj;
+      const stats = useMemo(() => {
+        let expectedProfit = 0;
+        let totalUnpaid = 0;
+        let pendingCost = 0; 
+        
+        orders.forEach(order => {
+          const product = products.find(p => p.id === order.productId);
+          if (product) {
+            if (order.status !== 'completed') totalUnpaid += (product.price * order.quantity);
+            if (order.status === 'pending_buy') pendingCost += (product.cost * order.quantity);
+            expectedProfit += ((product.price - product.cost) * order.quantity);
+          }
+        });
+        return { expectedProfit, totalUnpaid, pendingCost, pendingCount: purchasingList.length };
+      }, [orders, products, purchasingList]);
+
+      // --- 渲染共用彈窗 ---
+      const renderCustomerModal = () => {
+        if (!viewCustomer) return null;
+        const customerOrders = allEnrichedOrders.filter(o => o.customer === viewCustomer);
+        const unpaidTotal = customerOrders.reduce((sum, o) => o.status !== 'completed' ? sum + (o.product.price * o.quantity) : sum, 0);
+
+        return (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center animate-fade-in-bg">
+            <div className="bg-white w-full rounded-t-2xl shadow-xl overflow-hidden max-h-[85vh] flex flex-col animate-fade-in">
+              <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-blue-50/50 sticky top-0 z-10">
+                <div>
+                  <h3 className="font-extrabold text-xl flex items-center gap-2">
+                    <Icon name="user" className="text-blue-600"/> {viewCustomer} <span className="text-sm font-normal text-slate-500">的清單</span>
+                  </h3>
+                  <div className="text-xs font-bold text-red-500 mt-1">未結清總額: ${unpaidTotal.toLocaleString()}</div>
+                </div>
+                <button onClick={() => setViewCustomer(null)} className="w-8 h-8 bg-slate-200 rounded-full text-slate-600 flex items-center justify-center hover:bg-slate-300"><Icon name="xmark" /></button>
+              </div>
+              <div className="overflow-y-auto p-4 space-y-3 bg-slate-50 pb-10">
+                {customerOrders.length === 0 && <div className="text-center text-slate-400 py-4">無資料</div>}
+                {customerOrders.map(order => {
+                  const statusConfig = STATUSES[order.status.toUpperCase()];
+                  return (
+                    <div key={order.id} className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex gap-3">
+                      {order.product.image ? (
+                        <img src={order.product.image} className="w-16 h-16 rounded-lg object-cover shrink-0" alt="img" />
+                      ) : (
+                        <div className="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center shrink-0"><Icon name="box" className="text-slate-300"/></div>
+                      )}
+                      <div className="flex-1 min-w-0 flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between">
+                            <h4 className="font-bold text-slate-800 text-sm truncate">{order.product.name}</h4>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${statusConfig.color}`}>{statusConfig.label}</span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 mt-0.5">
+                            {order.style && <span className="mr-2">款: {order.style}</span>}
+                            {order.size && <span>碼: {order.size}</span>}
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-end mt-2">
+                          <div className="text-sm font-medium text-slate-600">
+                            ${order.product.price} × {order.quantity} 件 = <span className="font-black text-slate-800 text-base">${order.product.price * order.quantity}</span>
+                          </div>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            {statusConfig.next && (
+                              <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-md active:bg-slate-700 shadow-sm">
+                                {statusConfig.actionLabel}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const renderProductModal = () => {
+        if (!viewProductInfo) return null;
+        const productOrders = allEnrichedOrders.filter(o => o.productId === viewProductInfo.id);
+        const totalOrdered = productOrders.reduce((sum, o) => sum + o.quantity, 0);
+
+        return (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center animate-fade-in-bg">
+            <div className="bg-white w-full rounded-t-2xl shadow-xl overflow-hidden max-h-[85vh] flex flex-col animate-fade-in">
+              <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
+                <div className="flex items-center gap-3">
+                  {viewProductInfo.image && <img src={viewProductInfo.image} className="w-10 h-10 rounded object-cover" />}
+                  <div>
+                    <h3 className="font-extrabold text-lg text-slate-800 line-clamp-1">{viewProductInfo.name}</h3>
+                    <div className="text-xs font-bold text-slate-500">總接單數: {totalOrdered} 件</div>
+                  </div>
+                </div>
+                <button onClick={() => setViewProductInfo(null)} className="w-8 h-8 bg-slate-200 rounded-full text-slate-600 flex items-center justify-center shrink-0"><Icon name="xmark" /></button>
+              </div>
+              <div className="overflow-y-auto p-4 space-y-3 bg-slate-50 pb-10">
+                {productOrders.length === 0 && <div className="text-center text-slate-400 py-4">尚無人訂購</div>}
+                {productOrders.map(order => {
+                  const statusConfig = STATUSES[order.status.toUpperCase()];
+                  return (
+                    <div key={order.id} className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-blue-700 text-sm mb-0.5 cursor-pointer" onClick={() => { setViewProductInfo(null); setViewCustomer(order.customer); }}>
+                          {order.customer}
+                        </div>
+                        <div className="text-[11px] text-slate-500 flex flex-wrap gap-1">
+                          {order.style && <span className="bg-slate-100 px-1.5 py-0.5 rounded">款: {order.style}</span>}
+                          {order.size && <span className="bg-slate-100 px-1.5 py-0.5 rounded">碼: {order.size}</span>}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1.5 shrink-0">
+                        <div className="font-black text-slate-800">{order.quantity} 件</div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusConfig.color}`}>{statusConfig.label}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      return (
+        <div className="min-h-screen pb-24 relative">
+          <header className="bg-white shadow-sm sticky top-0 z-30 border-b border-slate-200">
+            <div className="max-w-5xl mx-auto px-4 h-16 flex justify-between items-center">
+              <h1 className="text-xl font-extrabold text-slate-800 flex items-center gap-2 tracking-wide">
+                <Icon name="store" className="text-blue-600" />
+                代購旗艦系統
+              </h1>
+              {activeTab !== 'settings' && (
+                <div className="text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                  <Icon name="chart-line" /> 利潤 ${stats.expectedProfit.toLocaleString()}
+                </div>
+              )}
+            </div>
+          </header>
+
+          <main className="max-w-5xl mx-auto p-4">
             
-            const monthlyCOGS = Math.round(currentMonthTotalSoldQty * avgUnitCost);
-            const grossProfit = frontlineNetIncome - monthlyCOGS + monthlyPreorderProfit; // 加上代購利潤
+            {/* ==================== 分頁 1: 商品庫 ==================== */}
+            {activeTab === 'products' && (
+              <div className="animate-fade-in">
+                <div className="flex justify-between items-end mb-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-800">商品庫</h2>
+                    <p className="text-xs text-emerald-600 font-bold"><Icon name="check" /> 已依品名排序</p>
+                  </div>
+                  <button onClick={() => setShowAddProduct(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm flex items-center gap-1 active:scale-95 transition-transform">
+                    <Icon name="plus" /> 新增
+                  </button>
+                </div>
 
-            const monthlySupplyExp = currentExpenses.filter(e => e.type === 'supply').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const monthlyFixedExp = currentExpenses.filter(e => e.type === 'fixed').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const monthlyTrafficExp = currentExpenses.filter(e => e.type === 'traffic').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const monthlySalary = currentExpenses.filter(e => e.type === 'salary').reduce((sum, e) => sum + (Number(e.amount)||0), 0);
-            const monthlyOtherTotal = monthlySupplyExp + monthlyFixedExp + monthlyTrafficExp;
-            
-            const monthlyNetProfit = grossProfit - monthlyOtherTotal - monthlySalary;
+                {showAddProduct && (
+                  <div className="bg-white p-5 rounded-2xl shadow-lg border border-slate-200 mb-6 relative z-10">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-bold text-lg">{editingProductId ? '編輯商品檔案' : '新增商品檔案'}</h3>
+                      <button onClick={closeProductModal} className="p-2 bg-slate-100 rounded-full text-slate-500 flex items-center justify-center"><Icon name="xmark" /></button>
+                    </div>
+                    <form onSubmit={handleSaveProduct} className="space-y-4">
+                      <div className="flex flex-col gap-4">
+                        <div className="w-full">
+                          {!newProduct.image ? (
+                            <div onClick={() => fileInputRef.current?.click()} className="w-full aspect-video border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-500 bg-slate-50">
+                              <Icon name="camera" size={32} className="mb-2 text-slate-400" />
+                              <span className="text-sm font-medium">拍攝或上傳商品圖</span>
+                            </div>
+                          ) : (
+                            <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center">
+                              <img src={newProduct.image} className="w-full h-full object-contain" alt="preview" />
+                              <button type="button" onClick={() => setNewProduct({...newProduct, image: null})} className="absolute top-2 right-2 bg-white/90 text-red-500 p-2 rounded-full"><Icon name="trash-can" size={14}/></button>
+                            </div>
+                          )}
+                          <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageChange} />
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">品名 / 編號 <span className="text-red-500">*</span></label>
+                            <input required type="text" value={newProduct.name} onChange={e=>setNewProduct({...newProduct, name: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="例如：33208 或 連身裙" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 mb-1">成本價 <span className="text-red-500">*</span></label>
+                              <input required type="number" min="0" value={newProduct.cost} onChange={e=>setNewProduct({...newProduct, cost: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" placeholder="$0" />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 mb-1">售價 <span className="text-red-500">*</span></label>
+                              <input required type="number" min="0" value={newProduct.price} onChange={e=>setNewProduct({...newProduct, price: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" placeholder="$0" />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-3 pt-2">
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 mb-1">款式 (用 / 分隔)</label>
+                              <input type="text" value={newProduct.styles} onChange={e=>setNewProduct({...newProduct, styles: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="黑/藍/白" />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-bold text-slate-700 mb-1">尺碼 (用 / 分隔)</label>
+                              <input type="text" value={newProduct.sizes} onChange={e=>setNewProduct({...newProduct, sizes: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="點選下方快捷鍵" />
+                            </div>
+                          </div>
 
-            const viewParts = safeStr(reportMonth).split('-');
-            const storeGifts = currentDeliveries.reduce((sum, d) => sum + (Number(d.giftCount) || 0), 0);
-            const marketGifts = currentMarket.reduce((sum, m) => sum + (Number(m.giftCount) || 0), 0);
+                          <div className="flex gap-2 justify-end">
+                            <span className="text-[10px] text-slate-400 self-center mr-1">快捷鍵:</span>
+                            <button type="button" onClick={() => setNewProduct({...newProduct, sizes: '小/中/大'})} className="px-2.5 py-1 text-xs font-bold bg-blue-50 text-blue-600 rounded border border-blue-100 active:bg-blue-100">小/中/大</button>
+                            <button type="button" onClick={() => setNewProduct({...newProduct, sizes: '小/大'})} className="px-2.5 py-1 text-xs font-bold bg-blue-50 text-blue-600 rounded border border-blue-100 active:bg-blue-100">小/大</button>
+                            <button type="button" onClick={() => setNewProduct({...newProduct, sizes: 'F'})} className="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-600 rounded border border-slate-200 active:bg-slate-200">單一</button>
+                          </div>
+                        </div>
+                      </div>
+                      <button type="submit" className="w-full bg-slate-800 text-white py-3.5 rounded-xl font-bold mt-2 active:bg-slate-700 transition">
+                        {editingProductId ? '儲存編輯內容' : '儲存商品建檔'}
+                      </button>
+                    </form>
+                  </div>
+                )}
 
-            return (
-                <div className="animate-fade-in pb-20">
-                    <div className="flex justify-between items-center bg-white rounded-2xl p-3 shadow-sm border border-[#f2e7df] mb-4">
-                        <button onClick={() => changeMonth(-1)} className="p-2 text-[#a89689]"><Icon name="chevron_left" /></button>
-                        <div className="font-bold text-[#7a6453] text-lg">{viewParts[0]||''}年 {parseInt(viewParts[1]||1, 10)}月</div>
-                        <button onClick={() => changeMonth(1)} className="p-2 text-[#a89689]"><Icon name="chevron_right" /></button>
+                {sortedProducts.length === 0 ? (
+                   <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
+                    <Icon name="box-open" size={48} className="text-slate-300 mb-3" />
+                    <p className="text-slate-500 font-medium">還沒有商品，點擊右上方開始建檔！</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    {sortedProducts.map(product => (
+                      <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col relative">
+                        <div 
+                          className="aspect-square bg-slate-50 relative active:opacity-80 transition"
+                          onClick={() => setViewProductInfo(product)}
+                        >
+                          {product.image ? (
+                            <img src={product.image} className="w-full h-full object-cover" alt={product.name} />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-300"><Icon name="box" size={40}/></div>
+                          )}
+                          <div className="absolute inset-0 bg-black/0 hover:bg-black/5 transition flex items-center justify-center"></div>
+                        </div>
+                        
+                        <div className="absolute top-2 right-2 flex flex-col gap-2 z-10">
+                          <button onClick={(e)=> { e.stopPropagation(); editProduct(product); }} className="bg-white/90 w-8 h-8 rounded-full text-slate-500 active:text-blue-600 flex items-center justify-center shadow-sm">
+                            <Icon name="pen" size={12}/>
+                          </button>
+                          <button onClick={(e)=> { e.stopPropagation(); deleteProduct(product.id); }} className="bg-white/90 w-8 h-8 rounded-full text-slate-400 active:text-red-500 flex items-center justify-center shadow-sm">
+                            <Icon name="trash-can" size={12}/>
+                          </button>
+                        </div>
+                        
+                        <div className="p-3 flex-1 flex flex-col">
+                          <h3 
+                            className="font-bold text-slate-800 text-sm mb-1 line-clamp-1 active:text-blue-600 transition"
+                            onClick={() => setViewProductInfo(product)}
+                          >
+                            {product.name}
+                          </h3>
+                          <div className="flex justify-between text-[11px] text-slate-500 mb-2.5">
+                            <span>本:${product.cost}</span>
+                            <span className="font-bold text-slate-800">賣:${product.price}</span>
+                          </div>
+                          <div className="mt-auto">
+                            <button onClick={() => openOrderForm(product)} className="w-full bg-blue-50 text-blue-700 active:bg-blue-600 active:text-white py-2 rounded-lg text-sm font-bold flex justify-center items-center gap-1 transition-colors">
+                              <Icon name="plus" size={12}/> 接單
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 接單 / 編輯訂單 Modal */}
+            {showAddOrder && selectedProductForOrder && (
+              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center animate-fade-in">
+                <div className="bg-white rounded-t-2xl shadow-xl w-full overflow-hidden max-h-[90vh] overflow-y-auto pb-safe">
+                  <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
+                    <h3 className="font-bold text-lg flex items-center gap-2">
+                      <Icon name="clipboard-list" className="text-blue-600"/> 
+                      {editingOrderId ? '編輯客訂紀錄' : '新增客訂紀錄'}
+                    </h3>
+                    <button onClick={closeOrderModal} className="w-8 h-8 bg-slate-200 rounded-full text-slate-600 flex items-center justify-center"><Icon name="xmark" size={14}/></button>
+                  </div>
+                  
+                  <div className="p-5">
+                    <div className="flex gap-3 mb-5 p-3 border border-blue-100 bg-blue-50/50 rounded-xl">
+                      {selectedProductForOrder.image ? 
+                        <img src={selectedProductForOrder.image} className="w-16 h-16 rounded-lg object-cover" alt="img"/> : 
+                        <div className="w-16 h-16 rounded-lg bg-white flex items-center justify-center text-slate-300"><Icon name="box" size={24}/></div>
+                      }
+                      <div>
+                        <div className="font-bold text-slate-800">{selectedProductForOrder.name}</div>
+                        <div className="text-sm text-slate-500">售價: ${selectedProductForOrder.price} / 利潤: ${(selectedProductForOrder.price - selectedProductForOrder.cost)}</div>
+                      </div>
                     </div>
 
-                    {/* 🎯 極簡口袋現金存摺 */}
-                    <Card className="bg-[#fffde7] border-[#fff59d] mb-4 shadow-md">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center text-[#f57f17] font-bold text-lg">
-                                <Icon name="account_balance_wallet" className="mr-2" /> 我的口袋現金
-                            </div>
-                            <button onClick={handleCapitalChange} className="text-[10px] bg-white border border-[#ffe082] text-[#f57f17] px-2 py-1 rounded-lg shadow-sm flex items-center">
-                                <Icon name="edit" className="text-[12px] mr-1"/> 設本金
-                            </button>
+                    <form onSubmit={handleSaveOrder} className="space-y-4">
+                      <datalist id="customer-names">
+                        {uniqueCustomers.map(c => <option key={c} value={c} />)}
+                      </datalist>
+
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">客人姓名/暱稱 <span className="text-red-500">*</span></label>
+                        <div className="relative">
+                          <div className="absolute left-3 top-3 text-slate-400"><Icon name="user" size={14} /></div>
+                          <input 
+                            required 
+                            list="customer-names"
+                            type="text" 
+                            value={newOrder.customer} 
+                            onChange={e=>setNewOrder({...newOrder, customer: e.target.value})} 
+                            className="w-full p-3 pl-9 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500" 
+                            placeholder="例如：其、陳小姐 (點擊可選舊客人)" 
+                          />
                         </div>
-                        
-                        <div className="text-center py-2 mb-3">
-                            <div className="text-xs text-[#a89689] font-bold mb-1">目前手邊實際剩餘現金</div>
-                            <div className={`text-5xl font-black tracking-tight ${pocketCash < 0 ? 'text-red-500' : 'text-[#4caf50]'}`}>
-                                ${pocketCash.toLocaleString()}
-                            </div>
-                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        {selectedProductForOrder.styles && selectedProductForOrder.styles.length > 0 && (
+                          <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">選擇款式</label>
+                            <select value={newOrder.style} onChange={e=>setNewOrder({...newOrder, style: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none">
+                              {selectedProductForOrder.styles.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                          </div>
+                        )}
+                        {selectedProductForOrder.sizes && selectedProductForOrder.sizes.length > 0 && (
+                          <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">選擇尺碼</label>
+                            <select value={newOrder.size} onChange={e=>setNewOrder({...newOrder, size: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none">
+                              {selectedProductForOrder.sizes.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                          </div>
+                        )}
+                      </div>
 
-                        {/* 直白存摺明細 */}
-                        <div className="bg-white bg-opacity-60 rounded-xl p-3 text-sm text-[#7a6453] font-bold border border-[#fff59d]">
-                            <div className="flex justify-between items-center text-[11px] text-[#c4b5aa] mb-2"><span>=== 資金流向明細 ===</span><span>(歷史總累計)</span></div>
-                            
-                            <div className="flex justify-between items-center mb-1.5">
-                                <span className="flex items-center text-[#4caf50]"><Icon name="add" className="text-[16px] mr-1"/> 創業初始本金</span>
-                                <span>$ {currentStartupCap.toLocaleString()}</span>
-                            </div>
-                            
-                            {/* 資金週轉折疊 */}
-                            <div className="flex justify-between items-center cursor-pointer mb-1.5" onClick={() => setExpAllFin(!expAllFin)}>
-                                <span className="flex items-center text-[#5c4d43]">
-                                    <Icon name="swap_horiz" className="text-[16px] mr-1"/> 資金週轉 (借貸/還款)
-                                    <Icon name={expAllFin ? "expand_less" : "expand_more"} className="text-[14px] ml-0.5 opacity-60"/>
-                                </span>
-                                <span className={`${(allTimeFinancingIn - allTimeFinancingOut) >= 0 ? 'text-[#4caf50]' : 'text-[#e57373]'}`}>
-                                    {(allTimeFinancingIn - allTimeFinancingOut) > 0 ? '+' : ''}$ {(allTimeFinancingIn - allTimeFinancingOut).toLocaleString()}
-                                </span>
-                            </div>
-                            {expAllFin && (
-                                <div className="pl-6 pr-2 py-1 mb-2 space-y-1 bg-[#fafafa] rounded text-[11px] text-[#a89689] animate-expand">
-                                    <div className="flex justify-between"><span>└ 借入週轉金總額</span><span className="text-[#4caf50]">+$ {allTimeFinancingIn.toLocaleString()}</span></div>
-                                    <div className="flex justify-between"><span>└ 償還借款總額</span><span className="text-[#e57373]">-$ {allTimeFinancingOut.toLocaleString()}</span></div>
-                                </div>
-                            )}
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-1">訂購數量 <span className="text-red-500">*</span></label>
+                        <input required type="number" min="1" value={newOrder.quantity} onChange={e=>setNewOrder({...newOrder, quantity: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none" />
+                      </div>
 
-                            {/* 預購代購金流折疊 */}
-                            <div className="flex justify-between items-center cursor-pointer mb-1.5 border-l-2 border-[#5c6bc0] pl-1.5" onClick={() => setExpAllPreorder(!expAllPreorder)}>
-                                <span className="flex items-center text-[#5c6bc0]">
-                                    <Icon name="local_shipping" className="text-[16px] mr-1"/> 預購/代購資金
-                                    <Icon name={expAllPreorder ? "expand_less" : "expand_more"} className="text-[14px] ml-0.5 opacity-60"/>
-                                </span>
-                                <span className={`${(allTimePreorderRev - allTimePreorderCost) >= 0 ? 'text-[#4caf50]' : 'text-[#e57373]'}`}>
-                                    {(allTimePreorderRev - allTimePreorderCost) > 0 ? '+' : ''}$ {(allTimePreorderRev - allTimePreorderCost).toLocaleString()}
-                                </span>
-                            </div>
-                            {expAllPreorder && (
-                                <div className="pl-6 pr-2 py-1 mb-2 space-y-1 bg-[#f5f6fa] rounded text-[11px] text-[#7986cb] animate-expand">
-                                    <div className="flex justify-between"><span>└ 代購總收回營收 (已出貨)</span><span className="text-[#4caf50]">+$ {allTimePreorderRev.toLocaleString()}</span></div>
-                                    <div className="flex justify-between"><span>└ 代購總支出批價 (已叫貨含以上)</span><span className="text-[#e57373]">-$ {allTimePreorderCost.toLocaleString()}</span></div>
-                                </div>
-                            )}
-
-                            {/* 賣衣總收折疊 */}
-                            <div className="flex justify-between items-center cursor-pointer mb-1.5" onClick={() => setExpAllRev(!expAllRev)}>
-                                <span className="flex items-center text-[#4caf50]">
-                                    <Icon name="add" className="text-[16px] mr-1"/> 現貨總收現金
-                                    <Icon name={expAllRev ? "expand_less" : "expand_more"} className="text-[14px] ml-0.5 opacity-60"/>
-                                </span>
-                                <span>$ {allTimeRev.toLocaleString()}</span>
-                            </div>
-                            {expAllRev && (
-                                <div className="pl-6 pr-2 py-1 mb-2 space-y-1 bg-[#fafafa] rounded text-[11px] text-[#a89689] animate-expand">
-                                    {allTimeMarketRev > 0 && <div className="flex justify-between"><span>└ 市場累積業績</span><span>${allTimeMarketRev.toLocaleString()}</span></div>}
-                                    {allTimeStoreRev > 0 && <div className="flex justify-between"><span>└ 超商累積業績</span><span>${allTimeStoreRev.toLocaleString()}</span></div>}
-                                    {allTimeStoreShipIn > 0 && <div className="flex justify-between"><span>└ 超商運費代收</span><span>${allTimeStoreShipIn.toLocaleString()}</span></div>}
-                                </div>
-                            )}
-
-                            {/* 買衣服進貨折疊 */}
-                            <div className="flex justify-between items-center text-[#e57373] cursor-pointer mb-1.5" onClick={() => setExpAllWhole(!expAllWhole)}>
-                                <span className="flex items-center"><Icon name="remove" className="text-[16px] mr-1"/> 現貨進貨花費<Icon name={expAllWhole ? "expand_less" : "expand_more"} className="text-[14px] ml-0.5 opacity-60"/></span>
-                                <span>-$ {allTimeWholesale.toLocaleString()}</span>
-                            </div>
-                            {expAllWhole && (
-                                <div className="pl-6 pr-2 py-1 mb-2 space-y-1 bg-[#fafafa] rounded text-[11px] text-[#a89689] animate-expand">
-                                    {allTimeWholeArrived > 0 && <div className="flex justify-between"><span>└ 已到貨付款</span><span>-${allTimeWholeArrived.toLocaleString()}</span></div>}
-                                    {allTimeWholeTransit > 0 && <div className="flex justify-between"><span>└ 在途預付款</span><span>-${allTimeWholeTransit.toLocaleString()}</span></div>}
-                                </div>
-                            )}
-
-                            {/* 包材水電折疊 */}
-                            <div className="flex justify-between items-center text-[#e57373] cursor-pointer mb-1.5" onClick={() => setExpAllOther(!expAllOther)}>
-                                <span className="flex items-center"><Icon name="remove" className="text-[16px] mr-1"/> 公司後勤開銷<Icon name={expAllOther ? "expand_less" : "expand_more"} className="text-[14px] ml-0.5 opacity-60"/></span>
-                                <span>-$ {allTimeOtherExp.toLocaleString()}</span>
-                            </div>
-                            {expAllOther && (
-                                <div className="pl-6 pr-2 py-1 mb-2 space-y-1 bg-[#fafafa] rounded text-[11px] text-[#a89689] animate-expand">
-                                    {allTimeSupply > 0 && <div className="flex justify-between"><span>└ 生財包材雜支</span><span>-${allTimeSupply.toLocaleString()}</span></div>}
-                                    {allTimeFixed > 0 && <div className="flex justify-between"><span>└ 倉租與水電</span><span>-${allTimeFixed.toLocaleString()}</span></div>}
-                                    {allTimeTraffic > 0 && <div className="flex justify-between"><span>└ 交通與油資</span><span>-${allTimeTraffic.toLocaleString()}</span></div>}
-                                    {allTimeSalary > 0 && <div className="flex justify-between"><span>└ 老闆支薪</span><span>-${allTimeSalary.toLocaleString()}</span></div>}
-                                </div>
-                            )}
-
-                            {/* 擺攤租金折疊 */}
-                            <div className="flex justify-between items-center text-[#e57373] cursor-pointer" onClick={() => setExpAllMarket(!expAllMarket)}>
-                                <span className="flex items-center"><Icon name="remove" className="text-[16px] mr-1"/> 擺攤租金與運費<Icon name={expAllMarket ? "expand_less" : "expand_more"} className="text-[14px] ml-0.5 opacity-60"/></span>
-                                <span>-$ {allTimeMarketExp.toLocaleString()}</span>
-                            </div>
-                            {expAllMarket && (
-                                <div className="pl-6 pr-2 py-1 mt-1 space-y-1 bg-[#fafafa] rounded text-[11px] text-[#a89689] animate-expand">
-                                    {allTimeMarketRent > 0 && <div className="flex justify-between"><span>└ 市場攤位租金</span><span>-${allTimeMarketRent.toLocaleString()}</span></div>}
-                                    {allTimeMarketMisc > 0 && <div className="flex justify-between"><span>└ 市場雜支(電/清/停)</span><span>-${allTimeMarketMisc.toLocaleString()}</span></div>}
-                                    {allTimeStoreShipOut > 0 && <div className="flex justify-between"><span>└ 超商運費支出</span><span>-${allTimeStoreShipOut.toLocaleString()}</span></div>}
-                                </div>
-                            )}
-                        </div>
-                    </Card>
-
-                    {/* 📊 瀑布流損益表 */}
-                    <Card>
-                        <div className="flex items-center font-bold text-[#7a6453] text-lg mb-4 pb-2 border-b border-[#f2e7df]">
-                            <Icon name="request_quote" className="mr-2 text-[#e57373]" /> 本月損益表 <span className="text-xs text-[#a89689] font-normal ml-2">(真實賺賠)</span>
-                        </div>
-                        
-                        <div className="space-y-3 text-sm font-bold text-[#5c4d43]">
-                            
-                            <div className="flex justify-between text-base cursor-pointer" onClick={() => setExpMoRev(!expMoRev)}>
-                                <span className="flex items-center">現貨總營業額<Icon name={expMoRev ? "expand_less" : "expand_more"} className="text-[16px] ml-1 text-[#c4b5aa]"/></span>
-                                <span className="text-[#bc9f8b]">${monthlyTotalRev.toLocaleString()}</span>
-                            </div>
-                            {expMoRev && (
-                                <div className="pl-4 pr-2 py-1 -mt-1 mb-1 space-y-1 bg-[#fafafa] border border-[#f0e6e0] rounded text-[11px] text-[#a89689] animate-expand">
-                                    <div className="flex justify-between"><span>└ 市場業績</span><span>${marketRevenue.toLocaleString()}</span></div>
-                                    <div className="flex justify-between"><span>└ 超商業績</span><span>${storeRevenue.toLocaleString()}</span></div>
-                                </div>
-                            )}
-                            
-                            <div className="flex justify-between items-center text-[#e57373] cursor-pointer" onClick={() => setExpMoMarket(!expMoMarket)}>
-                                <span className="flex items-center"><Icon name="remove" className="text-[14px] mr-1"/> 扣：擺攤租金與雜支<Icon name={expMoMarket ? "expand_less" : "expand_more"} className="text-[16px] ml-1 text-[#c4b5aa]"/></span>
-                                <span>-${marketMiscAndRent.toLocaleString()}</span>
-                            </div>
-                            {expMoMarket && (
-                                <div className="pl-6 pr-2 py-1 -mt-1 mb-1 space-y-1 bg-[#fafafa] border border-[#f0e6e0] rounded text-[11px] text-[#a89689] animate-expand">
-                                    {marketRent > 0 && <div className="flex justify-between"><span>└ 攤位租金</span><span>-${marketRent.toLocaleString()}</span></div>}
-                                    {marketElec > 0 && <div className="flex justify-between"><span>└ 電費</span><span>-${marketElec.toLocaleString()}</span></div>}
-                                    {marketClean > 0 && <div className="flex justify-between"><span>└ 清潔費</span><span>-${marketClean.toLocaleString()}</span></div>}
-                                    {marketToll > 0 && <div className="flex justify-between"><span>└ 過路費</span><span>-${marketToll.toLocaleString()}</span></div>}
-                                    {marketParking > 0 && <div className="flex justify-between"><span>└ 停車費</span><span>-${marketParking.toLocaleString()}</span></div>}
-                                </div>
-                            )}
-                            
-                            <div className="flex justify-between items-center text-[#e57373]">
-                                <span className="flex items-center"><Icon name="remove" className="text-[14px] mr-1"/> 扣：超商實際倒貼運費</span>
-                                <span>-${(storeShippingNetExp > 0 ? storeShippingNetExp : 0).toLocaleString()}</span>
-                            </div>
-                            {monthlyShippingProfit > 0 && (
-                                <div className="flex justify-between items-center text-[#4caf50]">
-                                    <span className="flex items-center"><Icon name="add" className="text-[14px] mr-1"/> 加：超商運費多收</span>
-                                    <span>+${monthlyShippingProfit.toLocaleString()}</span>
-                                </div>
-                            )}
-
-                            {/* 第一階段結論 */}
-                            <div className="bg-[#fdfaf7] p-2 rounded-lg flex justify-between text-base border border-[#f2e7df]">
-                                <span className="text-[#7a6453]">💰 現貨前端淨收</span><span className="text-[#bc9f8b]">${frontlineNetIncome.toLocaleString()}</span>
-                            </div>
-
-                            <div className="h-1"></div>
-
-                            <div className="flex justify-between items-center text-[#e57373]">
-                                <span className="flex items-center">
-                                    <Icon name="remove" className="text-[14px] mr-1"/> 扣：現貨賣出平均成本
-                                </span>
-                                <span>-${monthlyCOGS.toLocaleString()}</span>
-                            </div>
-                            <div className="pl-6 text-[10px] text-[#a89689] font-normal -mt-2 mb-1">
-                                ( 本月共銷出現貨 {currentMonthTotalSoldQty} 件 )
-                            </div>
-
-                            {/* 代購利潤獨立區塊 */}
-                            <div className="flex justify-between items-center text-[#5c6bc0] mt-3 pt-3 border-t border-dashed border-[#e8eaf6]">
-                                <span className="flex items-center">
-                                    <Icon name="add" className="text-[14px] mr-1"/> 加：代購 / 預購淨利
-                                </span>
-                                <span>+${monthlyPreorderProfit.toLocaleString()}</span>
-                            </div>
-                            <div className="pl-6 text-[10px] text-[#7986cb] font-normal -mt-1 mb-1">
-                                ( 總營收 ${monthlyPreorderRev} - 總批價 ${monthlyPreorderCost} )
-                            </div>
-
-                            {/* 第二階段結論 */}
-                            <div className="bg-[#e8f5e9] bg-opacity-40 p-2 rounded-lg flex justify-between text-base border border-[#c8e6c9] mt-2">
-                                <span className="text-[#4caf50]">💎 總營業毛利</span><span className="text-[#4caf50]">${grossProfit.toLocaleString()}</span>
-                            </div>
-
-                            <div className="h-2"></div>
-
-                            <div className="flex justify-between items-center text-[#e57373] cursor-pointer" onClick={() => setExpMoOther(!expMoOther)}>
-                                <span className="flex items-center"><Icon name="remove" className="text-[14px] mr-1"/> 扣：後勤開銷 (包材/水電/交通)<Icon name={expMoOther ? "expand_less" : "expand_more"} className="text-[16px] ml-1 text-[#c4b5aa]"/></span>
-                                <span>-${monthlyOtherTotal.toLocaleString()}</span>
-                            </div>
-                            {expMoOther && (
-                                <div className="pl-6 pr-2 py-1 -mt-1 mb-1 space-y-1 bg-[#fafafa] border border-[#f0e6e0] rounded text-[11px] text-[#a89689] animate-expand">
-                                    {monthlySupplyExp > 0 && <div className="flex justify-between"><span>└ 生財包材雜支</span><span>-${monthlySupplyExp.toLocaleString()}</span></div>}
-                                    {monthlyFixedExp > 0 && <div className="flex justify-between"><span>└ 倉租與水電</span><span>-${monthlyFixedExp.toLocaleString()}</span></div>}
-                                    {monthlyTrafficExp > 0 && <div className="flex justify-between"><span>└ 交通與油資</span><span>-${monthlyTrafficExp.toLocaleString()}</span></div>}
-                                </div>
-                            )}
-
-                            <div className="flex justify-between items-center text-[#fbc02d]">
-                                <span className="flex items-center"><Icon name="remove" className="text-[14px] mr-1"/> 扣：發老闆薪水</span>
-                                <span>-${monthlySalary.toLocaleString()}</span>
-                            </div>
-
-                            <div className="border-t-2 border-[#bc9f8b] pt-3 mt-4"></div>
-
-                            {/* 最終淨利 */}
-                            <div className="flex justify-between items-end mt-1">
-                                <span className="text-lg text-[#bc9f8b]">🏦 本月最終淨利</span>
-                                <span className={`text-3xl font-black ${monthlyNetProfit < 0 ? 'text-red-500' : 'text-[#bc9f8b]'}`}>
-                                    ${monthlyNetProfit.toLocaleString()}
-                                </span>
-                            </div>
-                            
-                            <div className="text-[10px] text-center text-[#a89689] mt-2">
-                                (註：資金的借款與還款不計入損益表，僅影響口袋現金)
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* 📦 庫存盤點模組 */}
-                    <Card className="bg-white border-dashed border-2 border-[#c8e6c9] mb-4">
-                        <div className="flex items-center text-[#4caf50] font-bold text-lg mb-3"><Icon name="inventory_2" className="mr-2" /> 現貨庫存與盤點</div>
-                        <div className="flex items-center justify-between mb-3 text-sm">
-                            <span className="text-[#7a6453] font-bold">目前現貨平均成本</span>
-                            <span className="font-black text-[#5c4d43]">${avgUnitCost.toFixed(1)} <span className="text-xs text-[#a89689] font-normal">/件</span></span>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 border-t border-[#f2e7df] pt-3 pb-2">
-                            <div className="text-center">
-                                <div className="text-[10px] text-[#a89689] font-bold">歷史總進貨</div>
-                                <div className="font-black text-lg text-[#5c4d43]">{accumulatedWholesaleQty}</div>
-                            </div>
-                            <div className="text-center border-x border-[#f2e7df]">
-                                <div className="text-[10px] text-[#a89689] font-bold">歷史總售出</div>
-                                <div className="font-black text-lg text-[#5c4d43]">{accumulatedTotalSold}</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-[10px] text-[#4caf50] font-bold">目前手邊應有</div>
-                                <div className="font-black text-2xl text-[#4caf50]">{currentInventoryQty}</div>
-                            </div>
-                        </div>
-
-                        {/* 盤點區塊 */}
-                        <div className="mt-2 pt-2 border-t border-[#f2e7df]">
-                            {isCheckingInventory ? (
-                                <div className="animate-fade-in pt-2">
-                                    <div className="text-xs text-[#a89689] mb-2 font-bold">系統帳面數量：{theoreticalInventory} 件</div>
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <input type="number" placeholder="輸入實際剩下幾件" value={actualInv} onChange={e=>setActualInv(e.target.value)} className="flex-[2] bg-[#fdfdfd] border border-[#c8e6c9] rounded-lg px-3 h-[40px] text-sm outline-none focus:border-[#4caf50] font-wawa"/>
-                                        <div className="flex-1 text-xs font-bold text-[#e57373] text-right">
-                                            盤差<br/><span className="text-lg">{(theoreticalInventory - (Number(actualInv)||0))}</span> 件
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={()=>setIsCheckingInventory(false)} className="flex-1 h-[40px] bg-[#f2e7df] text-[#7a6453] rounded-lg text-sm font-bold font-wawa">取消</button>
-                                        <button onClick={saveInventoryCheck} className="flex-[2] h-[40px] bg-[#4caf50] text-white rounded-lg text-sm font-bold font-wawa shadow-sm">校正儲存</button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <button onClick={()=>{setActualInv(''); setIsCheckingInventory(true);}} className="w-full py-2 bg-[#f0f9f0] text-[#4caf50] rounded-lg text-sm font-bold border border-[#c8e6c9] transition-colors active:bg-[#e8f5e9]">
-                                    ✏️ 數量不對？輸入盤點校正
-                                </button>
-                            )}
-                            {currentMonthAdj !== 0 && !isCheckingInventory && (
-                                <div className="text-center text-xs text-[#e57373] mt-2 font-bold">本月已有盤差紀錄：{currentMonthAdj > 0 ? '+' : ''}{currentMonthAdj} 件</div>
-                            )}
-                        </div>
-                    </Card>
-
-                    <Card><div className="flex justify-between items-center text-base font-bold text-[#5c4d43]"><span className="flex items-center">🎁 本月贈品統計</span><span className="text-[#e57373]">共 {storeGifts + marketGifts} 件</span></div></Card>
+                      <button type="submit" className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold mt-4 active:bg-blue-700 shadow-md transition">
+                        {editingOrderId ? '儲存修改' : '確認接單'}
+                      </button>
+                    </form>
+                  </div>
                 </div>
-            );
-        };
+              </div>
+            )}
 
-        // --- 分頁 5：代購預購系統 ---
-        const PreorderTab = ({ preorders, setPreorders, setConfirmDialog }) => {
-            const [editingId, setEditingId] = useState(null);
-            const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-            const [customerName, setCustomerName] = useState('');
-            const [itemsCount, setItemsCount] = useState('');
-            const [wholesaleCost, setWholesaleCost] = useState('');
-            const [revenue, setRevenue] = useState('');
-            const [note, setNote] = useState('');
-            
-            const [activeFilter, setActiveFilter] = useState('all');
-
-            const resetForm = () => {
-                setEditingId(null); setDate(new Date().toISOString().split('T')[0]);
-                setCustomerName(''); setItemsCount(''); setWholesaleCost(''); setRevenue(''); setNote('');
-            };
-
-            const handleAddPreorder = () => {
-                if (!customerName || !wholesaleCost || !revenue) return;
-                const recordData = { 
-                    date, customerName, 
-                    itemsCount: Number(itemsCount) || 1, 
-                    wholesaleCost: Number(wholesaleCost) || 0,
-                    revenue: Number(revenue) || 0,
-                    note, 
-                    status: editingId ? (preorders.find(p => p.id === editingId)?.status || 'pending') : 'pending'
-                };
+            {/* ==================== 分頁 2: 叫貨總表 ==================== */}
+            {activeTab === 'purchasing' && (
+              <div className="animate-fade-in">
                 
-                if (editingId) {
-                    setPreorders(prev => prev.map(p => p.id === editingId ? { ...p, ...recordData } : p).sort((a,b)=> safeTime(b.date) - safeTime(a.date)));
-                } else {
-                    const newRecord = { id: Date.now().toString(), ...recordData };
-                    setPreorders(prev => [newRecord, ...prev].sort((a,b)=> safeTime(b.date) - safeTime(a.date)));
-                }
-                resetForm();
-            };
-
-            const handleEditClick = (record) => {
-                setEditingId(record.id);
-                setDate(record.date); setCustomerName(record.customerName);
-                setItemsCount(record.itemsCount); 
-                setWholesaleCost(record.wholesaleCost); setRevenue(record.revenue);
-                setNote(record.note || '');
-                scrollToTop();
-            };
-
-            const changeStatus = (id, newStatus) => {
-                setPreorders(prev => prev.map(p => p.id === id ? { ...p, status: newStatus } : p));
-            };
-
-            const filteredList = preorders.filter(p => activeFilter === 'all' || p.status === activeFilter);
-            
-            const totalItems = filteredList.reduce((sum, p) => sum + (Number(p.itemsCount)||0), 0);
-            const totalWholesale = filteredList.reduce((sum, p) => sum + (Number(p.wholesaleCost)||0), 0);
-            const totalRevenue = filteredList.reduce((sum, p) => sum + (Number(p.revenue)||0), 0);
-
-            const filters = [
-                { id: 'all', label: '全部' },
-                { id: 'pending', label: '待叫貨' },
-                { id: 'ordered', label: '已叫貨' },
-                { id: 'arrived', label: '已到貨' },
-                { id: 'completed', label: '已出貨' }
-            ];
-
-            const getStatusConfig = (status) => {
-                switch(status) {
-                    case 'pending': return { text: '待叫貨', color: 'bg-gray-100 text-gray-600', nextBtn: '標記為已叫貨', nextStatus: 'ordered', nextColor: 'bg-[#ffb74d] text-white' };
-                    case 'ordered': return { text: '已叫貨', color: 'bg-[#fff3e0] text-[#f57c00]', nextBtn: '標記為已到貨', nextStatus: 'arrived', nextColor: 'bg-[#64b5f6] text-white' };
-                    case 'arrived': return { text: '已到貨', color: 'bg-[#e3f2fd] text-[#1976d2]', nextBtn: '已結算/出貨', nextStatus: 'completed', nextColor: 'bg-[#4caf50] text-white' };
-                    case 'completed': return { text: '已出貨/結單', color: 'bg-[#e8f5e9] text-[#388e3c]' };
-                    default: return { text: '不明', color: 'bg-gray-100 text-gray-600' };
-                }
-            };
-
-            return (
-                <div className="animate-fade-in pb-20">
-                    <Card className={editingId ? 'border-2 border-[#5c6bc0]' : 'border border-[#e8eaf6]'}>
-                        <div className="flex items-center mb-4 text-[#5c6bc0] font-bold text-lg">
-                            <Icon name={editingId ? 'edit' : 'add_circle'} className="mr-2" /> 
-                            {editingId ? '編輯代購 / 預購紀錄' : '建立代購 / 預購訂單'}
-                        </div>
-                        <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
-                        
-                        <div className="grid grid-cols-2 gap-3">
-                            <Input placeholder="客人姓名或暱稱" value={customerName} onChange={e => setCustomerName(e.target.value)} />
-                            <Input type="number" placeholder="商品件數" value={itemsCount} onChange={e => setItemsCount(e.target.value)} />
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-3">
-                            <Input type="number" placeholder="總批價(成本)" value={wholesaleCost} onChange={e => setWholesaleCost(e.target.value)} />
-                            <Input type="number" placeholder="總售價(實收)" value={revenue} onChange={e => setRevenue(e.target.value)} />
-                        </div>
-                        <Input placeholder="備註(款式、顏色、尺寸)" value={note} onChange={e => setNote(e.target.value)} />
-                        
-                        <div className="flex gap-3">
-                            {editingId && (
-                                <Button onClick={resetForm} className="flex-1 bg-[#e8eaf6] !text-[#5c6bc0]">取消</Button>
-                            )}
-                            <Button onClick={handleAddPreorder} className={editingId ? 'flex-[2] bg-[#5c6bc0] text-white' : 'w-full bg-[#5c6bc0] text-white'}>
-                                {editingId ? '儲存修改' : '建立單筆代購'}
-                            </Button>
-                        </div>
-                    </Card>
-
-                    {/* 狀態過濾列 */}
-                    <div className="flex overflow-x-auto gap-2 mb-4 custom-scrollbar px-1">
-                        {filters.map(f => (
-                            <button key={f.id} onClick={() => setActiveFilter(f.id)} className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-bold transition-colors shadow-sm ${activeFilter === f.id ? 'bg-[#3949ab] text-white' : 'bg-white text-[#7986cb] border border-[#c5cae9]'}`}>
-                                {f.label}
-                            </button>
-                        ))}
+                <div className="mb-4 bg-blue-50 border border-blue-100 p-4 rounded-2xl flex justify-between items-center shadow-sm relative overflow-hidden">
+                  <div className="absolute right-0 top-0 opacity-10 text-blue-500 transform translate-x-4 -translate-y-4">
+                    <Icon name="wallet" size={80} />
+                  </div>
+                  <div className="relative z-10 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md">
+                      <Icon name="file-invoice-dollar" size={18} />
                     </div>
-
-                    {/* 統計 Summary */}
-                    <Card className="bg-[#f8f9fa] border-none mb-4 p-3 shadow-inner">
-                        <div className="flex justify-between items-center text-sm font-bold">
-                            <div className="text-[#5c6bc0]">合計 <span className="text-lg">{totalItems}</span> 件</div>
-                            <div className="flex gap-4 text-right">
-                                <div className="flex flex-col"><span className="text-[10px] text-gray-500">預估總批價</span><span className="text-[#e57373]">${totalWholesale.toLocaleString()}</span></div>
-                                <div className="flex flex-col"><span className="text-[10px] text-gray-500">應收總售價</span><span className="text-[#4caf50]">${totalRevenue.toLocaleString()}</span></div>
-                            </div>
-                        </div>
-                    </Card>
-
-                    {filteredList.length === 0 ? <div className="text-center text-[#c5cae9] text-sm py-8 mt-2 bg-white rounded-2xl border border-dashed border-[#c5cae9] mx-1">此分類目前沒有訂單！</div> : (
-                        <div className="space-y-3 mx-1">
-                        {filteredList.map(p => {
-                            const conf = getStatusConfig(p.status);
-                            const profit = (Number(p.revenue)||0) - (Number(p.wholesaleCost)||0);
-                            return (
-                                <div key={p.id} className="bg-white rounded-xl p-4 shadow-sm border border-[#e8eaf6] relative">
-                                    <div className="absolute top-4 right-4 flex gap-1">
-                                        <button onClick={() => handleEditClick(p)} className="p-1.5 text-[#5c6bc0] bg-[#e8eaf6] rounded-lg shadow-sm"><Icon name="edit" className="text-[18px]" /></button>
-                                        <button onClick={() => setConfirmDialog({isOpen: true, id: p.id, collection: 'preorders'})} className="p-1.5 text-[#e57373] bg-[#fdf2f2] rounded-lg shadow-sm"><Icon name="delete" className="text-[18px]" /></button>
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <div className="font-bold text-[#3949ab] text-lg">{p.customerName}</div>
-                                        <div className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${conf.color}`}>{conf.text}</div>
-                                    </div>
-                                    
-                                    <div className="text-xs text-gray-400 mb-2">{p.date} 建立 {p.itemsCount > 1 ? `| 共 ${p.itemsCount} 件` : ''}</div>
-                                    
-                                    {p.note && <div className="text-sm text-gray-600 mb-3 bg-gray-50 p-2 rounded-lg border border-gray-100">{p.note}</div>}
-                                    
-                                    <div className="grid grid-cols-2 gap-2 text-sm pt-2 border-t border-gray-100 mt-2">
-                                        <div>批價成本: <span className="text-gray-500 font-bold">${p.wholesaleCost}</span></div>
-                                        <div>實收售價: <span className="text-[#3949ab] font-bold">${p.revenue}</span></div>
-                                    </div>
-                                    <div className="text-right text-xs mt-1 font-bold text-[#4caf50]">
-                                        單筆利潤: +${profit}
-                                    </div>
-
-                                    {conf.nextBtn && (
-                                        <button onClick={() => changeStatus(p.id, conf.nextStatus)} className={`w-full mt-4 py-2.5 rounded-xl font-bold flex justify-center items-center text-sm shadow-sm transition-colors ${conf.nextColor}`}>
-                                            {conf.nextBtn} <Icon name="arrow_forward_ios" className="ml-1 text-[12px]" />
-                                        </button>
-                                    )}
-                                </div>
-                            )
-                        })}
-                        </div>
-                    )}
+                    <div>
+                      <div className="text-xs font-bold text-blue-800 mb-0.5">這批需準備給廠商</div>
+                      <div className="text-2xl font-black text-blue-700 tracking-tight">
+                        <span className="text-sm font-bold mr-1">$</span>
+                        {stats.pendingCost.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-            );
-        };
 
-        // --- 應用程式主體 ---
-        const App = () => {
-            const [activeTab, setActiveTab] = useState('store');
-            
-            const [deliveriesRaw, setDeliveriesRaw] = useLocalStorage('xq_deliveries', []);
-            const [marketSalesRaw, setMarketSalesRaw] = useLocalStorage('xq_marketSales', []);
-            const [expensesRaw, setExpensesRaw] = useLocalStorage('xq_expenses', []);
-            const [reservationsRaw, setReservationsRaw] = useLocalStorage('xq_reservations', []); // 現貨保留
-            const [preordersRaw, setPreordersRaw] = useLocalStorage('xq_preorders', []);       // 代購預購
-            const [settingsRaw, setSettingsRaw] = useLocalStorage('xq_settings', { monthlyGoal: 100000, startupCapital: 36284 });
-            const [marketSoldStatsRaw, setMarketSoldStatsRaw] = useLocalStorage('xq_market_sold', {});
+                <div className="mb-3 flex justify-between items-center">
+                  <h2 className="text-sm font-bold text-slate-600">待叫貨明細表</h2>
+                </div>
 
-            const deliveries = getSafeArr(deliveriesRaw);
-            const marketSales = getSafeArr(marketSalesRaw);
-            const expenses = getSafeArr(expensesRaw);
-            const reservations = getSafeArr(reservationsRaw);
-            const preorders = getSafeArr(preordersRaw);
-            const settings = (typeof settingsRaw === 'object' && settingsRaw !== null && !Array.isArray(settingsRaw)) ? settingsRaw : { monthlyGoal: 100000, startupCapital: 36284 };
-            const marketSoldStats = (typeof marketSoldStatsRaw === 'object' && marketSoldStatsRaw !== null && !Array.isArray(marketSoldStatsRaw)) ? marketSoldStatsRaw : {};
-
-            const setDeliveries = (updater) => setDeliveriesRaw(prev => typeof updater === 'function' ? updater(getSafeArr(prev)) : updater);
-            const setMarketSales = (updater) => setMarketSalesRaw(prev => typeof updater === 'function' ? updater(getSafeArr(prev)) : updater);
-            const setExpenses = (updater) => setExpensesRaw(prev => typeof updater === 'function' ? updater(getSafeArr(prev)) : updater);
-            const setReservations = (updater) => setReservationsRaw(prev => typeof updater === 'function' ? updater(getSafeArr(prev)) : updater);
-            const setPreorders = (updater) => setPreordersRaw(prev => typeof updater === 'function' ? updater(getSafeArr(prev)) : updater);
-            const setSettings = (updater) => setSettingsRaw(prev => typeof updater === 'function' ? updater((typeof prev === 'object' && prev !== null && !Array.isArray(prev)) ? prev : { monthlyGoal: 100000, startupCapital: 36284 }) : updater);
-            const setMarketSoldStats = (updater) => setMarketSoldStatsRaw(prev => typeof updater === 'function' ? updater((typeof prev === 'object' && prev !== null && !Array.isArray(prev)) ? prev : {}) : updater);
-            
-            const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, id: null, collection: '' });
-
-            const executeDelete = () => {
-                const { id, collection } = confirmDialog;
-                if(id && collection) {
-                    if (collection === 'deliveries') setDeliveries(prev => prev.filter(d => d.id !== id));
-                    if (collection === 'market_sales') setMarketSales(prev => prev.filter(m => m.id !== id));
-                    if (collection === 'expenses') setExpenses(prev => prev.filter(e => e.id !== id));
-                    if (collection === 'reservations') setReservations(prev => prev.filter(r => r.id !== id));
-                    if (collection === 'preorders') setPreorders(prev => prev.filter(p => p.id !== id));
-                }
-                setConfirmDialog({isOpen: false, id: null, collection: ''});
-            };
-
-            return (
-                <ErrorBoundary>
-                    <div className="flex flex-col h-screen custom-scrollbar text-[#5c4d43] max-w-lg mx-auto bg-[#fdfaf7] shadow-2xl relative">
-                        <header className="bg-[#bc9f8b] text-white pt-6 pb-4 px-5 flex justify-between items-center shadow-md sticky top-0 z-10">
-                            <div className="flex items-center text-2xl font-bold tracking-widest drop-shadow-sm">💰 200%森衣好</div>
-                            <button className="p-1.5 bg-white bg-opacity-20 rounded-full"><Icon name="settings" className="text-[20px]" /></button>
-                        </header>
+                {purchasingList.length === 0 ? (
+                  <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
+                    <Icon name="circle-check" size={48} className="text-emerald-400 mb-3" />
+                    <p className="text-slate-500 font-medium">目前沒有需要叫貨的商品</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {purchasingList.map((item, index) => (
+                      <div key={index} className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 flex gap-4 items-center relative overflow-hidden">
+                        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-red-400"></div>
                         
-                        <main id="main-content" className="flex-1 overflow-y-auto p-4 relative custom-scrollbar">
-                            {activeTab === 'store' && <StoreTab deliveries={deliveries} setDeliveries={setDeliveries} reservations={reservations} setReservations={setReservations} setConfirmDialog={setConfirmDialog} />}
-                            {activeTab === 'market' && <MarketTab marketSales={marketSales} setMarketSales={setMarketSales} setConfirmDialog={setConfirmDialog} />}
-                            {activeTab === 'expense' && <ExpenseTab expenses={expenses} setExpenses={setExpenses} setConfirmDialog={setConfirmDialog} />}
-                            {activeTab === 'report' && <ReportTab deliveries={deliveries} marketSales={marketSales} expenses={expenses} preorders={preorders} settings={settings} setSettings={setSettings} marketSoldStats={marketSoldStats} setMarketSoldStats={setMarketSoldStats} />}
-                            {activeTab === 'preorder' && <PreorderTab preorders={preorders} setPreorders={setPreorders} setConfirmDialog={setConfirmDialog} />}
-                        </main>
+                        <div 
+                          className="shrink-0 active:opacity-70 transition"
+                          onClick={() => {
+                            const prod = products.find(p => p.id === item.productId);
+                            if(prod) setViewProductInfo(prod);
+                          }}
+                        >
+                          {item.image ? (
+                            <img src={item.image} className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-slate-100" alt="img" />
+                          ) : (
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-300"><Icon name="box" size={24}/></div>
+                          )}
+                        </div>
 
-                        {/* 回歸完美的 5 分頁底部導覽列 */}
-                        <nav className="bg-white border-t border-[#f2e7df] flex justify-around pb-safe pt-2 fixed bottom-0 w-full max-w-lg z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] px-1">
-                            {[ 
-                               { id: 'store', icon: 'inventory_2', label: '現貨超商' }, 
-                               { id: 'market', icon: 'storefront', label: '現貨市場' },
-                               { id: 'expense', icon: 'payments', label: '現貨支出' },
-                               { id: 'report', icon: 'bar_chart', label: '營運報表' },
-                               { id: 'preorder', icon: 'local_shipping', label: '代購', color: 'text-[#5c6bc0]' }
-                            ].map(t => {
-                                const isActive = activeTab === t.id;
-                                const activeColorClass = isActive ? (t.color ? t.color : 'text-[#bc9f8b]') : 'text-[#c4b5aa]';
-                                const activeBgColorClass = isActive ? (t.id === 'preorder' ? 'bg-[#5c6bc0]' : 'bg-[#bc9f8b]') : '';
-                                
-                                return (
-                                    <button key={t.id} onClick={() => { setActiveTab(t.id); scrollToTop(); }} className={`flex flex-col items-center justify-center py-1 w-full transition-colors relative ${activeColorClass}`}>
-                                        <Icon name={t.icon} className="mb-0.5 text-[22px]" />
-                                        <span className={`text-[10px] tracking-tighter ${isActive ? 'font-black' : 'font-medium'}`}>{t.label}</span>
-                                        {isActive && <div className={`absolute top-0 w-6 h-1 rounded-b-full ${activeBgColorClass}`}></div>}
-                                    </button>
-                                );
-                            })}
-                        </nav>
-                        
-                        <ConfirmModal isOpen={confirmDialog.isOpen} message="確定要刪除這筆紀錄嗎？" onConfirm={executeDelete} onCancel={() => setConfirmDialog({isOpen: false, id: null, collection: ''})} />
+                        <div className="flex-1 min-w-0">
+                          <h3 
+                            className="font-bold text-slate-800 text-base truncate active:text-blue-600 inline-block transition"
+                            onClick={() => {
+                              const prod = products.find(p => p.id === item.productId);
+                              if(prod) setViewProductInfo(prod);
+                            }}
+                          >
+                            {item.productName}
+                          </h3>
+                          <div className="flex flex-wrap gap-1.5 my-1">
+                            {item.style && <span className="text-[11px] sm:text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">款: {item.style}</span>}
+                            {item.size && <span className="text-[11px] sm:text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">碼: {item.size}</span>}
+                          </div>
+                          
+                          <div className="text-[11px] font-bold text-slate-500 mt-1 mb-1">
+                            批價: ${item.cost} × {item.totalQuantity} = <span className="text-slate-800">${item.itemSubtotal.toLocaleString()}</span>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1 mt-1.5 items-center">
+                            <span className="text-[10px] text-slate-400 mr-0.5">訂購人:</span>
+                            {item.customers.map((c, i) => (
+                              <button 
+                                key={i}
+                                onClick={() => setViewCustomer(c.name)}
+                                className="text-[10px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded shadow-sm border border-blue-100 active:bg-blue-100 transition"
+                              >
+                                {c.name}({c.qty})
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-2 shrink-0 pr-1">
+                          <div className="text-center">
+                            <div className="text-[10px] text-slate-500 font-bold">需叫貨</div>
+                            <div className="text-2xl font-black text-red-600 leading-none">{item.totalQuantity}<span className="text-xs font-normal ml-0.5">件</span></div>
+                          </div>
+                          <button onClick={() => batchMarkAsOrdered(item.productId, item.style, item.size)} className="bg-slate-800 text-white text-[11px] px-3 py-2 rounded-lg active:bg-slate-700 font-bold whitespace-nowrap shadow-sm">
+                            <Icon name="check" size={10} className="mr-0.5" />已叫貨
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ==================== 分頁 3: 訂單追蹤 ==================== */}
+            {activeTab === 'orders' && (
+              <div className="animate-fade-in">
+                <div className="mb-4">
+                  <div className="flex justify-between items-center mb-1">
+                    <h2 className="text-lg font-bold text-slate-800">理貨與訂單管理</h2>
+                  </div>
+                  <p className="text-xs text-slate-500">追蹤進度，或統整單一客人的未收款</p>
+                </div>
+
+                {/* --- 🌟 頂部三個模式按鈕 🌟 --- */}
+                <div className="flex bg-slate-200 p-1 rounded-xl mb-4">
+                  <button 
+                    onClick={() => setOrderViewMode('time')} 
+                    className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'time' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
+                  >
+                    <Icon name="list" className="mr-1" /> 明細
+                  </button>
+                  <button 
+                    onClick={() => setOrderViewMode('customer')} 
+                    className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'customer' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
+                  >
+                    <Icon name="users" className="mr-1" /> 顧客
+                  </button>
+                  <button 
+                    onClick={() => setOrderViewMode('product')} 
+                    className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'product' ? 'bg-white shadow text-orange-500' : 'text-slate-500'}`}
+                  >
+                    <Icon name="fire" className="mr-1" /> 熱賣
+                  </button>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-4 sticky top-16 z-20">
+                  <div className="p-2 border-b border-slate-100 flex items-center bg-slate-50">
+                    <Icon name="magnifying-glass" size={14} className="text-slate-400 ml-2 mr-2" />
+                    <input type="text" placeholder="搜尋客人或商品..." className="w-full bg-transparent outline-none text-sm p-1.5" value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} />
+                  </div>
+                  
+                  {/* 只有在明細模式跟熱賣模式提供狀態過濾比較有意義 */}
+                  {(orderViewMode === 'time' || orderViewMode === 'product') && (
+                    <div className="flex overflow-x-auto hide-scrollbar bg-white p-1">
+                      <button onClick={() => setOrderFilterStatus('all')} className={`whitespace-nowrap px-4 py-2 text-sm font-bold rounded-lg transition-colors ${orderFilterStatus === 'all' ? 'bg-slate-800 text-white' : 'text-slate-500'}`}>全部</button>
+                      {Object.values(STATUSES).map(status => (
+                        <button key={status.id} onClick={() => setOrderFilterStatus(status.id)} className={`whitespace-nowrap px-4 py-2 text-sm font-bold rounded-lg transition-colors ${orderFilterStatus === status.id ? 'bg-slate-800 text-white' : 'text-slate-500'}`}>
+                          {status.label}
+                        </button>
+                      ))}
                     </div>
-                </ErrorBoundary>
-            );
-        };
+                  )}
+                </div>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+                {/* 動態計算儀表板 */}
+                {(orderViewMode === 'time' || orderViewMode === 'product') && enrichedOrders.length > 0 && (
+                  <div className="mb-4 bg-slate-100 border border-slate-200 rounded-xl p-3 flex justify-between items-center shadow-sm text-slate-700">
+                    <div className="text-xs font-bold">
+                      合計 <span className="text-blue-700 text-sm">{currentFilteredStats.totalItems}</span> 件
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="text-right">
+                        <div className="text-[10px] text-slate-500">此頁批貨總額</div>
+                        <div className="font-bold text-sm text-slate-800">${currentFilteredStats.totalCost.toLocaleString()}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] text-slate-500">此頁應收總額</div>
+                        <div className="font-black text-sm text-blue-700">${currentFilteredStats.totalPrice.toLocaleString()}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+
+                  {/* --- 🌟 模式 C：依熱賣商品統計 🌟 --- */}
+                  {orderViewMode === 'product' && (
+                    productSummaries.length === 0 ? (
+                      <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-400">目前沒有商品銷售紀錄</div>
+                    ) : (
+                      productSummaries.map(summary => (
+                        <div 
+                          key={summary.product.id} 
+                          className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center active:bg-slate-50 transition cursor-pointer"
+                          onClick={() => setViewProductInfo(summary.product)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="shrink-0">
+                              {summary.product.image ? (
+                                <img src={summary.product.image} className="w-14 h-14 rounded-xl object-cover border border-slate-100" alt="img" />
+                              ) : (
+                                <div className="w-14 h-14 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-300"><Icon name="box" size={20}/></div>
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-bold text-slate-800 text-base mb-1">{summary.product.name}</div>
+                              <div className="text-[11px] text-slate-500 flex gap-2">
+                                <span>營收: ${summary.totalRevenue.toLocaleString()}</span>
+                                <span>|</span>
+                                <span className="text-emerald-500 font-bold">利潤: ${summary.totalProfit.toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-[10px] text-slate-500 mb-0.5">累計售出</div>
+                            <div className="font-black text-xl text-orange-500">
+                              {summary.totalItems} <span className="text-xs font-normal text-slate-400">件</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )
+                  )}
+
+
+                  {/* 模式 A：依顧客統整 */}
+                  {orderViewMode === 'customer' && (
+                    customerSummaries.length === 0 ? (
+                      <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-400">目前沒有顧客資料</div>
+                    ) : (
+                      customerSummaries.map(summary => (
+                        <div 
+                          key={summary.customer} 
+                          className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center active:bg-slate-50 transition cursor-pointer"
+                          onClick={() => setViewCustomer(summary.customer)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-lg">
+                              {summary.customer.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="font-bold text-slate-800 text-base">{summary.customer}</div>
+                              <div className="text-xs text-slate-500 mt-0.5">總共 {summary.totalItems} 件商品 (已完成 {summary.completedItems} 件)</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-[10px] text-slate-500 mb-0.5">待收款</div>
+                            <div className={`font-black text-lg ${summary.unpaidTotal > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                              ${summary.unpaidTotal.toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )
+                  )}
+
+                  {/* 模式 B：依訂單明細 (原來的列表) */}
+                  {orderViewMode === 'time' && (
+                    enrichedOrders.length === 0 ? (
+                      <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-400">沒有符合的訂單紀錄</div>
+                    ) : (
+                      enrichedOrders.map(order => {
+                        const statusConfig = STATUSES[order.status.toUpperCase()];
+                        return (
+                          <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="p-3 flex gap-3">
+                              <div 
+                                className="shrink-0 active:opacity-70 transition"
+                                onClick={() => {
+                                  const prod = products.find(p => p.id === order.productId);
+                                  if(prod) setViewProductInfo(prod);
+                                }}
+                              >
+                                {order.product.image ? (
+                                  <img src={order.product.image} className="w-16 h-16 rounded-xl object-cover border border-slate-100" alt="img" />
+                                ) : (
+                                  <div className="w-16 h-16 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 border border-slate-100"><Icon name="box" size={20}/></div>
+                                )}
+                              </div>
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start mb-0.5">
+                                  <span 
+                                    className="font-black text-blue-700 underline decoration-blue-200 decoration-2 underline-offset-2 active:text-blue-800 transition"
+                                    onClick={() => setViewCustomer(order.customer)}
+                                  >
+                                    {order.customer}
+                                  </span>
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusConfig.color}`}>{statusConfig.label}</span>
+                                </div>
+                                <div 
+                                  className="text-sm font-bold text-slate-700 truncate active:text-blue-600 inline-block"
+                                  onClick={() => {
+                                    const prod = products.find(p => p.id === order.productId);
+                                    if(prod) setViewProductInfo(prod);
+                                  }}
+                                >
+                                  {order.product.name}
+                                </div>
+                                <div className="text-[11px] text-slate-500 mt-1">
+                                  {order.style && <span className="mr-2">款:{order.style}</span>}
+                                  {order.size && <span>碼:{order.size}</span>}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="bg-slate-50 px-3 py-2 border-t border-slate-100 flex justify-between items-end">
+                              <div className="flex flex-col gap-1">
+                                <div className="text-[11px] text-slate-500">
+                                  批價: ${order.product.cost} × {order.quantity} = <span className="font-bold text-slate-600">${order.product.cost * order.quantity}</span>
+                                </div>
+                                <div className="text-xs font-medium text-slate-700">
+                                  售價: ${order.product.price} × {order.quantity} = <span className="font-black text-slate-800 text-[13px]">${order.product.price * order.quantity}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <button onClick={() => editOrder(order, order.product)} className="w-8 h-8 rounded-full text-slate-500 bg-white border border-slate-200 flex items-center justify-center shadow-sm active:text-blue-600"><Icon name="pen" size={12} /></button>
+                                <button onClick={() => deleteOrder(order.id)} className="w-8 h-8 rounded-full text-slate-400 bg-white border border-slate-200 flex items-center justify-center shadow-sm active:text-red-500"><Icon name="trash-can" size={12} /></button>
+                                {statusConfig.next && (
+                                  <button onClick={() => advanceOrderStatus(order.id, order.status)} className="bg-blue-100 text-blue-700 active:bg-blue-600 active:text-white px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1 shadow-sm">
+                                    {statusConfig.actionLabel} <Icon name="chevron-right" size={10} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ==================== 分頁 4: 設定與備份 ==================== */}
+            {activeTab === 'settings' && (
+              <div className="animate-fade-in">
+                <div className="mb-4">
+                  <h2 className="text-lg font-bold text-slate-800">系統設定與雲端備份</h2>
+                  <p className="text-xs text-slate-500">將資料下載儲存至 Google 雲端，不再怕手機壞掉或換機</p>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-4">
+                  <div className="flex items-center gap-3 mb-4 text-slate-700">
+                    <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center"><Icon name="database" size={18}/></div>
+                    <div>
+                      <h3 className="font-bold">資料庫狀態</h3>
+                      <p className="text-xs text-slate-500">目前共 {products.length} 件商品，{orders.length} 筆訂單</p>
+                    </div>
+                  </div>
+
+                  <hr className="border-slate-100 my-4" />
+
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-bold text-slate-800 text-sm mb-2"><Icon name="cloud-arrow-up" className="mr-1 text-emerald-500"/> 步驟一：備份資料</h4>
+                      <p className="text-xs text-slate-500 mb-3">將目前的系統資料下載為檔案。下載後，請透過手機將該檔案儲存到您的 <b>Google 雲端硬碟</b> 或 <b>手機檔案</b> 中。</p>
+                      <button onClick={downloadBackup} className="w-full bg-emerald-500 text-white py-3 rounded-xl font-bold shadow-sm active:bg-emerald-600 flex justify-center items-center gap-2">
+                        <Icon name="download" /> 下載系統備份檔
+                      </button>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <h4 className="font-bold text-slate-800 text-sm mb-2"><Icon name="cloud-arrow-down" className="mr-1 text-blue-500"/> 步驟二：還原資料 (換手機時使用)</h4>
+                      <p className="text-xs text-slate-500 mb-3">若不小心清除網頁紀錄或換新手機，點擊下方選擇您之前存到 Google 雲端的「備份檔」，即可恢復全部資料。</p>
+                      
+                      <input 
+                        type="file" 
+                        accept=".json" 
+                        className="hidden" 
+                        ref={importInputRef}
+                        onChange={handleImportBackup} 
+                      />
+                      <button onClick={() => importInputRef.current?.click()} className="w-full bg-white border-2 border-blue-500 text-blue-600 py-3 rounded-xl font-bold shadow-sm active:bg-blue-50 flex justify-center items-center gap-2">
+                        <Icon name="upload" /> 選擇備份檔並還原
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {renderCustomerModal()}
+            {renderProductModal()}
+
+          </main>
+
+          <nav className="fixed bottom-0 w-full bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40 pb-safe">
+            <div className="max-w-md mx-auto flex justify-between px-4 py-2">
+              <button onClick={() => setActiveTab('products')} className={`flex flex-col items-center p-2 min-w-[64px] transition-colors ${activeTab === 'products' ? 'text-blue-600' : 'text-slate-400'}`}>
+                <Icon name="store" size={22} className="mb-1" />
+                <span className="text-[10px] font-bold">商品庫</span>
+              </button>
+              
+              <button onClick={() => setActiveTab('purchasing')} className={`flex flex-col items-center p-2 min-w-[64px] relative transition-colors ${activeTab === 'purchasing' ? 'text-blue-600' : 'text-slate-400'}`}>
+                <div className="relative">
+                  <Icon name="clipboard-list" size={22} className="mb-1" />
+                  {stats.pendingCount > 0 && (
+                    <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center border-2 border-white">{stats.pendingCount}</span>
+                  )}
+                </div>
+                <span className="text-[10px] font-bold">叫貨表</span>
+              </button>
+              
+              <button onClick={() => setActiveTab('orders')} className={`flex flex-col items-center p-2 min-w-[64px] transition-colors ${activeTab === 'orders' ? 'text-blue-600' : 'text-slate-400'}`}>
+                <Icon name="list-ol" size={22} className="mb-1" />
+                <span className="text-[10px] font-bold">訂單追蹤</span>
+              </button>
+
+              <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center p-2 min-w-[64px] transition-colors ${activeTab === 'settings' ? 'text-blue-600' : 'text-slate-400'}`}>
+                <Icon name="gear" size={22} className="mb-1" />
+                <span className="text-[10px] font-bold">設定</span>
+              </button>
+            </div>
+          </nav>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
 </html>
 
