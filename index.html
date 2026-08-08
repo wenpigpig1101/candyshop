@@ -1568,7 +1568,7 @@
                 switch(status) {
                     case 'pending': return { text: '待叫貨', color: 'bg-gray-100 text-gray-600', nextBtn: '標記為已叫貨', nextStatus: 'ordered', nextColor: 'bg-[#ffb74d] text-white' };
                     case 'ordered': return { text: '已叫貨', color: 'bg-[#fff3e0] text-[#f57c00]', nextBtn: '標記為已到貨', nextStatus: 'arrived', nextColor: 'bg-[#64b5f6] text-white' };
-                    case 'arrived': return { text: '已到貨', color: 'bg-[#e3f2fd] text-[#1976d2]', nextBtn: '已結算/出貨', nextStatus: 'completed', nextColor: 'bg-[#4caf50] text-white' };
+                    case 'arrived': return { text: '已到貨', color: 'bg-[#e3f2fd] text-[#1976d2]', nextBtn: '已結單/出貨', nextStatus: 'completed', nextColor: 'bg-[#4caf50] text-white' };
                     case 'completed': return { text: '已出貨/結單', color: 'bg-[#e8f5e9] text-[#388e3c]' };
                     default: return { text: '不明', color: 'bg-gray-100 text-gray-600' };
                 }
@@ -1725,7 +1725,7 @@
                             {activeTab === 'preorder' && <PreorderTab preorders={preorders} setPreorders={setPreorders} setConfirmDialog={setConfirmDialog} />}
                         </main>
 
-                        {/* 回歸完美的 5 分頁底部導覽列 */}
+                        {/* 底部導覽列 (5個分頁) */}
                         <nav className="bg-white border-t border-[#f2e7df] flex justify-around pb-safe pt-2 fixed bottom-0 w-full max-w-lg z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] px-1">
                             {[ 
                                { id: 'store', icon: 'inventory_2', label: '現貨超商' }, 
