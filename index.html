@@ -1440,8 +1440,8 @@
                         </div>
                     </Card>
 
-                    {reservations.length === 0 ? <div className="text-center text-[#c4b5aa] text-sm py-8 mt-4">目前沒有現貨保留清單！</div> : (
-                        <div className="mt-4">
+                    {reservations.length === 0 ? <div className="text-center text-[#c4b5aa] text-sm py-8 mt-4 bg-white rounded-2xl border border-dashed border-[#e3f2fd] mx-1">目前沒有現貨保留清單！</div> : (
+                        <div className="mt-4 mx-1">
                         {reservations.map(r => (
                             <div key={r.id} className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-[#e3f2fd] relative">
                                 <div className="absolute top-4 right-4 flex gap-1">
@@ -1565,8 +1565,8 @@
                 switch(status) {
                     case 'pending': return { text: '待叫貨', color: 'bg-gray-100 text-gray-600', nextBtn: '標記為已叫貨', nextStatus: 'ordered', nextColor: 'bg-[#ffb74d] text-white' };
                     case 'ordered': return { text: '已叫貨', color: 'bg-[#fff3e0] text-[#f57c00]', nextBtn: '標記為已到貨', nextStatus: 'arrived', nextColor: 'bg-[#64b5f6] text-white' };
-                    case 'arrived': return { text: '已到貨', color: 'bg-[#e3f2fd] text-[#1976d2]', nextBtn: '已結算/出貨', nextStatus: 'completed', nextColor: 'bg-[#4caf50] text-white' };
-                    case 'completed': return { text: '已出貨/結單', color: 'bg-[#e8f5e9] text-[#388e3c]' };
+                    case 'arrived': return { text: '已到貨', color: 'bg-[#e3f2fd] text-[#1976d2]', nextBtn: '已結單/出貨', nextStatus: 'completed', nextColor: 'bg-[#4caf50] text-white' };
+                    case 'completed': return { text: '已結單出貨', color: 'bg-[#e8f5e9] text-[#388e3c]' };
                     default: return { text: '不明', color: 'bg-gray-100 text-gray-600' };
                 }
             };
@@ -1586,10 +1586,10 @@
                         </div>
                         
                         <div className="grid grid-cols-2 gap-3">
-                            <Input type="number" placeholder="此單總批價 (成本)" value={wholesaleCost} onChange={e => setWholesaleCost(e.target.value)} />
-                            <Input type="number" placeholder="此單總售價 (實收)" value={revenue} onChange={e => setRevenue(e.target.value)} />
+                            <Input type="number" placeholder="總批價(成本)" value={wholesaleCost} onChange={e => setWholesaleCost(e.target.value)} />
+                            <Input type="number" placeholder="總售價(實收)" value={revenue} onChange={e => setRevenue(e.target.value)} />
                         </div>
-                        <Input placeholder="備註(商品編號、顏色尺寸)" value={note} onChange={e => setNote(e.target.value)} />
+                        <Input placeholder="備註(款式、顏色、尺寸)" value={note} onChange={e => setNote(e.target.value)} />
                         
                         <div className="flex gap-3">
                             {editingId && (
@@ -1622,12 +1622,12 @@
                     </Card>
 
                     {filteredList.length === 0 ? <div className="text-center text-[#c5cae9] text-sm py-8 mt-2 bg-white rounded-2xl border border-dashed border-[#c5cae9] mx-1">此分類目前沒有訂單！</div> : (
-                        <div className="space-y-3">
+                        <div className="space-y-3 mx-1">
                         {filteredList.map(p => {
                             const conf = getStatusConfig(p.status);
                             const profit = (Number(p.revenue)||0) - (Number(p.wholesaleCost)||0);
                             return (
-                                <div key={p.id} className="bg-white rounded-xl p-4 shadow-sm border border-[#e8eaf6] relative mx-1">
+                                <div key={p.id} className="bg-white rounded-xl p-4 shadow-sm border border-[#e8eaf6] relative">
                                     <div className="absolute top-4 right-4 flex gap-1">
                                         <button onClick={() => handleEditClick(p)} className="p-1.5 text-[#5c6bc0] bg-[#e8eaf6] rounded-lg shadow-sm"><Icon name="edit" className="text-[18px]" /></button>
                                         <button onClick={() => setConfirmDialog({isOpen: true, id: p.id, collection: 'preorders'})} className="p-1.5 text-[#e57373] bg-[#fdf2f2] rounded-lg shadow-sm"><Icon name="delete" className="text-[18px]" /></button>
@@ -1723,8 +1723,8 @@
                             {activeTab === 'preorder' && <PreorderTab preorders={preorders} setPreorders={setPreorders} setConfirmDialog={setConfirmDialog} />}
                         </main>
 
-                        {/* 底部導覽列 (共6個分頁) */}
-                        <nav className="bg-white border-t border-[#f2e7df] flex justify-around pb-safe pt-2 fixed bottom-0 w-full max-w-lg z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] px-0.5">
+                        {/* 強制 6 等份的底部導覽列 */}
+                        <nav className="bg-white border-t border-[#f2e7df] grid grid-cols-6 pb-safe pt-2 fixed bottom-0 w-full max-w-lg z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                             {[ 
                                { id: 'store', icon: 'inventory_2', label: '超商' }, 
                                { id: 'market', icon: 'storefront', label: '市場' },
@@ -1733,16 +1733,14 @@
                                { id: 'expense', icon: 'payments', label: '支出' },
                                { id: 'report', icon: 'bar_chart', label: '報表' }
                             ].map(t => {
-                                // 判斷是否為目前選取
                                 const isActive = activeTab === t.id;
-                                // 根據不同分頁給予特定顏色，若無則使用預設拿鐵色
                                 const activeColorClass = isActive ? (t.color ? t.color : 'text-[#bc9f8b]') : 'text-[#c4b5aa]';
                                 const activeBgColorClass = isActive ? (t.id === 'preorder' ? 'bg-[#5c6bc0]' : (t.id === 'reserve' ? 'bg-[#64b5f6]' : 'bg-[#bc9f8b]')) : '';
                                 
                                 return (
-                                    <button key={t.id} onClick={() => { setActiveTab(t.id); scrollToTop(); }} className={`flex flex-col items-center py-1 w-full transition-colors relative ${activeColorClass}`}>
-                                        <Icon name={t.icon} className="mb-0.5" />
-                                        <span className={`text-[10px] font-bold tracking-tighter ${isActive ? '' : 'font-medium'}`}>{t.label}</span>
+                                    <button key={t.id} onClick={() => { setActiveTab(t.id); scrollToTop(); }} className={`flex flex-col items-center justify-center py-1 w-full transition-colors relative ${activeColorClass}`}>
+                                        <Icon name={t.icon} className="mb-0.5 text-[22px]" />
+                                        <span className={`text-[10px] tracking-tighter ${isActive ? 'font-black' : 'font-medium'}`}>{t.label}</span>
                                         {isActive && <div className={`absolute top-0 w-6 h-1 rounded-b-full ${activeBgColorClass}`}></div>}
                                     </button>
                                 );
