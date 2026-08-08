@@ -381,12 +381,16 @@
                         )}
                     </Card>
 
-                    {/* 清單 1：現貨保留區 (留貨) */}
-                    {reservations.length > 0 && (
-                        <div className="mb-6 animate-fade-in">
-                            <div className="flex items-center text-[#1976d2] font-bold px-2 text-lg mb-2">
-                                <Icon name="diamond" className="mr-1 text-[20px]" /> 現貨保留區 <span className="ml-2 bg-[#bbdefb] text-[#1565c0] text-xs px-2 py-0.5 rounded-full">{reservations.length}</span>
+                    {/* 清單 1：現貨保留區 (留貨) 永遠顯示標題 */}
+                    <div className="mb-6 animate-fade-in">
+                        <div className="flex items-center text-[#1976d2] font-bold px-2 text-lg mb-2">
+                            <Icon name="diamond" className="mr-1 text-[20px]" /> 現貨保留區 <span className="ml-2 bg-[#bbdefb] text-[#1565c0] text-xs px-2 py-0.5 rounded-full">{reservations.length}</span>
+                        </div>
+                        {reservations.length === 0 ? (
+                            <div className="text-center text-[#90caf9] text-sm py-6 bg-white rounded-xl border border-dashed border-[#e3f2fd] mx-1">
+                                目前沒有保留清單喔！
                             </div>
+                        ) : (
                             <div className="space-y-2">
                             {reservations.map(r => (
                                 <div key={r.id} className="bg-white rounded-xl p-3 shadow-sm border-l-4 border-[#64b5f6] relative mx-1 px-4">
@@ -406,8 +410,8 @@
                                 </div>
                             ))}
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
                     {/* 清單 2：未寄出 */}
                     <div className="mt-6 mb-2 flex items-center text-[#9b4949] font-bold px-2 text-lg"><Icon name="push_pin" className="mr-1 text-[20px]" /> 未寄出 <span className="ml-2 bg-[#d6aba3] text-white text-xs px-2 py-0.5 rounded-full">{pending.length}</span></div>
@@ -488,7 +492,7 @@
             const [note, setNote] = useState('');
             const [electricity, setElectricity] = useState('');
             const [cleaning, setCleaning] = useState('');
-            const [gas, setGas] = useState(''); // 這個欄位在 UI 隱藏，但保留 state 以防萬一
+            const [gas, setGas] = useState(''); 
             const [toll, setToll] = useState('');
             const [parking, setParking] = useState('');
             const [hasGift, setHasGift] = useState(false);
@@ -539,7 +543,7 @@
                     rent: Number(rent) || 0, note,
                     electricity: Number(electricity) || 0, cleaning: Number(cleaning) || 0,
                     toll: Number(toll) || 0, parking: Number(parking) || 0,
-                    gas: 0, // 確保未來新增的紀錄 gas 都是 0
+                    gas: 0,
                     hasGift, giftCount: hasGift ? (Number(giftCount) || 0) : 0,
                     accessories: { necklace: Number(acc.necklace) || 0, hat: Number(acc.hat) || 0, bag: Number(acc.bag) || 0, other: Number(acc.other) || 0 }
                 };
@@ -804,7 +808,7 @@
             const [amount, setAmount] = useState('');
             const [qty, setQty] = useState(''); 
             const [isArrived, setIsArrived] = useState(true);
-            const [flowType, setFlowType] = useState('in'); // 針對資金借還：'in' (借入) 或 'out' (償還)
+            const [flowType, setFlowType] = useState('in');
 
             const resetForm = () => {
                 setEditingId(null); setDate(new Date().toISOString().split('T')[0]);
@@ -1568,7 +1572,7 @@
                 switch(status) {
                     case 'pending': return { text: '待叫貨', color: 'bg-gray-100 text-gray-600', nextBtn: '標記為已叫貨', nextStatus: 'ordered', nextColor: 'bg-[#ffb74d] text-white' };
                     case 'ordered': return { text: '已叫貨', color: 'bg-[#fff3e0] text-[#f57c00]', nextBtn: '標記為已到貨', nextStatus: 'arrived', nextColor: 'bg-[#64b5f6] text-white' };
-                    case 'arrived': return { text: '已到貨', color: 'bg-[#e3f2fd] text-[#1976d2]', nextBtn: '已結單/出貨', nextStatus: 'completed', nextColor: 'bg-[#4caf50] text-white' };
+                    case 'arrived': return { text: '已到貨', color: 'bg-[#e3f2fd] text-[#1976d2]', nextBtn: '已結算/出貨', nextStatus: 'completed', nextColor: 'bg-[#4caf50] text-white' };
                     case 'completed': return { text: '已出貨/結單', color: 'bg-[#e8f5e9] text-[#388e3c]' };
                     default: return { text: '不明', color: 'bg-gray-100 text-gray-600' };
                 }
@@ -1674,8 +1678,8 @@
             const [deliveriesRaw, setDeliveriesRaw] = useLocalStorage('xq_deliveries', []);
             const [marketSalesRaw, setMarketSalesRaw] = useLocalStorage('xq_marketSales', []);
             const [expensesRaw, setExpensesRaw] = useLocalStorage('xq_expenses', []);
-            const [reservationsRaw, setReservationsRaw] = useLocalStorage('xq_reservations', []); // 現貨保留
-            const [preordersRaw, setPreordersRaw] = useLocalStorage('xq_preorders', []);       // 代購預購
+            const [reservationsRaw, setReservationsRaw] = useLocalStorage('xq_reservations', []);
+            const [preordersRaw, setPreordersRaw] = useLocalStorage('xq_preorders', []);
             const [settingsRaw, setSettingsRaw] = useLocalStorage('xq_settings', { monthlyGoal: 100000, startupCapital: 36284 });
             const [marketSoldStatsRaw, setMarketSoldStatsRaw] = useLocalStorage('xq_market_sold', {});
 
@@ -1725,7 +1729,7 @@
                             {activeTab === 'preorder' && <PreorderTab preorders={preorders} setPreorders={setPreorders} setConfirmDialog={setConfirmDialog} />}
                         </main>
 
-                        {/* 底部導覽列 (5個分頁) */}
+                        {/* 回歸完美的 5 分頁底部導覽列 */}
                         <nav className="bg-white border-t border-[#f2e7df] flex justify-around pb-safe pt-2 fixed bottom-0 w-full max-w-lg z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] px-1">
                             {[ 
                                { id: 'store', icon: 'inventory_2', label: '現貨超商' }, 
