@@ -90,8 +90,6 @@
       
       const [orderSearch, setOrderSearch] = useState('');
       const [orderFilterStatus, setOrderFilterStatus] = useState('all');
-      
-      // 新增：三個模式 ('time' 明細, 'customer' 顧客, 'product' 熱賣商品)
       const [orderViewMode, setOrderViewMode] = useState('time'); 
 
       const [viewCustomer, setViewCustomer] = useState(null);
@@ -302,6 +300,18 @@
         }));
       };
 
+      // --- 🌟 新增：一鍵修改顧客姓名 ---
+      const handleRenameCustomer = (oldName) => {
+        const newName = window.prompt(`要把「${oldName}」的名字改成什麼呢？\n這會一併修改他所有的訂單喔！`, oldName);
+        if (newName && newName.trim() !== '' && newName.trim() !== oldName) {
+          const trimmedNewName = newName.trim();
+          // 更新所有屬於這個客人的訂單
+          setOrders(orders.map(o => o.customer === oldName ? { ...o, customer: trimmedNewName } : o));
+          // 更新彈出視窗的狀態，讓畫面停留在新名字
+          setViewCustomer(trimmedNewName);
+        }
+      };
+
       // --- 衍生資料運算與排序 ---
       const sortedProducts = useMemo(() => {
         return [...products].sort((a, b) => {
@@ -360,7 +370,6 @@
         return Object.values(grouped).sort((a, b) => b.unpaidTotal - a.unpaidTotal);
       }, [enrichedOrders]);
 
-      // --- 🌟 新增：熱賣商品總表 (依商品群組化，算出單款銷售量) 🌟 ---
       const productSummaries = useMemo(() => {
         const grouped = {};
         enrichedOrders.forEach(order => {
@@ -376,8 +385,6 @@
           grouped[order.productId].totalRevenue += (order.product.price * order.quantity);
           grouped[order.productId].totalProfit += ((order.product.price - order.product.cost) * order.quantity);
         });
-        
-        // 依照銷售總數排序 (越熱賣排越上面)
         return Object.values(grouped).sort((a, b) => b.totalItems - a.totalItems);
       }, [enrichedOrders]);
 
@@ -434,7 +441,17 @@
               <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-blue-50/50 sticky top-0 z-10">
                 <div>
                   <h3 className="font-extrabold text-xl flex items-center gap-2">
-                    <Icon name="user" className="text-blue-600"/> {viewCustomer} <span className="text-sm font-normal text-slate-500">的清單</span>
+                    <Icon name="user" className="text-blue-600"/> 
+                    {viewCustomer} 
+                    {/* 這裡加入一鍵改名按鈕 */}
+                    <button 
+                      onClick={() => handleRenameCustomer(viewCustomer)} 
+                      className="ml-1 text-slate-400 hover:text-blue-600 active:text-blue-600 p-1.5 rounded-full bg-white shadow-sm border border-slate-200 transition"
+                      title="修改客人名字"
+                    >
+                      <Icon name="pen" size={12} />
+                    </button>
+                    <span className="text-sm font-normal text-slate-500 ml-1">的清單</span>
                   </h3>
                   <div className="text-xs font-bold text-red-500 mt-1">未結清總額: ${unpaidTotal.toLocaleString()}</div>
                 </div>
@@ -869,8 +886,7 @@
                   <p className="text-xs text-slate-500">追蹤進度，或統整單一客人的未收款</p>
                 </div>
 
-                {/* --- 🌟 頂部三個模式按鈕 🌟 --- */}
-                <div className="flex bg-slate-200 p-1 rounded-xl mb-4">
+                <div className="flex bg-slate-200 p-1 rounded-xl mb-3">
                   <button 
                     onClick={() => setOrderViewMode('time')} 
                     className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'time' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
@@ -897,7 +913,6 @@
                     <input type="text" placeholder="搜尋客人或商品..." className="w-full bg-transparent outline-none text-sm p-1.5" value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} />
                   </div>
                   
-                  {/* 只有在明細模式跟熱賣模式提供狀態過濾比較有意義 */}
                   {(orderViewMode === 'time' || orderViewMode === 'product') && (
                     <div className="flex overflow-x-auto hide-scrollbar bg-white p-1">
                       <button onClick={() => setOrderFilterStatus('all')} className={`whitespace-nowrap px-4 py-2 text-sm font-bold rounded-lg transition-colors ${orderFilterStatus === 'all' ? 'bg-slate-800 text-white' : 'text-slate-500'}`}>全部</button>
@@ -910,7 +925,6 @@
                   )}
                 </div>
 
-                {/* 動態計算儀表板 */}
                 {(orderViewMode === 'time' || orderViewMode === 'product') && enrichedOrders.length > 0 && (
                   <div className="mb-4 bg-slate-100 border border-slate-200 rounded-xl p-3 flex justify-between items-center shadow-sm text-slate-700">
                     <div className="text-xs font-bold">
@@ -930,8 +944,6 @@
                 )}
 
                 <div className="space-y-3">
-
-                  {/* --- 🌟 模式 C：依熱賣商品統計 🌟 --- */}
                   {orderViewMode === 'product' && (
                     productSummaries.length === 0 ? (
                       <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-400">目前沒有商品銷售紀錄</div>
@@ -970,8 +982,6 @@
                     )
                   )}
 
-
-                  {/* 模式 A：依顧客統整 */}
                   {orderViewMode === 'customer' && (
                     customerSummaries.length === 0 ? (
                       <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-400">目前沒有顧客資料</div>
@@ -1002,7 +1012,6 @@
                     )
                   )}
 
-                  {/* 模式 B：依訂單明細 (原來的列表) */}
                   {orderViewMode === 'time' && (
                     enrichedOrders.length === 0 ? (
                       <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-400">沒有符合的訂單紀錄</div>
