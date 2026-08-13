@@ -59,7 +59,7 @@
           window.localStorage.setItem(key, JSON.stringify(storedValue));
         } catch (error) {
           if(error.name === 'QuotaExceededError') {
-            alert('手機瀏覽器儲存空間已滿！建議進行「備份」，然後刪除一些舊歷史訂單。');
+            alert('手機儲存空間已滿！請到「設定」點擊「一鍵清除商品圖片」來釋放空間。');
           }
         }
       }, [key, storedValue]);
@@ -103,6 +103,7 @@
         return [...new Set(names)].filter(Boolean).sort();
       }, [orders]);
 
+      // --- 圖片極限壓縮 (節省手機空間) ---
       const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -114,7 +115,8 @@
           img.src = event.target.result;
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 400; 
+            // 將寬度進一步縮小至 250px，品質降至 0.5，極大化節省空間
+            const MAX_WIDTH = 250; 
             let scaleSize = 1;
             if (img.width > MAX_WIDTH) {
               scaleSize = MAX_WIDTH / img.width;
@@ -125,19 +127,22 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
             setNewProduct({ ...newProduct, image: compressedDataUrl });
           };
         };
       };
 
+      // --- 🌟 一鍵清除所有圖片 🌟 ---
+      const clearAllImages = () => {
+        if(window.confirm('確定要清除「所有商品」的圖片嗎？\n\n別擔心！商品名稱、價錢、客人的訂單都一定會保留。\n清除後可以釋放非常多手機空間！')) {
+          setProducts(products.map(p => ({ ...p, image: null })));
+          alert('✅ 圖片已全部清除，空間已釋放！您現在可以繼續新增商品了。');
+        }
+      };
+
       const downloadBackup = () => {
-        const backupData = {
-          version: '1.0',
-          date: new Date().toISOString(),
-          products: products,
-          orders: orders
-        };
+        const backupData = { version: '1.0', date: new Date().toISOString(), products, orders };
         const blob = new Blob([JSON.stringify(backupData)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -148,7 +153,6 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        alert('備份檔下載成功！\n請選擇儲存到您的「檔案」或「Google 雲端硬碟」中。');
       };
 
       const handleImportBackup = (e) => {
@@ -159,13 +163,13 @@
           try {
             const data = JSON.parse(event.target.result);
             if (data.products && Array.isArray(data.products) && data.orders && Array.isArray(data.orders)) {
-              if(window.confirm('確定要還原備份嗎？這會覆蓋掉目前所有的資料喔！')) {
+              if(window.confirm('確定要還原備份嗎？這會覆蓋掉目前的資料喔！')) {
                 setProducts(data.products);
                 setOrders(data.orders);
                 alert('資料還原成功！');
               }
             } else {
-              alert('檔案格式錯誤，這不是有效的備份檔。');
+              alert('檔案格式錯誤。');
             }
           } catch (error) {
             alert('讀取檔案失敗。');
@@ -217,7 +221,7 @@
       };
 
       const deleteProduct = (id) => {
-        if(window.confirm('確定刪除此商品？(已接單的紀錄不會受影響)')) {
+        if(window.confirm('確定刪除此商品？\n放心，已經結單客人的清單「文字跟金額」都還會保留！')) {
           setProducts(products.filter(p => p.id !== id));
         }
       };
@@ -265,9 +269,13 @@
             quantity: Number(newOrder.quantity)
           } : o));
         } else {
+          // 🌟 訂單防護罩機制：儲存訂單時，把商品的資訊直接備份進訂單中 🌟
           const order = {
             id: `o${Date.now()}`, 
             productId: selectedProductForOrder.id, 
+            productName: selectedProductForOrder.name, // 備份商品名稱
+            productPrice: selectedProductForOrder.price, // 備份售價
+            productCost: selectedProductForOrder.cost, // 備份成本
             customer: newOrder.customer.trim(),
             style: newOrder.style, 
             size: newOrder.size, 
@@ -300,19 +308,16 @@
         }));
       };
 
-      // --- 🌟 新增：一鍵修改顧客姓名 ---
       const handleRenameCustomer = (oldName) => {
-        const newName = window.prompt(`要把「${oldName}」的名字改成什麼呢？\n這會一併修改他所有的訂單喔！`, oldName);
+        const newName = window.prompt(`要把「${oldName}」改成什麼呢？\n這會修改他所有的訂單！`, oldName);
         if (newName && newName.trim() !== '' && newName.trim() !== oldName) {
           const trimmedNewName = newName.trim();
-          // 更新所有屬於這個客人的訂單
           setOrders(orders.map(o => o.customer === oldName ? { ...o, customer: trimmedNewName } : o));
-          // 更新彈出視窗的狀態，讓畫面停留在新名字
           setViewCustomer(trimmedNewName);
         }
       };
 
-      // --- 衍生資料運算與排序 ---
+      // --- 衍生資料運算 ---
       const sortedProducts = useMemo(() => {
         return [...products].sort((a, b) => {
           return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
@@ -321,7 +326,17 @@
 
       const allEnrichedOrders = useMemo(() => {
         return orders.map(order => {
-          const product = products.find(p => p.id === order.productId) || { name: '已刪除商品', image: null, cost: 0, price: 0, styles: [], sizes: [] };
+          // 🌟 即使商品被刪除，也能用訂單內的備份資料來顯示！
+          const liveProduct = products.find(p => p.id === order.productId);
+          const product = {
+            id: order.productId,
+            name: liveProduct ? liveProduct.name : (order.productName || '已刪除的商品'),
+            price: liveProduct ? liveProduct.price : (order.productPrice || 0),
+            cost: liveProduct ? liveProduct.cost : (order.productCost || 0),
+            image: liveProduct ? liveProduct.image : null, // 圖片不見沒關係，我們用預設的箱子
+            styles: liveProduct ? liveProduct.styles : [],
+            sizes: liveProduct ? liveProduct.sizes : []
+          };
           return { ...order, product };
         }).sort((a, b) => b.id.localeCompare(a.id));
       }, [orders, products]);
@@ -394,17 +409,21 @@
         const grouped = {};
         
         pending.forEach(order => {
-          const product = products.find(p => p.id === order.productId) || { name: '已刪除商品', image: null, cost: 0 };
+          const liveProduct = products.find(p => p.id === order.productId);
+          const pName = liveProduct ? liveProduct.name : (order.productName || '已刪除的商品');
+          const pCost = liveProduct ? liveProduct.cost : (order.productCost || 0);
+          const pImage = liveProduct ? liveProduct.image : null;
+
           const key = `${order.productId}_${order.style}_${order.size}`;
           
           if (!grouped[key]) {
             grouped[key] = {
-              productId: order.productId, productName: product.name, image: product.image, cost: product.cost,
+              productId: order.productId, productName: pName, image: pImage, cost: pCost,
               style: order.style, size: order.size, totalQuantity: 0, customers: []
             };
           }
           grouped[key].totalQuantity += order.quantity;
-          grouped[key].itemSubtotal = grouped[key].totalQuantity * product.cost;
+          grouped[key].itemSubtotal = grouped[key].totalQuantity * pCost;
           grouped[key].customers.push({ name: order.customer, qty: order.quantity });
         });
         
@@ -419,17 +438,17 @@
         let pendingCost = 0; 
         
         orders.forEach(order => {
-          const product = products.find(p => p.id === order.productId);
-          if (product) {
-            if (order.status !== 'completed') totalUnpaid += (product.price * order.quantity);
-            if (order.status === 'pending_buy') pendingCost += (product.cost * order.quantity);
-            expectedProfit += ((product.price - product.cost) * order.quantity);
-          }
+          const liveProduct = products.find(p => p.id === order.productId);
+          const price = liveProduct ? liveProduct.price : (order.productPrice || 0);
+          const cost = liveProduct ? liveProduct.cost : (order.productCost || 0);
+
+          if (order.status !== 'completed') totalUnpaid += (price * order.quantity);
+          if (order.status === 'pending_buy') pendingCost += (cost * order.quantity);
+          expectedProfit += ((price - cost) * order.quantity);
         });
         return { expectedProfit, totalUnpaid, pendingCost, pendingCount: purchasingList.length };
       }, [orders, products, purchasingList]);
 
-      // --- 渲染共用彈窗 ---
       const renderCustomerModal = () => {
         if (!viewCustomer) return null;
         const customerOrders = allEnrichedOrders.filter(o => o.customer === viewCustomer);
@@ -443,15 +462,7 @@
                   <h3 className="font-extrabold text-xl flex items-center gap-2">
                     <Icon name="user" className="text-blue-600"/> 
                     {viewCustomer} 
-                    {/* 這裡加入一鍵改名按鈕 */}
-                    <button 
-                      onClick={() => handleRenameCustomer(viewCustomer)} 
-                      className="ml-1 text-slate-400 hover:text-blue-600 active:text-blue-600 p-1.5 rounded-full bg-white shadow-sm border border-slate-200 transition"
-                      title="修改客人名字"
-                    >
-                      <Icon name="pen" size={12} />
-                    </button>
-                    <span className="text-sm font-normal text-slate-500 ml-1">的清單</span>
+                    <button onClick={() => handleRenameCustomer(viewCustomer)} className="ml-1 text-slate-400 hover:text-blue-600 p-1.5 rounded-full bg-white shadow-sm border border-slate-200"><Icon name="pen" size={12} /></button>
                   </h3>
                   <div className="text-xs font-bold text-red-500 mt-1">未結清總額: ${unpaidTotal.toLocaleString()}</div>
                 </div>
@@ -479,14 +490,15 @@
                             {order.size && <span>碼: {order.size}</span>}
                           </div>
                         </div>
-                        
                         <div className="flex justify-between items-end mt-2">
                           <div className="text-sm font-medium text-slate-600">
-                            ${order.product.price} × {order.quantity} 件 = <span className="font-black text-slate-800 text-base">${order.product.price * order.quantity}</span>
+                            ${order.product.price} × {order.quantity} = <span className="font-black text-slate-800 text-base">${order.product.price * order.quantity}</span>
                           </div>
-                          <div className="flex items-center gap-2 mb-0.5">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <button onClick={() => editOrder(order, order.product)} className="w-7 h-7 rounded-full text-slate-500 bg-white border border-slate-200 flex items-center justify-center shadow-sm"><Icon name="pen" size={10} /></button>
+                            <button onClick={() => deleteOrder(order.id)} className="w-7 h-7 rounded-full text-slate-400 bg-white border border-slate-200 flex items-center justify-center shadow-sm"><Icon name="trash-can" size={10} /></button>
                             {statusConfig.next && (
-                              <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-md active:bg-slate-700 shadow-sm">
+                              <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1.5 rounded-md shadow-sm ml-1">
                                 {statusConfig.actionLabel}
                               </button>
                             )}
@@ -530,14 +542,23 @@
                         <div className="font-bold text-blue-700 text-sm mb-0.5 cursor-pointer" onClick={() => { setViewProductInfo(null); setViewCustomer(order.customer); }}>
                           {order.customer}
                         </div>
-                        <div className="text-[11px] text-slate-500 flex flex-wrap gap-1">
+                        <div className="text-[11px] text-slate-500 flex flex-wrap gap-1 mb-2">
                           {order.style && <span className="bg-slate-100 px-1.5 py-0.5 rounded">款: {order.style}</span>}
                           {order.size && <span className="bg-slate-100 px-1.5 py-0.5 rounded">碼: {order.size}</span>}
+                        </div>
+                        <div className="flex items-center gap-2">
+                           <button onClick={() => editOrder(order, order.product)} className="w-7 h-7 rounded-full text-slate-500 bg-white border border-slate-200 flex items-center justify-center shadow-sm"><Icon name="pen" size={10} /></button>
+                           <button onClick={() => deleteOrder(order.id)} className="w-7 h-7 rounded-full text-slate-400 bg-white border border-slate-200 flex items-center justify-center shadow-sm"><Icon name="trash-can" size={10} /></button>
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1.5 shrink-0">
                         <div className="font-black text-slate-800">{order.quantity} 件</div>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusConfig.color}`}>{statusConfig.label}</span>
+                        {statusConfig.next && (
+                          <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-md mt-1 shadow-sm">
+                            {statusConfig.actionLabel}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -700,7 +721,7 @@
 
             {/* 接單 / 編輯訂單 Modal */}
             {showAddOrder && selectedProductForOrder && (
-              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center animate-fade-in">
+              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-end justify-center animate-fade-in">
                 <div className="bg-white rounded-t-2xl shadow-xl w-full overflow-hidden max-h-[90vh] overflow-y-auto pb-safe">
                   <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
                     <h3 className="font-bold text-lg flex items-center gap-2">
@@ -887,22 +908,13 @@
                 </div>
 
                 <div className="flex bg-slate-200 p-1 rounded-xl mb-3">
-                  <button 
-                    onClick={() => setOrderViewMode('time')} 
-                    className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'time' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
-                  >
+                  <button onClick={() => setOrderViewMode('time')} className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'time' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}>
                     <Icon name="list" className="mr-1" /> 明細
                   </button>
-                  <button 
-                    onClick={() => setOrderViewMode('customer')} 
-                    className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'customer' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
-                  >
+                  <button onClick={() => setOrderViewMode('customer')} className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'customer' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}>
                     <Icon name="users" className="mr-1" /> 顧客
                   </button>
-                  <button 
-                    onClick={() => setOrderViewMode('product')} 
-                    className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'product' ? 'bg-white shadow text-orange-500' : 'text-slate-500'}`}
-                  >
+                  <button onClick={() => setOrderViewMode('product')} className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'product' ? 'bg-white shadow text-orange-500' : 'text-slate-500'}`}>
                     <Icon name="fire" className="mr-1" /> 熱賣
                   </button>
                 </div>
@@ -981,6 +993,7 @@
                       ))
                     )
                   )}
+
 
                   {orderViewMode === 'customer' && (
                     customerSummaries.length === 0 ? (
@@ -1107,6 +1120,15 @@
                   </div>
 
                   <hr className="border-slate-100 my-4" />
+
+                  {/* --- 🌟 新增：一鍵清除圖片按鈕 🌟 --- */}
+                  <div className="mb-6 bg-red-50 p-4 rounded-xl border border-red-100">
+                    <h4 className="font-bold text-red-800 text-sm mb-2"><Icon name="broom" className="mr-1 text-red-500"/> 空間不足？一鍵清除圖片</h4>
+                    <p className="text-xs text-red-600/80 mb-3">如果手機跳出「空間已滿」，您可以點擊下方按鈕刪除「所有歷史商品」的圖片。<b>(放心，商品名稱與客人的訂單紀錄都會完美保留！)</b></p>
+                    <button onClick={clearAllImages} className="w-full bg-white border-2 border-red-400 text-red-600 py-2.5 rounded-xl font-bold shadow-sm active:bg-red-50 flex justify-center items-center gap-2">
+                      <Icon name="trash-can" /> 清除所有商品圖片
+                    </button>
+                  </div>
 
                   <div className="space-y-4">
                     <div>
