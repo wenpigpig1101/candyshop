@@ -59,7 +59,7 @@
           window.localStorage.setItem(key, JSON.stringify(storedValue));
         } catch (error) {
           if(error.name === 'QuotaExceededError') {
-            alert('手機瀏覽器儲存空間已滿！建議進行「備份」，然後刪除一些舊歷史訂單。');
+            alert('手機瀏覽器儲存空間已滿！請到「設定」點選「清除所有商品圖片」來釋放空間。');
           }
         }
       }, [key, storedValue]);
@@ -70,6 +70,23 @@
     const splitOptions = (str) => {
       if (!str) return [];
       return str.split(/[\/／,，、\s]+/).map(s => s.trim()).filter(Boolean);
+    };
+
+    // 🌟 新增：從訂單 ID 提取精準建檔時間的函數 🌟
+    const formatTimeFromId = (id, fallbackDate) => {
+      if (!id) return fallbackDate;
+      // 提取 ID 裡的數字 (也就是時間戳記)
+      const timestamp = parseInt(id.replace(/\D/g, ''));
+      // 如果數字太小 (舊的假資料)，直接顯示日期
+      if (isNaN(timestamp) || timestamp < 1000000000000) {
+        return fallbackDate ? fallbackDate.substring(5).replace('-', '/') : '';
+      }
+      const d = new Date(timestamp);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${mm}/${dd} ${hh}:${min}`;
     };
 
     function App() {
@@ -86,7 +103,10 @@
       const [selectedProductForOrder, setSelectedProductForOrder] = useState(null);
       
       const [newProduct, setNewProduct] = useState({ name: '', cost: '', price: '', styles: '', sizes: '', image: null });
-      const [newOrder, setNewOrder] = useState({ customer: '', style: '', size: '', quantity: 1 });
+      const [newOrder, setNewOrder] = useState({ 
+        customer: '', style: '', size: '', quantity: 1, 
+        manualName: '', manualCost: '', manualPrice: '' 
+      });
       
       const [orderSearch, setOrderSearch] = useState('');
       const [orderFilterStatus, setOrderFilterStatus] = useState('all');
@@ -114,7 +134,7 @@
           img.src = event.target.result;
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 400; 
+            const MAX_WIDTH = 250; 
             let scaleSize = 1;
             if (img.width > MAX_WIDTH) {
               scaleSize = MAX_WIDTH / img.width;
@@ -125,19 +145,27 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
             setNewProduct({ ...newProduct, image: compressedDataUrl });
           };
         };
       };
 
+      const clearSingleImage = (id) => {
+        if(window.confirm('確定要清除這件商品的圖片嗎？\n\n(清除後可釋放手機空間，商品名稱、金額與客人的清單都會完美保留！不會變0元)')) {
+          setProducts(products.map(p => p.id === id ? { ...p, image: null } : p));
+        }
+      };
+
+      const clearAllImages = () => {
+        if(window.confirm('確定要清除「所有商品」的圖片嗎？\n\n別擔心！商品名稱、價錢、客人的訂單都一定會保留。\n清除後可以釋放非常多手機空間！')) {
+          setProducts(products.map(p => ({ ...p, image: null })));
+          alert('✅ 圖片已全部清除，空間已釋放！您現在可以繼續新增商品了。');
+        }
+      };
+
       const downloadBackup = () => {
-        const backupData = {
-          version: '1.0',
-          date: new Date().toISOString(),
-          products: products,
-          orders: orders
-        };
+        const backupData = { version: '1.0', date: new Date().toISOString(), products, orders };
         const blob = new Blob([JSON.stringify(backupData)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -148,7 +176,6 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        alert('備份檔下載成功！\n請選擇儲存到您的「檔案」或「Google 雲端硬碟」中。');
       };
 
       const handleImportBackup = (e) => {
@@ -159,13 +186,13 @@
           try {
             const data = JSON.parse(event.target.result);
             if (data.products && Array.isArray(data.products) && data.orders && Array.isArray(data.orders)) {
-              if(window.confirm('確定要還原備份嗎？這會覆蓋掉目前所有的資料喔！')) {
+              if(window.confirm('確定要還原備份嗎？這會覆蓋掉目前的資料喔！')) {
                 setProducts(data.products);
                 setOrders(data.orders);
                 alert('資料還原成功！');
               }
             } else {
-              alert('檔案格式錯誤，這不是有效的備份檔。');
+              alert('檔案格式錯誤。');
             }
           } catch (error) {
             alert('讀取檔案失敗。');
@@ -217,7 +244,7 @@
       };
 
       const deleteProduct = (id) => {
-        if(window.confirm('確定刪除此商品？(已接單的紀錄不會受影響)')) {
+        if(window.confirm('【警告】徹底刪除此商品？\n\n如果您只是想「釋放手機空間」，請按左上角的『清圖』按鈕就好！\n如果堅持刪除商品，舊的訂單可能會變成 $0 元喔！')) {
           setProducts(products.filter(p => p.id !== id));
         }
       };
@@ -226,7 +253,7 @@
         setShowAddOrder(false);
         setEditingOrderId(null);
         setSelectedProductForOrder(null);
-        setNewOrder({ customer: '', style: '', size: '', quantity: 1 });
+        setNewOrder({ customer: '', style: '', size: '', quantity: 1, manualName: '', manualCost: '', manualPrice: '' });
       };
 
       const openOrderForm = (product) => {
@@ -235,7 +262,8 @@
           customer: '', 
           style: product.styles && product.styles.length > 0 ? product.styles[0] : '', 
           size: product.sizes && product.sizes.length > 0 ? product.sizes[0] : '', 
-          quantity: 1 
+          quantity: 1,
+          manualName: product.name, manualPrice: product.price, manualCost: product.cost
         });
         setEditingOrderId(null);
         setShowAddOrder(true);
@@ -247,7 +275,10 @@
           customer: order.customer,
           style: order.style || '',
           size: order.size || '',
-          quantity: order.quantity
+          quantity: order.quantity,
+          manualName: product.name === '已刪除商品' ? (order.productName || '') : product.name,
+          manualPrice: product.name === '已刪除商品' ? (order.productPrice || '') : product.price,
+          manualCost: product.name === '已刪除商品' ? (order.productCost || '') : product.cost
         });
         setEditingOrderId(order.id);
         setShowAddOrder(true);
@@ -256,25 +287,32 @@
       const handleSaveOrder = (e) => {
         e.preventDefault();
         
+        const isDeletedProduct = selectedProductForOrder.name === '已刪除商品';
+
         if (editingOrderId) {
           setOrders(orders.map(o => o.id === editingOrderId ? {
             ...o,
             customer: newOrder.customer.trim(),
             style: newOrder.style,
             size: newOrder.size,
-            quantity: Number(newOrder.quantity)
+            quantity: Number(newOrder.quantity),
+            productName: isDeletedProduct ? newOrder.manualName : selectedProductForOrder.name,
+            productPrice: isDeletedProduct ? Number(newOrder.manualPrice) : selectedProductForOrder.price,
+            productCost: isDeletedProduct ? Number(newOrder.manualCost) : selectedProductForOrder.cost
           } : o));
         } else {
           const order = {
-            id: `o${Date.now()}`, 
+            id: `o${Date.now()}`, // 這裡的 Date.now() 就是建檔時的精準時間
             productId: selectedProductForOrder.id, 
+            productName: selectedProductForOrder.name, 
+            productPrice: selectedProductForOrder.price, 
+            productCost: selectedProductForOrder.cost, 
             customer: newOrder.customer.trim(),
             style: newOrder.style, 
             size: newOrder.size, 
             quantity: Number(newOrder.quantity), 
             status: 'pending_buy', 
-            date: new Date().toISOString().split('T')[0],
-            isOutOfStock: false // 預設新增時非斷貨
+            date: new Date().toISOString().split('T')[0]
           };
           setOrders([order, ...orders]);
         }
@@ -294,31 +332,23 @@
 
       const batchMarkAsOrdered = (productId, style, size) => {
         setOrders(orders.map(o => {
-          if (o.status === 'pending_buy' && o.productId === productId && o.style === style && o.size === size && !o.isOutOfStock) {
+          if (o.status === 'pending_buy' && o.productId === productId && o.style === style && o.size === size) {
             return { ...o, status: 'ordered' };
           }
           return o;
         }));
       };
 
-      // --- 🌟 新增：一鍵修改顧客姓名 ---
       const handleRenameCustomer = (oldName) => {
-        const newName = window.prompt(`要把「${oldName}」的名字改成什麼呢？\n這會一併修改他所有的訂單喔！`, oldName);
+        const newName = window.prompt(`要把「${oldName}」改成什麼呢？\n這會修改他所有的訂單！`, oldName);
         if (newName && newName.trim() !== '' && newName.trim() !== oldName) {
           const trimmedNewName = newName.trim();
-          // 更新所有屬於這個客人的訂單
           setOrders(orders.map(o => o.customer === oldName ? { ...o, customer: trimmedNewName } : o));
-          // 更新彈出視窗的狀態，讓畫面停留在新名字
           setViewCustomer(trimmedNewName);
         }
       };
 
-      // --- 🌟 新增：切換斷貨狀態 ---
-      const toggleOutOfStock = (id) => {
-        setOrders(orders.map(o => o.id === id ? { ...o, isOutOfStock: !o.isOutOfStock } : o));
-      };
-
-      // --- 衍生資料運算與排序 ---
+      // --- 衍生資料運算 ---
       const sortedProducts = useMemo(() => {
         return [...products].sort((a, b) => {
           return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
@@ -327,9 +357,18 @@
 
       const allEnrichedOrders = useMemo(() => {
         return orders.map(order => {
-          const product = products.find(p => p.id === order.productId) || { name: '已刪除商品', image: null, cost: 0, price: 0, styles: [], sizes: [] };
+          const liveProduct = products.find(p => p.id === order.productId);
+          const product = {
+            id: order.productId,
+            name: liveProduct ? liveProduct.name : (order.productName || '已刪除商品'),
+            price: liveProduct ? liveProduct.price : (order.productPrice || 0),
+            cost: liveProduct ? liveProduct.cost : (order.productCost || 0),
+            image: liveProduct ? liveProduct.image : null,
+            styles: liveProduct ? liveProduct.styles : [],
+            sizes: liveProduct ? liveProduct.sizes : []
+          };
           return { ...order, product };
-        }).sort((a, b) => b.id.localeCompare(a.id));
+        }).sort((a, b) => b.id.localeCompare(a.id)); // 新的訂單在前面
       }, [orders, products]);
 
       const enrichedOrders = useMemo(() => {
@@ -340,22 +379,18 @@
         });
       }, [allEnrichedOrders, orderFilterStatus, orderSearch]);
 
-      // 統計總覽 (過濾掉斷貨商品)
       const currentFilteredStats = useMemo(() => {
         let totalCost = 0;
         let totalPrice = 0;
         let totalItems = 0;
         enrichedOrders.forEach(order => {
-          if (!order.isOutOfStock) {
-            totalCost += (order.product.cost * order.quantity);
-            totalPrice += (order.product.price * order.quantity);
-            totalItems += order.quantity;
-          }
+          totalCost += (order.product.cost * order.quantity);
+          totalPrice += (order.product.price * order.quantity);
+          totalItems += order.quantity;
         });
         return { totalCost, totalPrice, totalItems };
       }, [enrichedOrders]);
 
-      // 顧客統計 (過濾掉斷貨商品)
       const customerSummaries = useMemo(() => {
         const grouped = {};
         enrichedOrders.forEach(order => {
@@ -369,20 +404,17 @@
             };
           }
           grouped[order.customer].orders.push(order);
+          grouped[order.customer].totalItems += order.quantity;
           
-          if (!order.isOutOfStock) {
-            grouped[order.customer].totalItems += order.quantity;
-            if (order.status !== 'completed') {
-              grouped[order.customer].unpaidTotal += (order.product.price * order.quantity);
-            } else {
-              grouped[order.customer].completedItems += order.quantity;
-            }
+          if (order.status !== 'completed') {
+            grouped[order.customer].unpaidTotal += (order.product.price * order.quantity);
+          } else {
+            grouped[order.customer].completedItems += order.quantity;
           }
         });
         return Object.values(grouped).sort((a, b) => b.unpaidTotal - a.unpaidTotal);
       }, [enrichedOrders]);
 
-      // 產品熱賣統計 (過濾掉斷貨商品)
       const productSummaries = useMemo(() => {
         const grouped = {};
         enrichedOrders.forEach(order => {
@@ -394,32 +426,33 @@
               totalProfit: 0
             };
           }
-          if (!order.isOutOfStock) {
-            grouped[order.productId].totalItems += order.quantity;
-            grouped[order.productId].totalRevenue += (order.product.price * order.quantity);
-            grouped[order.productId].totalProfit += ((order.product.price - order.product.cost) * order.quantity);
-          }
+          grouped[order.productId].totalItems += order.quantity;
+          grouped[order.productId].totalRevenue += (order.product.price * order.quantity);
+          grouped[order.productId].totalProfit += ((order.product.price - order.product.cost) * order.quantity);
         });
         return Object.values(grouped).sort((a, b) => b.totalItems - a.totalItems);
       }, [enrichedOrders]);
 
-      // 叫貨清單 (過濾掉已斷貨的商品)
       const purchasingList = useMemo(() => {
-        const pending = orders.filter(o => o.status === 'pending_buy' && !o.isOutOfStock);
+        const pending = orders.filter(o => o.status === 'pending_buy');
         const grouped = {};
         
         pending.forEach(order => {
-          const product = products.find(p => p.id === order.productId) || { name: '已刪除商品', image: null, cost: 0 };
+          const liveProduct = products.find(p => p.id === order.productId);
+          const pName = liveProduct ? liveProduct.name : (order.productName || '已刪除商品');
+          const pCost = liveProduct ? liveProduct.cost : (order.productCost || 0);
+          const pImage = liveProduct ? liveProduct.image : null;
+
           const key = `${order.productId}_${order.style}_${order.size}`;
           
           if (!grouped[key]) {
             grouped[key] = {
-              productId: order.productId, productName: product.name, image: product.image, cost: product.cost,
+              productId: order.productId, productName: pName, image: pImage, cost: pCost,
               style: order.style, size: order.size, totalQuantity: 0, customers: []
             };
           }
           grouped[key].totalQuantity += order.quantity;
-          grouped[key].itemSubtotal = grouped[key].totalQuantity * product.cost;
+          grouped[key].itemSubtotal = grouped[key].totalQuantity * pCost;
           grouped[key].customers.push({ name: order.customer, qty: order.quantity });
         });
         
@@ -428,19 +461,19 @@
         });
       }, [orders, products]);
 
-      // 首頁狀態列統計 (過濾掉斷貨商品)
       const stats = useMemo(() => {
         let expectedProfit = 0;
         let totalUnpaid = 0;
         let pendingCost = 0; 
         
         orders.forEach(order => {
-          const product = products.find(p => p.id === order.productId);
-          if (product && !order.isOutOfStock) {
-            if (order.status !== 'completed') totalUnpaid += (product.price * order.quantity);
-            if (order.status === 'pending_buy') pendingCost += (product.cost * order.quantity);
-            expectedProfit += ((product.price - product.cost) * order.quantity);
-          }
+          const liveProduct = products.find(p => p.id === order.productId);
+          const price = liveProduct ? liveProduct.price : (order.productPrice || 0);
+          const cost = liveProduct ? liveProduct.cost : (order.productCost || 0);
+
+          if (order.status !== 'completed') totalUnpaid += (price * order.quantity);
+          if (order.status === 'pending_buy') pendingCost += (cost * order.quantity);
+          expectedProfit += ((price - cost) * order.quantity);
         });
         return { expectedProfit, totalUnpaid, pendingCost, pendingCount: purchasingList.length };
       }, [orders, products, purchasingList]);
@@ -449,8 +482,7 @@
       const renderCustomerModal = () => {
         if (!viewCustomer) return null;
         const customerOrders = allEnrichedOrders.filter(o => o.customer === viewCustomer);
-        // 未結清總額過濾掉斷貨商品
-        const unpaidTotal = customerOrders.reduce((sum, o) => (o.status !== 'completed' && !o.isOutOfStock) ? sum + (o.product.price * o.quantity) : sum, 0);
+        const unpaidTotal = customerOrders.reduce((sum, o) => o.status !== 'completed' ? sum + (o.product.price * o.quantity) : sum, 0);
 
         return (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center animate-fade-in-bg">
@@ -460,14 +492,7 @@
                   <h3 className="font-extrabold text-xl flex items-center gap-2">
                     <Icon name="user" className="text-blue-600"/> 
                     {viewCustomer} 
-                    <button 
-                      onClick={() => handleRenameCustomer(viewCustomer)} 
-                      className="ml-1 text-slate-400 hover:text-blue-600 active:text-blue-600 p-1.5 rounded-full bg-white shadow-sm border border-slate-200 transition"
-                      title="修改客人名字"
-                    >
-                      <Icon name="pen" size={12} />
-                    </button>
-                    <span className="text-sm font-normal text-slate-500 ml-1">的清單</span>
+                    <button onClick={() => handleRenameCustomer(viewCustomer)} className="ml-1 text-slate-400 hover:text-blue-600 p-1.5 rounded-full bg-white shadow-sm border border-slate-200"><Icon name="pen" size={12} /></button>
                   </h3>
                   <div className="text-xs font-bold text-red-500 mt-1">未結清總額: ${unpaidTotal.toLocaleString()}</div>
                 </div>
@@ -477,36 +502,40 @@
                 {customerOrders.length === 0 && <div className="text-center text-slate-400 py-4">無資料</div>}
                 {customerOrders.map(order => {
                   const statusConfig = STATUSES[order.status.toUpperCase()];
-                  const isOOS = order.isOutOfStock;
                   return (
-                    <div key={order.id} className={`p-3 rounded-xl shadow-sm border border-slate-200 flex gap-3 ${isOOS ? 'bg-slate-100 opacity-70' : 'bg-white'}`}>
+                    <div key={order.id} className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex gap-3">
                       {order.product.image ? (
                         <img src={order.product.image} className="w-16 h-16 rounded-lg object-cover shrink-0" alt="img" />
                       ) : (
-                        <div className="w-16 h-16 rounded-lg bg-slate-200 flex items-center justify-center shrink-0"><Icon name="box" className="text-slate-400"/></div>
+                        <div className="w-16 h-16 rounded-lg bg-slate-50 flex items-center justify-center shrink-0"><Icon name="box" className="text-slate-300"/></div>
                       )}
                       <div className="flex-1 min-w-0 flex flex-col justify-between">
                         <div>
-                          <div className="flex justify-between items-center">
-                            <h4 className={`font-bold text-sm truncate ${isOOS ? 'text-slate-500 line-through' : 'text-slate-800'}`}>{order.product.name}</h4>
-                            <div className="flex gap-1 shrink-0 ml-2">
-                              {isOOS && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-300 text-slate-700">已斷貨</span>}
-                              {!isOOS && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusConfig.color}`}>{statusConfig.label}</span>}
-                            </div>
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-bold text-slate-800 text-sm truncate pr-1">{order.product.name}</h4>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${statusConfig.color}`}>{statusConfig.label}</span>
                           </div>
-                          <div className="text-[11px] text-slate-500 mt-0.5">
-                            {order.style && <span className="mr-2">款: {order.style}</span>}
+                          <div className="text-[11px] text-slate-500 mt-0.5 flex items-center flex-wrap gap-1.5">
+                            {order.style && <span>款: {order.style}</span>}
                             {order.size && <span>碼: {order.size}</span>}
+                            {/* 🌟 隱藏的時間戳記顯示在這裡 🌟 */}
+                            <span className="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 ml-auto whitespace-nowrap">
+                              <Icon name="clock" size={10} className="mr-1"/>
+                              {formatTimeFromId(order.id, order.date)}
+                            </span>
                           </div>
                         </div>
                         
                         <div className="flex justify-between items-end mt-2">
-                          <div className={`text-sm font-medium ${isOOS ? 'text-slate-400 line-through' : 'text-slate-600'}`}>
-                            ${order.product.price} × {order.quantity} 件 = <span className={`font-black text-base ${isOOS ? 'text-slate-400' : 'text-slate-800'}`}>${order.product.price * order.quantity}</span>
+                          <div className="text-sm font-medium text-slate-600">
+                            ${order.product.price} × {order.quantity} 件 = <span className="font-black text-slate-800 text-base">${order.product.price * order.quantity}</span>
                           </div>
-                          <div className="flex items-center gap-2 mb-0.5">
-                            {!isOOS && statusConfig.next && (
-                              <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-md active:bg-slate-700 shadow-sm">
+                          
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <button onClick={() => editOrder(order, order.product)} className="w-7 h-7 rounded-full text-slate-500 bg-white border border-slate-200 flex items-center justify-center shadow-sm active:text-blue-600"><Icon name="pen" size={10} /></button>
+                            <button onClick={() => deleteOrder(order.id)} className="w-7 h-7 rounded-full text-slate-400 bg-white border border-slate-200 flex items-center justify-center shadow-sm active:text-red-500"><Icon name="trash-can" size={10} /></button>
+                            {statusConfig.next && (
+                              <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1.5 rounded-md active:bg-slate-700 shadow-sm ml-1">
                                 {statusConfig.actionLabel}
                               </button>
                             )}
@@ -525,8 +554,7 @@
       const renderProductModal = () => {
         if (!viewProductInfo) return null;
         const productOrders = allEnrichedOrders.filter(o => o.productId === viewProductInfo.id);
-        // 總接單數過濾掉斷貨的
-        const totalOrdered = productOrders.reduce((sum, o) => !o.isOutOfStock ? sum + o.quantity : sum, 0);
+        const totalOrdered = productOrders.reduce((sum, o) => sum + o.quantity, 0);
 
         return (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center animate-fade-in-bg">
@@ -536,7 +564,7 @@
                   {viewProductInfo.image && <img src={viewProductInfo.image} className="w-10 h-10 rounded object-cover" />}
                   <div>
                     <h3 className="font-extrabold text-lg text-slate-800 line-clamp-1">{viewProductInfo.name}</h3>
-                    <div className="text-xs font-bold text-slate-500">總有效接單: {totalOrdered} 件</div>
+                    <div className="text-xs font-bold text-slate-500">總接單數: {totalOrdered} 件</div>
                   </div>
                 </div>
                 <button onClick={() => setViewProductInfo(null)} className="w-8 h-8 bg-slate-200 rounded-full text-slate-600 flex items-center justify-center shrink-0"><Icon name="xmark" /></button>
@@ -545,25 +573,40 @@
                 {productOrders.length === 0 && <div className="text-center text-slate-400 py-4">尚無人訂購</div>}
                 {productOrders.map(order => {
                   const statusConfig = STATUSES[order.status.toUpperCase()];
-                  const isOOS = order.isOutOfStock;
                   return (
-                    <div key={order.id} className={`p-3 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center gap-2 ${isOOS ? 'bg-slate-50 opacity-70' : 'bg-white'}`}>
-                      <div className="flex-1 min-w-0">
-                        <div className={`font-bold text-sm mb-0.5 cursor-pointer ${isOOS ? 'text-slate-500 line-through' : 'text-blue-700'}`} onClick={() => { setViewProductInfo(null); setViewCustomer(order.customer); }}>
+                    <div key={order.id} className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex flex-col gap-2">
+                      <div className="flex justify-between items-start">
+                        <div className="font-bold text-blue-700 text-sm cursor-pointer" onClick={() => { setViewProductInfo(null); setViewCustomer(order.customer); }}>
                           {order.customer}
                         </div>
-                        <div className="text-[11px] text-slate-500 flex flex-wrap gap-1">
-                          {order.style && <span className="bg-slate-100 px-1.5 py-0.5 rounded">款: {order.style}</span>}
-                          {order.size && <span className="bg-slate-100 px-1.5 py-0.5 rounded">碼: {order.size}</span>}
-                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusConfig.color}`}>{statusConfig.label}</span>
                       </div>
-                      <div className="flex flex-col items-end gap-1.5 shrink-0">
-                        <div className={`font-black ${isOOS ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{order.quantity} 件</div>
-                        {isOOS ? (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-300 text-slate-700">已斷貨</span>
-                        ) : (
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusConfig.color}`}>{statusConfig.label}</span>
-                        )}
+
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <div className="text-[11px] text-slate-500 flex flex-wrap gap-1 mb-1.5">
+                            {order.style && <span className="bg-slate-100 px-1.5 py-0.5 rounded">款: {order.style}</span>}
+                            {order.size && <span className="bg-slate-100 px-1.5 py-0.5 rounded">碼: {order.size}</span>}
+                            {/* 🌟 隱藏的時間戳記顯示在這裡 🌟 */}
+                            <span className="text-[10px] text-slate-400 self-center ml-1 flex items-center">
+                              <Icon name="clock" size={10} className="mr-1"/>
+                              {formatTimeFromId(order.id, order.date)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                             <button onClick={() => editOrder(order, order.product)} className="w-7 h-7 rounded-full text-slate-500 bg-white border border-slate-200 flex items-center justify-center shadow-sm"><Icon name="pen" size={10} /></button>
+                             <button onClick={() => deleteOrder(order.id)} className="w-7 h-7 rounded-full text-slate-400 bg-white border border-slate-200 flex items-center justify-center shadow-sm"><Icon name="trash-can" size={10} /></button>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1.5 shrink-0">
+                          <div className="font-black text-slate-800">{order.quantity} 件</div>
+                          {statusConfig.next && (
+                            <button onClick={() => advanceOrderStatus(order.id, order.status)} className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-md mt-1 shadow-sm">
+                              {statusConfig.actionLabel}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -679,6 +722,16 @@
                   <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     {sortedProducts.map(product => (
                       <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col relative">
+                        
+                        {/* 左上角清除圖片按鈕 */}
+                        <div className="absolute top-2 left-2 z-10">
+                          {product.image && (
+                            <button onClick={(e)=> { e.stopPropagation(); clearSingleImage(product.id); }} className="bg-white/90 px-2 py-1 rounded-md text-slate-500 hover:text-orange-500 active:text-orange-600 flex items-center justify-center shadow-sm border border-slate-100">
+                              <Icon name="eraser" size={10} className="mr-1"/><span className="text-[10px] font-bold">清圖</span>
+                            </button>
+                          )}
+                        </div>
+
                         <div 
                           className="aspect-square bg-slate-50 relative active:opacity-80 transition"
                           onClick={() => setViewProductInfo(product)}
@@ -725,8 +778,11 @@
             )}
 
             {/* 接單 / 編輯訂單 Modal */}
-            {showAddOrder && selectedProductForOrder && (
-              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center animate-fade-in">
+            {showAddOrder && selectedProductForOrder && (() => {
+              const isDeletedProduct = selectedProductForOrder.name === '已刪除商品';
+
+              return (
+              <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-end justify-center animate-fade-in">
                 <div className="bg-white rounded-t-2xl shadow-xl w-full overflow-hidden max-h-[90vh] overflow-y-auto pb-safe">
                   <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 sticky top-0 z-10">
                     <h3 className="font-bold text-lg flex items-center gap-2">
@@ -737,16 +793,36 @@
                   </div>
                   
                   <div className="p-5">
-                    <div className="flex gap-3 mb-5 p-3 border border-blue-100 bg-blue-50/50 rounded-xl">
-                      {selectedProductForOrder.image ? 
-                        <img src={selectedProductForOrder.image} className="w-16 h-16 rounded-lg object-cover" alt="img"/> : 
-                        <div className="w-16 h-16 rounded-lg bg-white flex items-center justify-center text-slate-300"><Icon name="box" size={24}/></div>
-                      }
-                      <div>
-                        <div className="font-bold text-slate-800">{selectedProductForOrder.name}</div>
-                        <div className="text-sm text-slate-500">售價: ${selectedProductForOrder.price} / 利潤: ${(selectedProductForOrder.price - selectedProductForOrder.cost)}</div>
+                    {/* 壞單救援 */}
+                    {isDeletedProduct ? (
+                      <div className="flex flex-col gap-2 mb-5 p-3 border border-red-200 bg-red-50 rounded-xl">
+                        <div className="text-xs font-bold text-red-600 mb-1">
+                          <Icon name="triangle-exclamation" className="mr-1" /> 原商品已被刪除，請手動補回資料
+                        </div>
+                        <input type="text" placeholder="商品名稱" value={newOrder.manualName} onChange={e => setNewOrder({...newOrder, manualName: e.target.value})} className="w-full p-2.5 text-sm rounded-lg border border-slate-200 outline-none focus:border-blue-500"/>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <span className="absolute left-3 top-2.5 text-slate-400 text-sm">批$</span>
+                            <input type="number" placeholder="成本" value={newOrder.manualCost} onChange={e => setNewOrder({...newOrder, manualCost: e.target.value})} className="w-full p-2.5 pl-9 text-sm rounded-lg border border-slate-200 outline-none focus:border-blue-500"/>
+                          </div>
+                          <div className="relative flex-1">
+                            <span className="absolute left-3 top-2.5 text-slate-400 text-sm">售$</span>
+                            <input type="number" placeholder="售價" value={newOrder.manualPrice} onChange={e => setNewOrder({...newOrder, manualPrice: e.target.value})} className="w-full p-2.5 pl-9 text-sm rounded-lg border border-slate-200 outline-none focus:border-blue-500"/>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="flex gap-3 mb-5 p-3 border border-blue-100 bg-blue-50/50 rounded-xl">
+                        {selectedProductForOrder.image ? 
+                          <img src={selectedProductForOrder.image} className="w-16 h-16 rounded-lg object-cover" alt="img"/> : 
+                          <div className="w-16 h-16 rounded-lg bg-white flex items-center justify-center text-slate-300"><Icon name="box" size={24}/></div>
+                        }
+                        <div>
+                          <div className="font-bold text-slate-800">{selectedProductForOrder.name}</div>
+                          <div className="text-sm text-slate-500">售價: ${selectedProductForOrder.price} / 批價: ${selectedProductForOrder.cost}</div>
+                        </div>
+                      </div>
+                    )}
 
                     <form onSubmit={handleSaveOrder} className="space-y-4">
                       <datalist id="customer-names">
@@ -770,22 +846,27 @@
                       </div>
                       
                       <div className="grid grid-cols-2 gap-4">
-                        {selectedProductForOrder.styles && selectedProductForOrder.styles.length > 0 && (
-                          <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">選擇款式</label>
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-1">選擇款式</label>
+                          {!isDeletedProduct && selectedProductForOrder.styles && selectedProductForOrder.styles.length > 0 ? (
                             <select value={newOrder.style} onChange={e=>setNewOrder({...newOrder, style: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none">
                               {selectedProductForOrder.styles.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
-                          </div>
-                        )}
-                        {selectedProductForOrder.sizes && selectedProductForOrder.sizes.length > 0 && (
-                          <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">選擇尺碼</label>
+                          ) : (
+                            <input type="text" value={newOrder.style} onChange={e=>setNewOrder({...newOrder, style: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="手動輸入 (選填)" />
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-bold text-slate-700 mb-1">選擇尺碼</label>
+                          {!isDeletedProduct && selectedProductForOrder.sizes && selectedProductForOrder.sizes.length > 0 ? (
                             <select value={newOrder.size} onChange={e=>setNewOrder({...newOrder, size: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none">
                               {selectedProductForOrder.sizes.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
-                          </div>
-                        )}
+                          ) : (
+                            <input type="text" value={newOrder.size} onChange={e=>setNewOrder({...newOrder, size: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="手動輸入 (選填)" />
+                          )}
+                        </div>
                       </div>
 
                       <div>
@@ -800,7 +881,8 @@
                   </div>
                 </div>
               </div>
-            )}
+              )
+            })()}
 
             {/* ==================== 分頁 2: 叫貨總表 ==================== */}
             {activeTab === 'purchasing' && (
@@ -825,7 +907,7 @@
                 </div>
 
                 <div className="mb-3 flex justify-between items-center">
-                  <h2 className="text-sm font-bold text-slate-600">待叫貨明細表 (不含斷貨商品)</h2>
+                  <h2 className="text-sm font-bold text-slate-600">待叫貨明細表</h2>
                 </div>
 
                 {purchasingList.length === 0 ? (
@@ -913,22 +995,13 @@
                 </div>
 
                 <div className="flex bg-slate-200 p-1 rounded-xl mb-3">
-                  <button 
-                    onClick={() => setOrderViewMode('time')} 
-                    className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'time' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
-                  >
+                  <button onClick={() => setOrderViewMode('time')} className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'time' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}>
                     <Icon name="list" className="mr-1" /> 明細
                   </button>
-                  <button 
-                    onClick={() => setOrderViewMode('customer')} 
-                    className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'customer' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}
-                  >
+                  <button onClick={() => setOrderViewMode('customer')} className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'customer' ? 'bg-white shadow text-blue-600' : 'text-slate-500'}`}>
                     <Icon name="users" className="mr-1" /> 顧客
                   </button>
-                  <button 
-                    onClick={() => setOrderViewMode('product')} 
-                    className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'product' ? 'bg-white shadow text-orange-500' : 'text-slate-500'}`}
-                  >
+                  <button onClick={() => setOrderViewMode('product')} className={`flex-1 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-colors ${orderViewMode === 'product' ? 'bg-white shadow text-orange-500' : 'text-slate-500'}`}>
                     <Icon name="fire" className="mr-1" /> 熱賣
                   </button>
                 </div>
@@ -1008,6 +1081,7 @@
                     )
                   )}
 
+
                   {orderViewMode === 'customer' && (
                     customerSummaries.length === 0 ? (
                       <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 text-slate-400">目前沒有顧客資料</div>
@@ -1044,9 +1118,8 @@
                     ) : (
                       enrichedOrders.map(order => {
                         const statusConfig = STATUSES[order.status.toUpperCase()];
-                        const isOOS = order.isOutOfStock;
                         return (
-                          <div key={order.id} className={`rounded-2xl shadow-sm border border-slate-200 overflow-hidden ${isOOS ? 'bg-slate-50 opacity-80' : 'bg-white'}`}>
+                          <div key={order.id} className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                             <div className="p-3 flex gap-3">
                               <div 
                                 className="shrink-0 active:opacity-70 transition"
@@ -1065,18 +1138,15 @@
                               <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-start mb-0.5">
                                   <span 
-                                    className={`font-black underline decoration-2 underline-offset-2 transition ${isOOS ? 'text-slate-500 decoration-slate-300' : 'text-blue-700 decoration-blue-200 active:text-blue-800'}`}
+                                    className="font-black text-blue-700 underline decoration-blue-200 decoration-2 underline-offset-2 active:text-blue-800 transition"
                                     onClick={() => setViewCustomer(order.customer)}
                                   >
                                     {order.customer}
                                   </span>
-                                  <div className="flex gap-1 shrink-0 ml-2">
-                                    {isOOS && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-300 text-slate-700">已斷貨</span>}
-                                    {!isOOS && <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusConfig.color}`}>{statusConfig.label}</span>}
-                                  </div>
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusConfig.color}`}>{statusConfig.label}</span>
                                 </div>
                                 <div 
-                                  className={`text-sm font-bold truncate inline-block transition ${isOOS ? 'text-slate-500 line-through' : 'text-slate-700 active:text-blue-600'}`}
+                                  className="text-sm font-bold text-slate-700 truncate active:text-blue-600 inline-block"
                                   onClick={() => {
                                     const prod = products.find(p => p.id === order.productId);
                                     if(prod) setViewProductInfo(prod);
@@ -1084,29 +1154,32 @@
                                 >
                                   {order.product.name}
                                 </div>
-                                <div className="text-[11px] text-slate-500 mt-1">
-                                  {order.style && <span className="mr-2">款:{order.style}</span>}
+                                <div className="text-[11px] text-slate-500 mt-1 flex items-center flex-wrap gap-1.5">
+                                  {order.style && <span>款:{order.style}</span>}
                                   {order.size && <span>碼:{order.size}</span>}
+                                  
+                                  {/* 🌟 隱藏的時間戳記顯示在這裡 🌟 */}
+                                  <span className="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 ml-auto whitespace-nowrap">
+                                    <Icon name="clock" size={10} className="mr-1"/>
+                                    {formatTimeFromId(order.id, order.date)}
+                                  </span>
                                 </div>
                               </div>
                             </div>
 
                             <div className="bg-slate-50 px-3 py-2 border-t border-slate-100 flex justify-between items-end">
                               <div className="flex flex-col gap-1">
-                                <div className={`text-[11px] ${isOOS ? 'text-slate-400 line-through' : 'text-slate-500'}`}>
-                                  批價: ${order.product.cost} × {order.quantity} = <span className="font-bold">${order.product.cost * order.quantity}</span>
+                                <div className="text-[11px] text-slate-500">
+                                  批價: ${order.product.cost} × {order.quantity} = <span className="font-bold text-slate-600">${order.product.cost * order.quantity}</span>
                                 </div>
-                                <div className={`text-xs font-medium ${isOOS ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
-                                  售價: ${order.product.price} × {order.quantity} = <span className={`font-black text-[13px] ${isOOS ? 'text-slate-400' : 'text-slate-800'}`}>${order.product.price * order.quantity}</span>
+                                <div className="text-xs font-medium text-slate-700">
+                                  售價: ${order.product.price} × {order.quantity} = <span className="font-black text-slate-800 text-[13px]">${order.product.price * order.quantity}</span>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 mb-0.5">
-                                <button onClick={() => toggleOutOfStock(order.id)} className={`px-2 py-1 rounded text-[11px] font-bold shadow-sm border ${isOOS ? 'bg-green-50 text-green-700 border-green-200 active:bg-green-100' : 'bg-slate-100 text-slate-600 border-slate-200 active:bg-slate-200'}`}>
-                                  {isOOS ? '恢復' : '斷貨'}
-                                </button>
                                 <button onClick={() => editOrder(order, order.product)} className="w-8 h-8 rounded-full text-slate-500 bg-white border border-slate-200 flex items-center justify-center shadow-sm active:text-blue-600"><Icon name="pen" size={12} /></button>
                                 <button onClick={() => deleteOrder(order.id)} className="w-8 h-8 rounded-full text-slate-400 bg-white border border-slate-200 flex items-center justify-center shadow-sm active:text-red-500"><Icon name="trash-can" size={12} /></button>
-                                {!isOOS && statusConfig.next && (
+                                {statusConfig.next && (
                                   <button onClick={() => advanceOrderStatus(order.id, order.status)} className="bg-blue-100 text-blue-700 active:bg-blue-600 active:text-white px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1 shadow-sm">
                                     {statusConfig.actionLabel} <Icon name="chevron-right" size={10} />
                                   </button>
@@ -1140,6 +1213,15 @@
                   </div>
 
                   <hr className="border-slate-100 my-4" />
+
+                  {/* 🌟 舊商品一鍵清空圖片按鈕 🌟 */}
+                  <div className="mb-6 bg-red-50 p-4 rounded-xl border border-red-100">
+                    <h4 className="font-bold text-red-800 text-sm mb-2"><Icon name="broom" className="mr-1 text-red-500"/> 空間不足？一鍵清除圖片</h4>
+                    <p className="text-xs text-red-600/80 mb-3">如果手機跳出「空間已滿」，您可以點擊下方按鈕刪除「所有歷史商品」的圖片。<b>(放心，商品名稱與客人的訂單紀錄都會完美保留！)</b></p>
+                    <button onClick={clearAllImages} className="w-full bg-white border-2 border-red-400 text-red-600 py-2.5 rounded-xl font-bold shadow-sm active:bg-red-50 flex justify-center items-center gap-2">
+                      <Icon name="trash-can" /> 清除所有商品圖片
+                    </button>
+                  </div>
 
                   <div className="space-y-4">
                     <div>
@@ -1212,3 +1294,5 @@
   </script>
 </body>
 </html>
+
+
